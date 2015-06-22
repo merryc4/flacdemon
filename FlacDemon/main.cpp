@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include "FlacDemonNameSpace.h"
 #include "FlacDemon.h"
 
 int main(int argc, const char * argv[])
@@ -15,10 +16,10 @@ int main(int argc, const char * argv[])
     // insert code here...
     std::cout << "Hello, World!\n";
     
-    FlacDemon* demon = new FlacDemon();
+    FlacDemon::Demon* demon = new FlacDemon::Demon();
     
     demon->run();
-    
+
     delete demon;
     
     

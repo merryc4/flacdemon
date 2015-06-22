@@ -11,8 +11,6 @@
 
 #include <iostream>
 
-#endif /* defined(__FlacDemon__Track__) */
-
 class Track {
     
 protected:
@@ -48,3 +46,5 @@ template <class KValue>
 void Track::setValueForKey(KValue value, char *key){
     
 }
+
+#endif /* defined(__FlacDemon__Track__) */
