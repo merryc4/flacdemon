@@ -10,14 +10,22 @@
 #define __FlacDemon__Track__
 
 #include <iostream>
+#include "FlacDemonNameSpace.h"
 
-class Track {
+class FlacDemon::Track {
     
 protected:
     char* fileLocation;
     time_t timeAdded;
     unsigned int playCount;
     time_t trackTime;
+    
+    AVCodecID codecID;
+    string* codecName;
+    int bitRate;
+    //flags?
+    int sampleRate;
+    int channels;
     //groups
     
 public:
@@ -32,18 +40,20 @@ public:
     template <class KValue>
     void setValueForKey(KValue value, char* key);
     
+    void setValuesFromAudioContext(AVCodecContext*);
+    
 //    void addGroup(&Group group);
 //    void removeGroup(&Group group);
     
 };
 
 template <class KValue>
-KValue Track::valueForKey(char* key){
+KValue FlacDemon::Track::valueForKey(char* key){
     
 }
 
 template <class KValue>
-void Track::setValueForKey(KValue value, char *key){
+void FlacDemon::Track::setValueForKey(KValue value, char *key){
     
 }
 

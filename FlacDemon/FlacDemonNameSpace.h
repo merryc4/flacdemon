@@ -17,9 +17,20 @@
 #include <functional>
 #include <map>
 
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavutil/avutil.h>
+    
+}
+
 namespace FlacDemon {
     class Demon;
     class CommandParser;
+    class FileImporter;
+    
+    class Track;
+    class Group;
 };
 
 using namespace std;
