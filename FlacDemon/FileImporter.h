@@ -11,16 +11,10 @@
 
 #include <iostream>
 #include "FlacDemonNameSpace.h"
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <dirent.h>
+#include "File.h"
 
-struct directory {
-    string* path;
-    AVCodecID codecID;
-    bool isAlbumDirectory;
-    bool hasMediaFiles;
-};
+#define FLACDEMON_METADATA_MULTIPLE_VALUES "FlacDemonMetaDataMultipleValues"
+
 
 
 class FlacDemon::FileImporter {
@@ -28,13 +22,6 @@ protected:
     
 public:
     void importFilesFromPath(string*);
-    directory* parseDirectory(string*);
-    void addFile(string*);
-    int isDirectory(string*);
-    int isDirectory(const char*);
-    
-    int readMediaFile(string*, AVCodecID*);
-    int readMediaFile(const char*, AVCodecID*);
 };
 
 

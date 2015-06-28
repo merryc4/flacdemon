@@ -21,13 +21,14 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
-    
+#include <libavutil/dict.h>
 }
 
 namespace FlacDemon {
     class Demon;
     class CommandParser;
     class FileImporter;
+    class File;
     
     class Track;
     class Group;
