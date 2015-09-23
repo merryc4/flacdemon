@@ -8,7 +8,6 @@
 
 #ifndef FlacDemon_FlacDemonNameSpace_h
 #define FlacDemon_FlacDemonNameSpace_h
-#endif
 
 #include <iostream>
 #include <unistd.h>
@@ -32,9 +31,19 @@ namespace FlacDemon {
     
     class Track;
     class Group;
+    class Album;
 };
 
 using namespace std;
 
 typedef int (FlacDemon::Demon::*demonCommandFunction) (vector<string>*);
 
+struct MediaStreamInfo {
+    unsigned long bitRate;
+    unsigned long sampleRate;
+    unsigned long channels;
+    unsigned long duration;
+    AVCodecID codecID;
+};
+
+#endif

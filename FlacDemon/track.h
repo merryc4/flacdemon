@@ -15,21 +15,17 @@
 class FlacDemon::Track {
     
 protected:
-    char* fileLocation;
     time_t timeAdded;
     unsigned int playCount;
     time_t trackTime;
-    
-    AVCodecID codecID;
-    string* codecName;
-    int bitRate;
-    //flags?
-    int sampleRate;
-    int channels;
-    //groups
+
     
 public:
-    Track (char *fileLocation);
+    FlacDemon::File* file;
+    struct MediaStreamInfo * mediaStreamInfo;
+
+    Track (FlacDemon::File* file = NULL);
+    ~Track();
     
     void incrementPlaycount ();
     void decrementPlaycount ();
@@ -40,6 +36,7 @@ public:
     template <class KValue>
     void setValueForKey(KValue value, char* key);
     
+    void setFile(FlacDemon::File*);
     void setValuesFromAudioContext(AVCodecContext*);
     
 //    void addGroup(&Group group);

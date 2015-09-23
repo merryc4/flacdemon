@@ -13,9 +13,6 @@
 #include "FlacDemonNameSpace.h"
 #include "File.h"
 
-#define FLACDEMON_METADATA_MULTIPLE_VALUES "FlacDemonMetaDataMultipleValues"
-
-
 
 class FlacDemon::FileImporter {
 protected:

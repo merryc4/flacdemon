@@ -6,17 +6,18 @@
 //  Copyright (c) 2015 c4software. All rights reserved.
 //
 
-#include "Track.h"
+#include "TrackFile.h"
 
+FlacDemon::Track::Track(FlacDemon::File* file){
+    this->playCount = 0;
+    this->timeAdded = 0;
+    this->trackTime = 0;
+    if(file)
+        this->setFile(file);
+}
+FlacDemon::Track::~Track(){
 
-void FlacDemon::Track::setValuesFromAudioContext(AVCodecContext* codecContext){
-    this->bitRate = codecContext->sample_rate;
-    this->sampleRate = codecContext->sample_rate;
-    this->channels = codecContext->channels;
-    this->codecID = codecContext->codec_id;
-    
-    if(this->codecName != NULL){
-        delete this->codecName;
-    }
-    this->codecName = new string(codecContext->codec->name);
+}
+void FlacDemon::Track::setFile(FlacDemon::File * file){
+    this->file = file;
 }
