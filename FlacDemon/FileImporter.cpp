@@ -20,7 +20,7 @@ void FlacDemon::FileImporter::importFilesFromPath(string *path){
     cout << "-------------------------------------------------------" << endl;
     
     for(vector<FlacDemon::File*>::iterator it = albumDirectories->begin(); it != albumDirectories->end(); it++){
-        cout << *(*it)->path << endl;
+        
     }
 }
 

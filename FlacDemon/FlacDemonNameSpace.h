@@ -32,6 +32,8 @@ namespace FlacDemon {
     class Track;
     class Group;
     class Album;
+    
+    class Database;
 };
 
 using namespace std;

@@ -15,6 +15,7 @@ FlacDemon::Demon::Demon() {
     
     this->commandParser = new FlacDemon::CommandParser();
     this->fileImporter = new FlacDemon::FileImporter();
+    this->database = new FlacDemon::Database();
     
     this->commandParser->setMapForDemon(this, new std::map<string, demonCommandFunction>{
         {"add", &FlacDemon::Demon::add},

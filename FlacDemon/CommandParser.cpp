@@ -20,7 +20,7 @@ void FlacDemon::CommandParser::getCommand() {
 string* FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";
 	string* input = new string();
-	getline(cin, *input);
+    getline(cin >> ws, *input);
 	return input;
 }
 void FlacDemon::CommandParser::parseCommand(string* command) {

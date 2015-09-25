@@ -12,17 +12,26 @@
 #include <iostream>
 #include <vector>
 #include "Track.h"
+
+#include "FlacDemonNameSpace.h"
+
 #define GroupTypeKeyArray ["Genre", "Composer", "Artist", "Album Artist", "Album", "Other"]
 #define GroupTypeUKeyArray ["GENRE", "COMPOSER", "ARTIST", "ALBUMARTIST", "ALBUM", "OTHER"]
+
 
 using namespace std;
 
 class FlacDemon::Group {
 protected:
-    const char* title;
-    const char* typeKey;
-    vector<FlacDemon::Track> tracks; //pointers?
-    vector<FlacDemon::Group> groups;
+    string * title;
+    string * typeKey;
+    string * filepath;
+    uint flags;
+    vector<FlacDemon::Track*> * tracks; //pointers?
+    vector<FlacDemon::Group*> * groups;
+    
+    Group(string * iTitle = NULL, string * iFilepath = NULL, string * iTypeKey = NULL);
+    ~Group();
     
 public:
     void add (FlacDemon::Track* track);
@@ -31,14 +40,14 @@ public:
     void remove (FlacDemon::Track* track);
     void remove (FlacDemon::Group* group);
     
-    void contains (FlacDemon::Track* track);
-    void contains (FlacDemon::Group* group);
+    bool contains (FlacDemon::Track* track);
+    bool contains (FlacDemon::Group* group);
     
     void removeFromGroups();
     unsigned int trackCount();
     
-    FlacDemon::Track* allTracks();
-    FlacDemon::Group* allGroups(const char* key=nullptr);
+    vector<FlacDemon::Track*> * allTracks();
+    vector<FlacDemon::Group*> * allGroups(const char* key=nullptr);
     
     //vector / arrays of tracks / groups
     

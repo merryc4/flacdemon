@@ -77,6 +77,7 @@ public:
     void setToMediaFile(AVFormatContext*);
     void makeTrack();
     void standardiseMetaTags();
+    string * standardiseKey(string* key);
     
     void setToDirectory();
     

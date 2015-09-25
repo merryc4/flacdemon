@@ -87,8 +87,9 @@ void FlacDemon::File::addFile(FlacDemon::File * file){
     this->files->push_back(file);
     if(file->isDirectory()){
         this->flags = this->flags | FLACDEMON_DIRECTORY_HAS_SUBDIRECTORIES;
-        if(file->isMediaFile())
+        if(file->isMediaFile() || file->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA)
             this->flags = this->flags | FLACDEMON_SUBDIRECTORY_HAS_MEDIA;
+        
     } else if(file->isMediaFile()){
         this->flags = this->flags | FLACDEMON_FILE_IS_MEDIA;
         if(this->codecID == AV_CODEC_ID_NONE){
@@ -104,7 +105,7 @@ void FlacDemon::File::addFile(FlacDemon::File * file){
 void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
     AVDictionaryEntry *copyFrom = NULL, *copyTo=NULL;
     const char * value=NULL;
-    while ((copyFrom = av_dict_get(file->metadata, "", copyFrom, 0))){
+    while ((copyFrom = av_dict_get(file->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX))){
         if((copyTo = av_dict_get(this->metadata, copyFrom->key, copyTo, 0))
            && strcmp(copyTo->value, copyFrom->value) !=0 ){
             cout << "values for key '" << copyFrom->key << "' '" << copyTo->value << "' and '" << copyFrom->value << "' do not match" << endl;
@@ -188,14 +189,13 @@ bool FlacDemon::File::isAlbumDirectory(){
     bool albumConsistency = false,
     artistConsistency = false;
     
-    regex e("album[^a-zA-Z]artist", regex_constants::icase);
     
     for(vector<string*>::iterator it = this->consistentMetadata->begin(); it != this->consistentMetadata->end(); it++){
         cout << **it << ", ";
         if(((*it)->compare("album"))==0 ) {
             albumConsistency = true;
-        } else if (regex_match((**it), e)) {
-            albumConsistency = true;
+        } else if ((*it)->compare("albumartist")==0) {
+            artistConsistency = true;
         } else if(((*it)->compare("artist"))==0){
             artistConsistency = true;
         }
@@ -284,12 +284,24 @@ void FlacDemon::File::makeTrack(){
 }
 void FlacDemon::File::standardiseMetaTags(){
     // this function is not finished
-    AVDictionaryEntry *copyFrom = NULL, *copyTo=NULL;
-    const char * value=NULL;
-    while ((copyFrom = av_dict_get(this->metadata, "", copyFrom, 0))){
-        
-        av_dict_set(&this->metadata, copyFrom->key, copyFrom->value, 0);
+    AVDictionaryEntry *copyFrom = NULL;
+    string * key = NULL, * newKey = NULL;
+    while ((copyFrom = av_dict_get(this->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX))){
+        key = new string(copyFrom->key);
+        newKey = this->standardiseKey(key);
+        free(key);
+        if(key != newKey)
+            av_dict_set(&this->metadata, newKey->c_str(), copyFrom->value, 0);
     }
+}
+string * FlacDemon::File::standardiseKey(string *key){
+    key = new string(*key);
+    transform(key->begin(), key->end(), key->begin(), ::tolower);
+    regex e("album[^a-zA-Z]artist", regex_constants::icase);
+    if(regex_match((*key), e)){
+        key->assign("albumartist");
+    }
+    return key;
 }
 void FlacDemon::File::printMetaDataDict(AVDictionary *dict){
     cout << "Metadata for " << *this->path << ":" <<endl;
@@ -308,7 +320,7 @@ string* FlacDemon::File::getMetaDataEntry(const char *key){
 }
 vector<FlacDemon::File*> * FlacDemon::File::getAlbumDirectories(){
     vector<FlacDemon::File*> * albumDirectories = new vector<FlacDemon::File*>;
-    if(this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY){
+    if(this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA){
         vector<FlacDemon::File*> * subdirectoryAlbumDirectories = NULL;
         for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
             if(!((*it)->flags &

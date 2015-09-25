@@ -12,6 +12,7 @@
 #include "FlacDemonNameSpace.h"
 #include "CommandParser.h"
 #include "FileImporter.h"
+#include "Database.h"
 
 using namespace std;
 
@@ -20,6 +21,7 @@ protected:
     vector<string>* commands;
     FlacDemon::CommandParser* commandParser;
     FlacDemon::FileImporter* fileImporter;
+    FlacDemon::Database* database;
     
 public:
     Demon();
