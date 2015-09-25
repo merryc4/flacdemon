@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include "FlacDemonNameSpace.h"
+#include "File.h"
 
 class FlacDemon::Track {
     
@@ -31,7 +32,7 @@ public:
     void decrementPlaycount ();
     
     template <class KValue>
-    KValue valueForKey (char* key);
+    KValue valueForKey (const char* key);
     
     template <class KValue>
     void setValueForKey(KValue value, char* key);
@@ -45,8 +46,11 @@ public:
 };
 
 template <class KValue>
-KValue FlacDemon::Track::valueForKey(char* key){
-    
+KValue FlacDemon::Track::valueForKey(const char* key){
+    if(this->file){
+        return this->file->getMetaDataEntry(key);
+    }
+    return NULL;
 }
 
 template <class KValue>

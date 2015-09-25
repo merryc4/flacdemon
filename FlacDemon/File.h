@@ -32,8 +32,9 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_FILE_IS_NON_MEDIA     16
 #define FLACDEMON_DIRECTORY_HAS_MULTIPLE_CODECS 32
 #define FLACDEMON_SUBDIRECTORY_HAS_MEDIA 64
+#define FLACDEMON_FILE_IS_MEDIA_DIRECTORY 128
 
-#define FLACDEMON_FILE_IS_MEDIA_DIRECTORY (FLACDEMON_FILE_IS_MEDIA & FLACDEMON_FILE_IS_DIRECTORY)
+#define FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA (FLACDEMON_FILE_IS_MEDIA_DIRECTORY | FLACDEMON_SUBDIRECTORY_HAS_MEDIA)
 
 class FlacDemon::File {
 private:
@@ -78,15 +79,17 @@ public:
     void makeTrack();
     void standardiseMetaTags();
     string * standardiseKey(string* key);
+    const char * standardiseKey(const char *key);
     
     void setToDirectory();
     
     void printMetaDataDict(AVDictionary* dict);
-    string* getMetaDataEntry(const char* key);
-    string* getMetaDataEntry(string* key);
+    const char* getMetaDataEntry(const char* key);
+    const char* getMetaDataEntry(string* key);
     
-    vector<FlacDemon::File*> * getAlbumDirectories();
-    vector<FlacDemon::File*> * getNoneAlbumFiles();
+    vector<FlacDemon::File*> * getAlbumDirectories(int depth = INT_MAX);
+    vector<FlacDemon::File*> * getMediaFiles(int depth = INT_MAX);
+    vector<FlacDemon::File*> * getNoneAlbumFiles(int depth = INT_MAX);
 };
 
 #endif /* defined(__FlacDemon__File__) */

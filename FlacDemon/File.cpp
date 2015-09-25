@@ -87,11 +87,12 @@ void FlacDemon::File::addFile(FlacDemon::File * file){
     this->files->push_back(file);
     if(file->isDirectory()){
         this->flags = this->flags | FLACDEMON_DIRECTORY_HAS_SUBDIRECTORIES;
-        if(file->isMediaFile() || file->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA)
+        if(file->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA)
             this->flags = this->flags | FLACDEMON_SUBDIRECTORY_HAS_MEDIA;
         
     } else if(file->isMediaFile()){
         this->flags = this->flags | FLACDEMON_FILE_IS_MEDIA;
+        this->flags = this->flags | FLACDEMON_FILE_IS_MEDIA_DIRECTORY;
         if(this->codecID == AV_CODEC_ID_NONE){
             this->codecID = file->codecID;
         } else if(this->codecID != file->codecID){
@@ -118,8 +119,8 @@ void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
 }
 void FlacDemon::File::checkFileStructure(){
     int lookForCDs = 0;
-    if(!this->isMediaFile()){
-        if(!(lookForCDs = (this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA)))
+    if(!this->flags & FLACDEMON_FILE_IS_MEDIA){
+        if(!(lookForCDs = (this->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA)))
             return;
     }
 //    for(vector<FlacDemon::File*>::iterator it = files->begin(); it != files->end(); it++){
@@ -181,14 +182,15 @@ bool FlacDemon::File::isDirectory(){
     return this->flags & FLACDEMON_FILE_IS_DIRECTORY;
 }
 bool FlacDemon::File::isMediaFile(){
-    return this->flags & FLACDEMON_FILE_IS_MEDIA;
+    return this->flags & FLACDEMON_FILE_IS_MEDIA && !(this->flags & FLACDEMON_FILE_IS_DIRECTORY);
 }
 bool FlacDemon::File::isAlbumDirectory(){
-//    return (this->flags & FLACDEMON_FILE_IS_MEDIA && !(this->flags & (FLACDEMON_DIRECTORY_HAS_MULTIPLE_CODECS | FLACDEMON_SUBDIRECTORY_HAS_MEDIA))) ? true : false;
-//    return this->flags & FLACDEMON_DIRECTORY_IS_ALBUM ? true : false;
+
+    if(!(this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY))
+        return false;
+    
     bool albumConsistency = false,
     artistConsistency = false;
-    
     
     for(vector<string*>::iterator it = this->consistentMetadata->begin(); it != this->consistentMetadata->end(); it++){
         cout << **it << ", ";
@@ -286,12 +288,16 @@ void FlacDemon::File::standardiseMetaTags(){
     // this function is not finished
     AVDictionaryEntry *copyFrom = NULL;
     string * key = NULL, * newKey = NULL;
+    std::vector<std::pair<string *, const char *>> toAdd;
     while ((copyFrom = av_dict_get(this->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX))){
         key = new string(copyFrom->key);
         newKey = this->standardiseKey(key);
         free(key);
         if(key != newKey)
-            av_dict_set(&this->metadata, newKey->c_str(), copyFrom->value, 0);
+            toAdd.push_back(*new std::pair<string *, const char*>{newKey, copyFrom->value});
+    }
+    for(std::vector<std::pair<string *, const char *>>::iterator it = toAdd.begin(); it != toAdd.end(); it++){
+        av_dict_set(&this->metadata, (*it).first->c_str(), (*it).second, 0);
     }
 }
 string * FlacDemon::File::standardiseKey(string *key){
@@ -303,6 +309,9 @@ string * FlacDemon::File::standardiseKey(string *key){
     }
     return key;
 }
+const char * FlacDemon::File::standardiseKey(const char *key){
+    return this->standardiseKey(new string(key))->c_str();
+}
 void FlacDemon::File::printMetaDataDict(AVDictionary *dict){
     cout << "Metadata for " << *this->path << ":" <<endl;
     AVDictionaryEntry *t = NULL;
@@ -311,25 +320,29 @@ void FlacDemon::File::printMetaDataDict(AVDictionary *dict){
     }
     cout <<endl<<endl;
 }
-string* FlacDemon::File::getMetaDataEntry(string* key){
+const char* FlacDemon::File::getMetaDataEntry(string* key){
     return this->getMetaDataEntry(key->c_str());
 }
-string* FlacDemon::File::getMetaDataEntry(const char *key){
+const char* FlacDemon::File::getMetaDataEntry(const char *key){
+//    const char * tKey = this->standardiseKey(key);
     AVDictionaryEntry *t = av_dict_get(this->metadata, key, NULL, AV_DICT_IGNORE_SUFFIX);
-    return new string(t->value);
+    if(!t)
+        return NULL;
+    char * str = (char*)malloc(sizeof(t->value));
+    strcpy(str, t->value);
+    return (const char*)str;
 }
-vector<FlacDemon::File*> * FlacDemon::File::getAlbumDirectories(){
+vector<FlacDemon::File*> * FlacDemon::File::getAlbumDirectories(int max){
     vector<FlacDemon::File*> * albumDirectories = new vector<FlacDemon::File*>;
-    if(this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA){
+    if(max > 0 && this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA){
         vector<FlacDemon::File*> * subdirectoryAlbumDirectories = NULL;
         for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
-            if(!((*it)->flags &
-                 FLACDEMON_FILE_IS_DIRECTORY))
+            if(!((*it)->flags & FLACDEMON_FILE_IS_DIRECTORY))
                 continue;
             if((*it)->isAlbumDirectory()){
                 albumDirectories->push_back(*it);
-            } else if((*it)->flags && FLACDEMON_FILE_IS_MEDIA_DIRECTORY){
-                subdirectoryAlbumDirectories = (*it)->getAlbumDirectories();
+            } else if((*it)->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY){
+                subdirectoryAlbumDirectories = (*it)->getAlbumDirectories(max - 1);
                 albumDirectories->insert(albumDirectories->end(), subdirectoryAlbumDirectories->begin(), subdirectoryAlbumDirectories->end());
                 free(subdirectoryAlbumDirectories);
             }
@@ -340,7 +353,26 @@ vector<FlacDemon::File*> * FlacDemon::File::getAlbumDirectories(){
     }
     return albumDirectories;
 }
-vector<FlacDemon::File*> * FlacDemon::File::getNoneAlbumFiles(){
+vector<FlacDemon::File*> * FlacDemon::File::getMediaFiles(int max){
+    vector<FlacDemon::File*> * mediaFiles = new vector<FlacDemon::File*>;
+    if(max > 0 && this->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
+        vector<FlacDemon::File*> * subdirectoryMediaFiles = NULL;
+        for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
+            if((*it)->isMediaFile()){
+                mediaFiles->push_back(*it);
+            } else if((*it)->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
+                subdirectoryMediaFiles = (*it)->getMediaFiles(max - 1);
+                mediaFiles->insert(mediaFiles->end(), subdirectoryMediaFiles->begin(), subdirectoryMediaFiles->end());
+                free(subdirectoryMediaFiles);
+            }
+        }
+    }
+    if(this->isMediaFile()){
+        mediaFiles->push_back(this);
+    }
+    return mediaFiles;
+}
+vector<FlacDemon::File*> * FlacDemon::File::getNoneAlbumFiles(int max){
     
     return NULL;
 }

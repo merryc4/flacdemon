@@ -15,6 +15,7 @@
 #include "FlacDemonNameSpace.h"
 //#include "Group.h"
 #include "File.h"
+#include "Track.h"
 
 class FlacDemon::Database {
 protected:
@@ -37,6 +38,7 @@ public:
     void initSignals();
     void signalReceiver(const char * signalName, void * arg);
     void addAlbumDirectory(FlacDemon::File * albumDirectory);
+    void add(FlacDemon::File * file);
     void add(FlacDemon::Track* track);
 };
 

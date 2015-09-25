@@ -32,6 +32,9 @@ void FlacDemon::FileImporter::importFilesFromPath(string *path){
     for(vector<FlacDemon::File*>::iterator it = albumDirectories->begin(); it != albumDirectories->end(); it++){
         signalHandler->call("addAlbumDirectory", (*it));
     }
+    
+    //need to free memory allocated in getAlbumDirectories
+    
 }
 
 
