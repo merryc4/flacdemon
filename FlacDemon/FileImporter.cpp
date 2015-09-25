@@ -8,6 +8,16 @@
 
 #include "FileImporter.h"
 
+FlacDemon::FileImporter::FileImporter(){
+//    signalHandler->signals("sig1")->connect(boost::bind(&FlacDemon::FileImporter::sigtest, this, _1));
+//    signalHandler->call("sig1");
+}
+FlacDemon::FileImporter::~FileImporter(){
+    
+}
+void FlacDemon::FileImporter::sigtest(const char * signalName){
+    cout << "hello world\n";
+}
 void FlacDemon::FileImporter::importFilesFromPath(string *path){
 	cout << "Importing files from " << path << endl;
     FlacDemon::File * file = new FlacDemon::File(path);
@@ -20,7 +30,7 @@ void FlacDemon::FileImporter::importFilesFromPath(string *path){
     cout << "-------------------------------------------------------" << endl;
     
     for(vector<FlacDemon::File*>::iterator it = albumDirectories->begin(); it != albumDirectories->end(); it++){
-        
+        signalHandler->call("addAlbumDirectory", (*it));
     }
 }
 

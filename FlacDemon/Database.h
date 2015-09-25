@@ -13,9 +13,10 @@
 #include <sqlite3.h>
 
 #include "FlacDemonNameSpace.h"
-#include "Group.h"
+//#include "Group.h"
+#include "File.h"
 
-class FlacDemon::Database : public FlacDemon::Group {
+class FlacDemon::Database {
 protected:
     
     struct SQLStatements {
@@ -23,14 +24,18 @@ protected:
         
     } sql_statements;
     
-    void initDB();
     sqlite3 * openDB();
     void closeDB(sqlite3 * db);
+    void runSQL(const char * sql, int (*callback)(void*,int,char**,char**) = NULL, void * arg = NULL); //add callback
+    
+    void initDB();
     
 public:
     Database();
     ~Database();
     
+    void initSignals();
+    void signalReceiver(const char * signalName, void * arg);
     void addAlbumDirectory(FlacDemon::File * albumDirectory);
     void add(FlacDemon::Track* track);
 };

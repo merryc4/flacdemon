@@ -10,26 +10,24 @@
 
 FlacDemon::Database::Database(){
     this->initDB();
+    this->initSignals();
 }
 FlacDemon::Database::~Database(){
     
 }
-void FlacDemon::Database::initDB(){
-    sqlite3 * db = this->openDB();
-    if(!db)
-        return;
-    char * err = NULL;
+void FlacDemon::Database::initSignals(){
+    auto f = boost::bind(&FlacDemon::Database::signalReceiver, this, _1, _2);
+    signalHandler->signals("addAlbumDirectory")->connect(f);
     
-    sqlite3_exec(db, this->sql_statements.createTableTracks, NULL, NULL, &err);
-    
-    if(err){
-        cout << err << endl;
-        free(err);
+}
+void FlacDemon::Database::signalReceiver(const char * signalName, void * arg){
+    cout << "signal received: " << signalName << endl;
+    if(strcmp(signalName, "addAlbumDirectory")){
+        this->addAlbumDirectory(static_cast<FlacDemon::File *>(arg));
     }
 }
-
 void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
-    
+    std::cout << "add album directory: " << *albumDirectory->path << endl;
 }
 void FlacDemon::Database::add(FlacDemon::Track *track){
     
@@ -43,4 +41,21 @@ sqlite3 * FlacDemon::Database::openDB(){
 }
 void FlacDemon::Database::closeDB(sqlite3* db){
     sqlite3_close(db);
+}
+void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char**,char**), void * arg){
+    sqlite3 * db = this->openDB();
+    if(!db)
+        return;
+    char * err = NULL;
+    
+    sqlite3_exec(db, sql, callback, arg, &err);
+    
+    if(err){
+        cout << err << endl;
+        free(err);
+    }
+    this->closeDB(db);
+}
+void FlacDemon::Database::initDB(){
+    this->runSQL(this->sql_statements.createTableTracks, NULL);
 }

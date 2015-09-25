@@ -12,13 +12,17 @@
 #include <iostream>
 #include "FlacDemonNameSpace.h"
 #include "File.h"
+#include "SignalHandler.h"
 
 
 class FlacDemon::FileImporter {
 protected:
     
 public:
+    FileImporter();
+    ~FileImporter();
     void importFilesFromPath(string*);
+    void sigtest(const char * signalName);
 };
 
 

@@ -16,6 +16,8 @@
 #include <functional>
 #include <map>
 
+#include "SignalHandler.h"
+
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -47,5 +49,7 @@ struct MediaStreamInfo {
     unsigned long duration;
     AVCodecID codecID;
 };
+
+extern const SignalHandler * signalHandler;
 
 #endif

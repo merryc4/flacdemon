@@ -10,6 +10,8 @@
 #include "FlacDemonNameSpace.h"
 #include "FlacDemon.h"
 
+const SignalHandler * signalHandler = new SignalHandler();
+
 int main(int argc, const char * argv[])
 {
 
@@ -18,11 +20,12 @@ int main(int argc, const char * argv[])
     
     chdir("/Users/merryclarke/Documents/Xcode Projects/FlacDemon/");
     
-    FlacDemon::Demon* demon = new FlacDemon::Demon();
+    FlacDemon::Demon * demon = new FlacDemon::Demon();
     
     demon->run();
 
     delete demon;
+    delete signalHandler;
     
     
     return 0;
