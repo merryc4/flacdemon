@@ -277,7 +277,7 @@ void FlacDemon::File::setToMediaFile(AVFormatContext* formatContext){
     this->mediaStreamInfo->sampleRate = codecContext->sample_rate;
     this->mediaStreamInfo->channels = codecContext->channels;
     this->mediaStreamInfo->codecID = codecContext->codec_id;
-    this->mediaStreamInfo->duration = formatContext->duration;
+    this->mediaStreamInfo->duration = formatContext->streams[0]->duration;
     
     this->makeTrack();
 }
@@ -325,6 +325,8 @@ const char* FlacDemon::File::getMetaDataEntry(string* key){
 }
 const char* FlacDemon::File::getMetaDataEntry(const char *key){
 //    const char * tKey = this->standardiseKey(key);
+    if(key == NULL)
+        return NULL;
     AVDictionaryEntry *t = av_dict_get(this->metadata, key, NULL, AV_DICT_IGNORE_SUFFIX);
     if(!t)
         return NULL;

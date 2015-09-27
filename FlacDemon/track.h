@@ -10,18 +10,23 @@
 #define __FlacDemon__Track__
 
 #include <iostream>
+#include <time.h>
 #include "FlacDemonNameSpace.h"
 #include "File.h"
 
 class FlacDemon::Track {
     
 protected:
-    time_t timeAdded;
+    time_t dateAdded;
     unsigned int playCount;
     time_t trackTime;
-
+    
+    std::string * filepath;
+    
+    std::map<std::string, long> * trackinfo;
     
 public:
+    string * uuid;
     FlacDemon::File* file;
     struct MediaStreamInfo * mediaStreamInfo;
 
@@ -31,31 +36,20 @@ public:
     void incrementPlaycount ();
     void decrementPlaycount ();
     
-    template <class KValue>
-    KValue valueForKey (const char* key);
-    
-    template <class KValue>
-    void setValueForKey(KValue value, char* key);
+    const char * valueForKey (std::string * key);
+    void setValueForKey(std::string * value, std::string* key);
+
+    long getTrackInfoForKey(const char * key);
+    long getTrackInfoForKey(std::string * key);
     
     void setFile(FlacDemon::File*);
     void setValuesFromAudioContext(AVCodecContext*);
+    
+    void initInfo();
     
 //    void addGroup(&Group group);
 //    void removeGroup(&Group group);
     
 };
-
-template <class KValue>
-KValue FlacDemon::Track::valueForKey(const char* key){
-    if(this->file){
-        return this->file->getMetaDataEntry(key);
-    }
-    return NULL;
-}
-
-template <class KValue>
-void FlacDemon::Track::setValueForKey(KValue value, char *key){
-    
-}
 
 #endif /* defined(__FlacDemon__Track__) */

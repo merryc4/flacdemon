@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <sqlite3.h>
+#include <boost/format.hpp>
 
 #include "FlacDemonNameSpace.h"
 //#include "Group.h"
@@ -21,9 +22,30 @@ class FlacDemon::Database {
 protected:
     
     struct SQLStatements {
-        const char * createTableTracks = "create table if not exists `tracks` (id int, Number int, Title varchar(255), AlbumArtist varchar(255), Artist varchar(255), Album varchar(255), Genre varchar(255), Composer varchar(255), Disc unsigned int, Time unsigned int, PlayCount unsigned int, DateAdded unsigned int)";
+        const char * createTableTracksFormat = "create table if not exists `tracks` (id INTEGER PRIMARY KEY AUTOINCREMENT, %s)";
+        char * fields = NULL;
+        char * addTrackFormat = "insert into tracks (%s) values(%s)";
         
     } sql_statements;
+    
+    std::vector<std::string> * metakeys = new std::vector<std::string>{
+        "track",
+        "title",
+        "albumartist",
+        "artist",
+        "album",
+        "genre",
+        "composer",
+        "disc"
+    };
+    std::vector<std::string> * trackinfokeys = new std::vector<std::string>{
+        "tracktime",
+        "playcount",
+        "dateadded",
+        "filepath"
+    };
+    
+    std::vector<std::string> * allkeys = new std::vector<std::string>;
     
     sqlite3 * openDB();
     void closeDB(sqlite3 * db);

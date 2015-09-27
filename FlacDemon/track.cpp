@@ -10,8 +10,19 @@
 
 FlacDemon::Track::Track(FlacDemon::File* file){
     this->playCount = 0;
-    this->timeAdded = 0;
+    this->dateAdded = 0;
     this->trackTime = 0;
+    
+    this->trackinfo = new std::map<std::string, long>{
+        {"playcount", 0},
+        {"dateadded", 0},
+        {"tracktime", 0}
+    };
+    
+//    boost::uuids
+//    boost::uuids::uuid u = gen();
+//    to_string(u);
+    
     if(file)
         this->setFile(file);
 }
@@ -20,4 +31,42 @@ FlacDemon::Track::~Track(){
 }
 void FlacDemon::Track::setFile(FlacDemon::File * file){
     this->file = file;
+    this->trackinfo->at("tracktime") = (long) this->file->mediaStreamInfo->duration / (0.001 * this->file->mediaStreamInfo->sampleRate);
+    
+    this->filepath = new std::string(*file->path);
+}
+//template <class KValue>
+const char * FlacDemon::Track::valueForKey(std::string* key){
+    const char * value = NULL;
+    if(key->compare("filepath")==0){
+        return this->filepath->c_str();
+    }
+    if(this->file)
+        value = this->file->getMetaDataEntry(key);
+    //query db if no file?
+    if(value == NULL){
+        char * tvalue = new char [11];
+        sprintf(tvalue, "%ld", this->getTrackInfoForKey(key));
+        value = (const char *)tvalue;
+    }
+    return value;
+}
+
+//template <class KValue>
+void FlacDemon::Track::setValueForKey(std::string * value, std::string *key){
+    
+}
+long FlacDemon::Track::getTrackInfoForKey(const char * key){
+    std::string tkey = key;
+    return this->getTrackInfoForKey(&tkey);
+}
+long FlacDemon::Track::getTrackInfoForKey(std::string * key){
+    if(this->trackinfo->count(*key)){
+        return this->trackinfo->at(*key);
+    }
+    return -1;
+}
+void FlacDemon::Track::initInfo(){
+    cout << time(NULL) << endl;
+    this->trackinfo->at("dateadded") = time(NULL);
 }

@@ -38,22 +38,29 @@ void FlacDemon::Database::add(FlacDemon::File * file){
 }
 void FlacDemon::Database::add(FlacDemon::Track *track){
     cout << "adding track: " << *track->file->path << endl;
-    const char * tracknum, *title, *artist, *albumartist, *album, *genre, *composer, *disc;
-    uint time=0, playcount=0, dateadded=0;
     
-    tracknum = track->file->getMetaDataEntry("track");
-    title = track->file->getMetaDataEntry("title");
-    artist = track->file->getMetaDataEntry("artist");
-    albumartist = track->file->getMetaDataEntry("albumartist");
-    album = track->file->getMetaDataEntry("album");
-    genre = track->file->getMetaDataEntry("genre");
-    composer = track->file->getMetaDataEntry("composer");
-    disc = track->file->getMetaDataEntry("disc");
+    track->initInfo();
     
-    int size = snprintf(NULL, 0, "%s", track->file->getMetaDataEntry("Title"));
-    char * sql = (char *)malloc(size + 1);
-    sprintf(sql, "%s", track->valueForKey<const char *>("Title"));
-    cout << sql << endl;
+    std::string sql="'";
+    for(std::vector<std::string>::iterator it = this->allkeys->begin(); it != this->allkeys->end(); it++){
+        sql.append(track->valueForKey(&(*it)));
+        sql.append("','");
+    }
+    sql.pop_back();
+//    for(std::vector<std::string>::iterator it = this->trackinfokeys->begin(); it != this->trackinfokeys->end(); it++){
+//        sql.append(track->valueForKey<const char*>((*it).c_str()));
+//        sql.append(",");
+//    }
+    sql.pop_back();
+    
+    std::string sql2 = this->sql_statements.addTrackFormat;
+    size_t pos = sql2.find("%s");
+    sql2.erase(pos, 2);
+    sql2.insert(pos, sql);
+    
+    cout << sql2.c_str() << endl;
+    this->runSQL(sql2.c_str());
+//    this->runSQL("insert into tracks (track,title,albumartist,artist,album,genre,composer,disc,tracktime,playcount,dateadded) values('01','The Fusion','Dusty Fingers','Jason Havelock','Dusty Fingers','','','00','','','')");
 }
 sqlite3 * FlacDemon::Database::openDB(){
     sqlite3 * db = NULL;
@@ -80,5 +87,53 @@ void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char*
     this->closeDB(db);
 }
 void FlacDemon::Database::initDB(){
-    this->runSQL(this->sql_statements.createTableTracks, NULL);
+    this->runSQL("drop table `tracks`");
+    
+    std::string sql="";
+    std::string fields="";
+    for(std::vector<std::string>::iterator it = this->metakeys->begin(); it != this->metakeys->end(); it++){
+        sql.append((*it));
+        sql.append(" varchar(255),");
+        
+        fields.append((*it));
+        fields.append(",");
+        
+        this->allkeys->push_back(*(new std::string((*it))));
+    }
+    for(std::vector<std::string>::iterator it = this->trackinfokeys->begin(); it != this->trackinfokeys->end(); it++){
+        sql.append((*it));
+//        sql.append(" unsigned int,");
+        sql.append(" varchar(255),");
+
+        
+        fields.append((*it));
+        fields.append(",");
+        
+        this->allkeys->push_back(*(new std::string((*it)))); //messy, use vector of string pointers intstead
+    }
+    
+    sql.pop_back();
+    fields.pop_back();
+    
+    std::string sql2 = this->sql_statements.createTableTracksFormat;
+    size_t pos = sql2.find("%s");
+    sql2.erase(pos, 2);
+    sql2.insert(pos, sql);
+    
+    cout << sql2 << endl;
+    this->runSQL(sql2.c_str(), NULL);
+    
+    std::string addTrackSQL = this->sql_statements.addTrackFormat;
+    pos = addTrackSQL.find("%s");
+    addTrackSQL.erase(pos, 2);
+    addTrackSQL.insert(pos, fields);
+    this->sql_statements.addTrackFormat = new char [addTrackSQL.length() + 1];
+    std::strcpy(this->sql_statements.addTrackFormat, addTrackSQL.c_str());
+    
+    this->sql_statements.fields = new char [fields.length() + 1];
+    std::strcpy(this->sql_statements.fields, fields.c_str());
+    
 }
+
+
+

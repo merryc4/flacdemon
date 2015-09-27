@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <boost/uuid/uuid.hpp>
 
 #include "SignalHandler.h"
 
