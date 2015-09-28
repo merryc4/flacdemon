@@ -13,6 +13,7 @@
 #include "CommandParser.h"
 #include "FileImporter.h"
 #include "Database.h"
+#include "Player.h"
 
 using namespace std;
 
@@ -22,6 +23,7 @@ protected:
     FlacDemon::CommandParser* commandParser;
     FlacDemon::FileImporter* fileImporter;
     FlacDemon::Database* database;
+    FlacDemon::Player * player;
     
 public:
     Demon();

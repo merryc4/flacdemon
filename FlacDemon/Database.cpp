@@ -9,6 +9,26 @@
 #include "Database.h"
 
 FlacDemon::Database::Database(){
+//    this->sqlSelectStatment = NULL;
+
+    this->allkeys = new std::vector<std::string>;
+
+    this->metakeys = new std::vector<std::string>{
+        "track",
+        "title",
+        "albumartist",
+        "artist",
+        "album",
+        "genre",
+        "composer",
+        "disc"
+    };
+    this->trackinfokeys = new std::vector<std::string>{
+        "tracktime",
+        "playcount",
+        "dateadded",
+        "filepath"
+    };
     this->initDB();
     this->initSignals();
 }
@@ -64,13 +84,13 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
 }
 sqlite3 * FlacDemon::Database::openDB(){
     sqlite3 * db = NULL;
-    if(sqlite3_open("flacdemon.db", &db) != SQLITE_OK){
+    if(sqlite3_open_v2("flacdemon.db", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) != SQLITE_OK){
         cout << "error opening sqlite3 database, err code: " << sqlite3_errcode(db) << ". err msg: " << sqlite3_errmsg(db);
     }
     return db;
 }
 void FlacDemon::Database::closeDB(sqlite3* db){
-    sqlite3_close(db);
+    sqlite3_close_v2(db);
 }
 void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char**,char**), void * arg){
     sqlite3 * db = this->openDB();
@@ -86,8 +106,58 @@ void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char*
     }
     this->closeDB(db);
 }
+FD_SQLRESULTS * FlacDemon::Database::sqlSelect(std::string *sql){
+    return this->sqlSelect(sql->c_str());
+}
+FD_SQLRESULTS * FlacDemon::Database::sqlSelect(const char *sql){
+    sqlite3_stmt * stmt;
+    if(this->sqlSelectStatment == NULL){
+        if(sql == NULL)
+            return NULL;
+        sqlite3 * db = this->openDB();
+        if(!db)
+            return NULL;
+        if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK){
+            //error
+            cout << "Error occured while preparing sql statement: " << sql << endl;
+            return NULL;
+        }
+        this->sqlSelectStatment = stmt;
+    } else {
+        stmt = this->sqlSelectStatment;
+    }
+    FD_SQLRESULTS * results = new FD_SQLRESULTS;
+    int stepCode, columns, i;
+    const unsigned char * value = NULL;
+    const char * key = NULL;
+    if ((stepCode = sqlite3_step(stmt)) == SQLITE_ROW) {
+        columns = sqlite3_column_count(stmt);
+        for (i = 0; i < columns; i++) {
+            if((value = sqlite3_column_text(stmt, i)) && (key = sqlite3_column_name(stmt, i))){
+                results->insert(std::pair<std::string, const unsigned char *>(*new std::string(key), value)); //will need to free the key
+            }
+            
+        }
+    } else {
+        if(stepCode != SQLITE_DONE){
+            //error occurred, check result code
+            cout << "Error stepping through sql select" << endl;
+        }
+        this->clearSelect();
+    }
+
+    return results;
+}
+void FlacDemon::Database::clearSelect(){
+    if(this->sqlSelectStatment != NULL){
+        sqlite3 * db = sqlite3_db_handle(this->sqlSelectStatment);
+        sqlite3_finalize(this->sqlSelectStatment);
+        this->closeDB(db);
+        this->sqlSelectStatment = NULL;
+    }
+}
 void FlacDemon::Database::initDB(){
-    this->runSQL("drop table `tracks`");
+//    this->runSQL("drop table if exists `tracks`");
     
     std::string sql="";
     std::string fields="";
@@ -98,7 +168,8 @@ void FlacDemon::Database::initDB(){
         fields.append((*it));
         fields.append(",");
         
-        this->allkeys->push_back(*(new std::string((*it))));
+        this->allkeys->push_back(*new std::string((*it)));
+
     }
     for(std::vector<std::string>::iterator it = this->trackinfokeys->begin(); it != this->trackinfokeys->end(); it++){
         sql.append((*it));
@@ -135,5 +206,21 @@ void FlacDemon::Database::initDB(){
     
 }
 
+FlacDemon::Track * FlacDemon::Database::trackForID(long ID){
+    std::string sql = "select * from tracks where id=";
+    sql.append(std::to_string(ID));
+    FD_SQLRESULTS * results = this->sqlSelect(&sql);
+    this->clearSelect();
+    if(results->count("filepath")){
+        cout << "found track for id " << ID << endl;
+        return this->trackWithKeyMap(results);
+    }
+    return NULL;
+}
+FlacDemon::Track * FlacDemon::Database::trackWithKeyMap(FD_SQLRESULTS *keyMap){
+    FlacDemon::Track * track = new FlacDemon::Track(keyMap);
+    
+    return NULL;
+}
 
 

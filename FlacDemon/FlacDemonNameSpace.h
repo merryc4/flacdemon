@@ -37,6 +37,7 @@ namespace FlacDemon {
     class Album;
     
     class Database;
+    class Player;
 };
 
 using namespace std;
@@ -52,5 +53,7 @@ struct MediaStreamInfo {
 };
 
 extern const SignalHandler * signalHandler;
+
+typedef std::basic_string <unsigned char> ustring;
 
 #endif

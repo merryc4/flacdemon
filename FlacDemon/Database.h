@@ -18,38 +18,29 @@
 #include "File.h"
 #include "Track.h"
 
+#define FD_SQLRESULTS std::map<std::string, const unsigned char *>
+
 class FlacDemon::Database {
 protected:
     
     struct SQLStatements {
         const char * createTableTracksFormat = "create table if not exists `tracks` (id INTEGER PRIMARY KEY AUTOINCREMENT, %s)";
         char * fields = NULL;
-        char * addTrackFormat = "insert into tracks (%s) values(%s)";
-        
+        char * addTrackFormat = (char *)"insert into tracks (%s) values(%s)";
     } sql_statements;
     
-    std::vector<std::string> * metakeys = new std::vector<std::string>{
-        "track",
-        "title",
-        "albumartist",
-        "artist",
-        "album",
-        "genre",
-        "composer",
-        "disc"
-    };
-    std::vector<std::string> * trackinfokeys = new std::vector<std::string>{
-        "tracktime",
-        "playcount",
-        "dateadded",
-        "filepath"
-    };
+    std::vector<std::string> * metakeys;
+    std::vector<std::string> * trackinfokeys;
+    std::vector<std::string> * allkeys;
     
-    std::vector<std::string> * allkeys = new std::vector<std::string>;
+    sqlite3_stmt * sqlSelectStatment = NULL;
     
     sqlite3 * openDB();
     void closeDB(sqlite3 * db);
-    void runSQL(const char * sql, int (*callback)(void*,int,char**,char**) = NULL, void * arg = NULL); //add callback
+    void runSQL(const char * sql, int (*callback)(void*,int,char**,char**) = NULL, void * arg = NULL); //add return code
+    FD_SQLRESULTS * sqlSelect(std::string * sql);
+    FD_SQLRESULTS * sqlSelect(const char * sql);
+    void clearSelect();
     
     void initDB();
     
@@ -62,6 +53,9 @@ public:
     void addAlbumDirectory(FlacDemon::File * albumDirectory);
     void add(FlacDemon::File * file);
     void add(FlacDemon::Track* track);
+    
+    FlacDemon::Track * trackForID(long ID);
+    FlacDemon::Track * trackWithKeyMap(FD_SQLRESULTS * keyMap);
 };
 
 #endif /* defined(__FlacDemon__Database__) */

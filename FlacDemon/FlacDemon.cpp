@@ -16,6 +16,9 @@ FlacDemon::Demon::Demon() {
     this->commandParser = new FlacDemon::CommandParser();
     this->fileImporter = new FlacDemon::FileImporter();
     this->database = new FlacDemon::Database();
+    this->player = new FlacDemon::Player();
+    
+    this->player->setDatabase(this->database);
     
     this->commandParser->setMapForDemon(this, new std::map<string, demonCommandFunction>{
         {"add", &FlacDemon::Demon::add},
@@ -45,5 +48,6 @@ int FlacDemon::Demon::add(vector<string> * args){
 }
 int FlacDemon::Demon::play(vector<string> * args){
     cout << "play some tunes" << endl;
+    this->player->playTrackWithID(1);
     return 0;
 }

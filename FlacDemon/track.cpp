@@ -9,6 +9,21 @@
 #include "TrackFile.h"
 
 FlacDemon::Track::Track(FlacDemon::File* file){
+    this->init();
+    if(file)
+        this->setFile(file);
+}
+FlacDemon::Track::Track(FD_KEYMAP * ikeymap){
+    Track();
+    this->keymap = ikeymap;
+//    for(FD_KEYMAP::iterator it = keymap->begin(); it != keymap->end(); it++){
+//        this->setValueForKey(it->second, &(it->first));
+//    }
+}
+FlacDemon::Track::~Track(){
+
+}
+void FlacDemon::Track::init(){
     this->playCount = 0;
     this->dateAdded = 0;
     this->trackTime = 0;
@@ -18,16 +33,6 @@ FlacDemon::Track::Track(FlacDemon::File* file){
         {"dateadded", 0},
         {"tracktime", 0}
     };
-    
-//    boost::uuids
-//    boost::uuids::uuid u = gen();
-//    to_string(u);
-    
-    if(file)
-        this->setFile(file);
-}
-FlacDemon::Track::~Track(){
-
 }
 void FlacDemon::Track::setFile(FlacDemon::File * file){
     this->file = file;
@@ -43,6 +48,8 @@ const char * FlacDemon::Track::valueForKey(std::string* key){
     }
     if(this->file)
         value = this->file->getMetaDataEntry(key);
+    else if(this->keymap)
+        value = this->keymap->at(*key);
     //query db if no file?
     if(value == NULL){
         char * tvalue = new char [11];
@@ -54,6 +61,9 @@ const char * FlacDemon::Track::valueForKey(std::string* key){
 
 //template <class KValue>
 void FlacDemon::Track::setValueForKey(std::string * value, std::string *key){
+    
+}
+void FlacDemon::Track::setValueForKey(const unsigned char * value, const std::string *key){
     
 }
 long FlacDemon::Track::getTrackInfoForKey(const char * key){
