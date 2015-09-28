@@ -18,7 +18,7 @@
 #include "File.h"
 #include "Track.h"
 
-#define FD_SQLRESULTS std::map<std::string, const unsigned char *>
+typedef std::map<std::string, const unsigned char *> fd_sqlresults;
 
 class FlacDemon::Database {
 protected:
@@ -33,13 +33,15 @@ protected:
     std::vector<std::string> * trackinfokeys;
     std::vector<std::string> * allkeys;
     
+    std::vector<FlacDemon::Track *> * openTracks = new std::vector<FlacDemon::Track *>;
+    
     sqlite3_stmt * sqlSelectStatment = NULL;
     
     sqlite3 * openDB();
     void closeDB(sqlite3 * db);
     void runSQL(const char * sql, int (*callback)(void*,int,char**,char**) = NULL, void * arg = NULL); //add return code
-    FD_SQLRESULTS * sqlSelect(std::string * sql);
-    FD_SQLRESULTS * sqlSelect(const char * sql);
+    fd_keymap * sqlSelect(std::string * sql);
+    fd_keymap * sqlSelect(const char * sql);
     void clearSelect();
     
     void initDB();
@@ -55,7 +57,7 @@ public:
     void add(FlacDemon::Track* track);
     
     FlacDemon::Track * trackForID(long ID);
-    FlacDemon::Track * trackWithKeyMap(FD_SQLRESULTS * keyMap);
+    FlacDemon::Track * trackWithKeyMap(fd_keymap * keyMap);
 };
 
 #endif /* defined(__FlacDemon__Database__) */

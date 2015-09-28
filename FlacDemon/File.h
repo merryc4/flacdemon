@@ -41,14 +41,16 @@ private:
     vector<string*>* consistentMetadata;
     vector<string*>* inconsistentMetadata;
 public:
+    AVFormatContext * formatContext = NULL;
     
-    string * path;
-    string * type;
+    std::string * path;
+    std::string * type;
     AVCodecID codecID;
     AVDictionary * metadata;
     vector<FlacDemon::File*> *files;
     int error;
     bool exists;
+    bool readTags = true;
     
     unsigned int flags;
     
@@ -56,7 +58,7 @@ public:
     MediaStreamInfo * mediaStreamInfo;
     unsigned long fileSize;
     
-    File(string* path = NULL);
+    File(string* path = NULL, bool readTags = true);
     ~File();
     
     string* getPath();
@@ -75,6 +77,7 @@ public:
     bool isAlbumDirectory();
     
     int readMediaInfo();
+    int openFormatContext();
     void setToMediaFile(AVFormatContext*);
     void makeTrack();
     void standardiseMetaTags();
@@ -84,8 +87,8 @@ public:
     void setToDirectory();
     
     void printMetaDataDict(AVDictionary* dict);
-    const char* getMetaDataEntry(const char* key);
-    const char* getMetaDataEntry(string* key);
+    std::string* getMetaDataEntry(const char* key);
+    std::string* getMetaDataEntry(string* key);
     
     vector<FlacDemon::File*> * getAlbumDirectories(int depth = INT_MAX);
     vector<FlacDemon::File*> * getMediaFiles(int depth = INT_MAX);

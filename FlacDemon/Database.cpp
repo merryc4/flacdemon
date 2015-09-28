@@ -63,7 +63,7 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
     
     std::string sql="'";
     for(std::vector<std::string>::iterator it = this->allkeys->begin(); it != this->allkeys->end(); it++){
-        sql.append(track->valueForKey(&(*it)));
+        sql.append(*track->valueForKey(&(*it)));
         sql.append("','");
     }
     sql.pop_back();
@@ -106,10 +106,10 @@ void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char*
     }
     this->closeDB(db);
 }
-FD_SQLRESULTS * FlacDemon::Database::sqlSelect(std::string *sql){
+fd_keymap * FlacDemon::Database::sqlSelect(std::string *sql){
     return this->sqlSelect(sql->c_str());
 }
-FD_SQLRESULTS * FlacDemon::Database::sqlSelect(const char *sql){
+fd_keymap * FlacDemon::Database::sqlSelect(const char *sql){
     sqlite3_stmt * stmt;
     if(this->sqlSelectStatment == NULL){
         if(sql == NULL)
@@ -126,7 +126,7 @@ FD_SQLRESULTS * FlacDemon::Database::sqlSelect(const char *sql){
     } else {
         stmt = this->sqlSelectStatment;
     }
-    FD_SQLRESULTS * results = new FD_SQLRESULTS;
+    fd_keymap * results = new fd_keymap;
     int stepCode, columns, i;
     const unsigned char * value = NULL;
     const char * key = NULL;
@@ -134,7 +134,7 @@ FD_SQLRESULTS * FlacDemon::Database::sqlSelect(const char *sql){
         columns = sqlite3_column_count(stmt);
         for (i = 0; i < columns; i++) {
             if((value = sqlite3_column_text(stmt, i)) && (key = sqlite3_column_name(stmt, i))){
-                results->insert(std::pair<std::string, const unsigned char *>(*new std::string(key), value)); //will need to free the key
+                results->insert(std::pair<std::string, std::string *>(*new std::string(key), new std::string(value, value + sqlite3_column_bytes(stmt, i)))); //will need to free the key
             }
             
         }
@@ -207,9 +207,16 @@ void FlacDemon::Database::initDB(){
 }
 
 FlacDemon::Track * FlacDemon::Database::trackForID(long ID){
+    for(std::vector<FlacDemon::Track *>::iterator it = this->openTracks->begin(); it != this->openTracks->end(); it++){
+        std::string * value = NULL;
+        std::string strID = std::to_string(ID);
+        if((value = (*it)->valueForKey("id")) && value->compare(strID) == 0){
+            return (*it);
+        }
+    }
     std::string sql = "select * from tracks where id=";
     sql.append(std::to_string(ID));
-    FD_SQLRESULTS * results = this->sqlSelect(&sql);
+    fd_keymap * results = this->sqlSelect(&sql);
     this->clearSelect();
     if(results->count("filepath")){
         cout << "found track for id " << ID << endl;
@@ -217,10 +224,10 @@ FlacDemon::Track * FlacDemon::Database::trackForID(long ID){
     }
     return NULL;
 }
-FlacDemon::Track * FlacDemon::Database::trackWithKeyMap(FD_SQLRESULTS *keyMap){
+FlacDemon::Track * FlacDemon::Database::trackWithKeyMap(fd_keymap *keyMap){
     FlacDemon::Track * track = new FlacDemon::Track(keyMap);
-    
-    return NULL;
+    this->openTracks->push_back(track);
+    return track;
 }
 
 

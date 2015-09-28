@@ -10,17 +10,31 @@
 #define __FlacDemon__Player__
 
 #include <stdio.h>
+#include <ao/ao.h>
 #include "FlacDemonNameSpace.h"
 #include "Database.h"
 
 class FlacDemon::Player {
 private:
     FlacDemon::Database * database;
+    int defaultDriverID = -1;
+    ao_device * device = NULL;
+    ao_sample_format sampleFormat = {
+        16,
+        44100,
+        2,
+        AO_FMT_NATIVE, //revise whether we need to specify this
+        0
+    };
 protected:
     
 public:
+    Player();
+    ~Player();
+    
     void setDatabase(FlacDemon::Database * database);
     void playTrackWithID(long ID);
+    void playTrack(FlacDemon::Track * track);
 };
 
 #endif /* defined(__FlacDemon__Player__) */

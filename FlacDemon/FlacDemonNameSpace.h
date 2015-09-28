@@ -26,6 +26,8 @@ extern "C" {
 #include <libavutil/dict.h>
 }
 
+typedef std::map<std::string, std::string *> fd_keymap;
+
 namespace FlacDemon {
     class Demon;
     class CommandParser;
@@ -55,5 +57,6 @@ struct MediaStreamInfo {
 extern const SignalHandler * signalHandler;
 
 typedef std::basic_string <unsigned char> ustring;
+
 
 #endif

@@ -13,9 +13,10 @@ FlacDemon::Track::Track(FlacDemon::File* file){
     if(file)
         this->setFile(file);
 }
-FlacDemon::Track::Track(FD_KEYMAP * ikeymap){
+FlacDemon::Track::Track(fd_keymap * ikeymap){
     Track();
     this->keymap = ikeymap;
+    this->filepath = this->keymap->at("filepath");
 //    for(FD_KEYMAP::iterator it = keymap->begin(); it != keymap->end(); it++){
 //        this->setValueForKey(it->second, &(it->first));
 //    }
@@ -40,21 +41,23 @@ void FlacDemon::Track::setFile(FlacDemon::File * file){
     
     this->filepath = new std::string(*file->path);
 }
-//template <class KValue>
-const char * FlacDemon::Track::valueForKey(std::string* key){
-    const char * value = NULL;
+
+std::string * FlacDemon::Track::valueForKey (const char * key){
+    std::string tkey = key;
+    return this->valueForKey(&tkey);
+}
+std::string * FlacDemon::Track::valueForKey(std::string* key){
+    std::string * value = NULL;
     if(key->compare("filepath")==0){
-        return this->filepath->c_str();
+        return this->filepath;
     }
-    if(this->file)
-        value = this->file->getMetaDataEntry(key);
-    else if(this->keymap)
+    if(this->keymap)
         value = this->keymap->at(*key);
+    else if(this->file)
+        value = this->file->getMetaDataEntry(key);
     //query db if no file?
     if(value == NULL){
-        char * tvalue = new char [11];
-        sprintf(tvalue, "%ld", this->getTrackInfoForKey(key));
-        value = (const char *)tvalue;
+        value = new std::string(std::to_string(this->getTrackInfoForKey(key)));
     }
     return value;
 }
@@ -63,9 +66,9 @@ const char * FlacDemon::Track::valueForKey(std::string* key){
 void FlacDemon::Track::setValueForKey(std::string * value, std::string *key){
     
 }
-void FlacDemon::Track::setValueForKey(const unsigned char * value, const std::string *key){
-    
-}
+//void FlacDemon::Track::setValueForKey(const unsigned char * value, const std::string *key){
+//    
+//}
 long FlacDemon::Track::getTrackInfoForKey(const char * key){
     std::string tkey = key;
     return this->getTrackInfoForKey(&tkey);
@@ -79,4 +82,10 @@ long FlacDemon::Track::getTrackInfoForKey(std::string * key){
 void FlacDemon::Track::initInfo(){
     cout << time(NULL) << endl;
     this->trackinfo->at("dateadded") = time(NULL);
+}
+int FlacDemon::Track::openFilePath(){
+    //will need to do more checks, path exists, relative pathname, file opened succesfully etc
+    if(this->filepath && !this->file)
+        this->file = new FlacDemon::File(this->filepath, false);
+    return this->file==NULL ? 0 : 1;
 }

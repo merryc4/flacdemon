@@ -9,11 +9,10 @@
 #ifndef __FlacDemon__SignalHandler__
 #define __FlacDemon__SignalHandler__
 
-#define FD_SIGNAL boost::signals2::signal<void (const char *, void *)>
-#define FD_SIGNAL_FILE boost::signals2::signal<void (FlacDemon::File *)>
-
 #include <iostream>
 #include <boost/signals2.hpp>
+
+typedef boost::signals2::signal<void (const char *, void *)> fd_signal;
 
 class SignalHandler {
 protected:
@@ -24,9 +23,9 @@ public:
     void setSystemSignalHandler();
     static void systemSignalHandler(int signum);
         
-    std::map<const char *, FD_SIGNAL*> * signalMap;
+    std::map<const char *, fd_signal*> * signalMap;
     
-    FD_SIGNAL * signals(const char * signalName, bool returnNull = false) const; // return signal for key
+    fd_signal * signals(const char * signalName, bool returnNull = false) const; // return signal for key
     void call(const char * signalName, void * ) const;
 };
 

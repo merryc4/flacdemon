@@ -10,7 +10,7 @@
 
 const char * FlacDemonMetaDataMultipleValues = "FlacDemonMetaDataMultipleValues";
 
-FlacDemon::File::File(string* path){
+FlacDemon::File::File(string* path, bool readTags){
     this->codecID = AV_CODEC_ID_NONE;
     this->flags = 0;
     this->metadata = NULL;
@@ -18,6 +18,7 @@ FlacDemon::File::File(string* path){
     this->path = new string;
     this->error = 0;
     this->fileSize = 0;
+    this->readTags = readTags;
     
     if(path)
         this->setPath(path);
@@ -206,44 +207,25 @@ bool FlacDemon::File::isAlbumDirectory(){
 
     return albumConsistency && artistConsistency;
 }
-int FlacDemon::File::readMediaInfo(){
-    AVFormatContext* inputContext = avformat_alloc_context();
-    //    AVCodecContext** codecContext;
-    
-    int averror;
+int FlacDemon::File::readMediaInfo(){    
     AVCodec* inputCodec;
-    
-    /** Open the input file to read from it. */
-    if ((averror = avformat_open_input(&inputContext, this->path->c_str(), NULL,
-                                     NULL)) < 0) {
-        cout << "could not open input file" << endl;
-        //         fprintf(stderr, "Could not open input file '%s' (error '%s')\n",
-        //                 path, get_error_text(error));
-        inputContext = NULL;
-        return averror;
+    if(this->openFormatContext() < 0){
+        return -1;
     }
-    
+    int averror;
     /** Get information on the input file (number of streams etc.). */
-    if ((averror = avformat_find_stream_info(inputContext, NULL)) < 0) {
+    if ((averror = avformat_find_stream_info(this->formatContext, NULL)) < 0) {
         cout << "Could not open find stream info" << endl;
-        //         fprintf(stderr, "Could not open find stream info (error '%s')\n",
-        //                 get_error_text(error));
-        avformat_close_input(&inputContext);
+        avformat_close_input(&this->formatContext);
         return averror;
     }
     
-    /** Make sure that there is only one stream in the input file. */
-//    if ((inputContext)->nb_streams != 1) {
-//        fprintf(stderr, "Expected one audio input stream, but found %d\n",
-//                inputContext->nb_streams);
-//        avformat_close_input(&inputContext);
-//        return AVERROR_EXIT;
-//    }
+    //check streams
     
     /** Find a decoder for the audio stream. */
-    if (!(inputCodec = avcodec_find_decoder((inputContext)->streams[0]->codec->codec_id))) {
+    if (!(inputCodec = avcodec_find_decoder((this->formatContext)->streams[0]->codec->codec_id))) {
         fprintf(stderr, "Could not find input codec\n");
-        avformat_close_input(&inputContext);
+        avformat_close_input(&this->formatContext);
         return AVERROR_EXIT;
     }
     
@@ -251,12 +233,16 @@ int FlacDemon::File::readMediaInfo(){
         cout << "skipping none audio file " << *path << endl;
         this->flags = this->flags & ~ FLACDEMON_FILE_IS_MEDIA;
     } else {
-        this->setToMediaFile(inputContext);
+        this->setToMediaFile(this->formatContext);
     }
     
     this->codecID = inputCodec->id;
     
-    av_dict_copy(&this->metadata, inputContext->metadata, 0);
+    if(!this->readTags){
+        return 0;
+    }
+    
+    av_dict_copy(&this->metadata, this->formatContext->metadata, 0);
     
     this->standardiseMetaTags();
     
@@ -264,8 +250,22 @@ int FlacDemon::File::readMediaInfo(){
     
     cout << "Found decoder " << inputCodec->name << endl;
     
-    avformat_free_context(inputContext); //this calls free on metadata dict so need to copy fields to new dict
     return inputCodec->id;
+}
+int FlacDemon::File::openFormatContext(){
+    /** Open the input file to read from it. */
+    if(this->formatContext)
+        return 0;
+    int averror;
+    this->formatContext = avformat_alloc_context();
+
+    if ((averror = avformat_open_input(&this->formatContext, this->path->c_str(), NULL,
+                                       NULL)) < 0) {
+        cout << "could not open input file" << endl;
+        this->formatContext = NULL;
+        return averror;
+    }
+    return 0;
 }
 void FlacDemon::File::setToMediaFile(AVFormatContext* formatContext){
     this->flags = this->flags | FLACDEMON_FILE_IS_MEDIA;
@@ -320,19 +320,17 @@ void FlacDemon::File::printMetaDataDict(AVDictionary *dict){
     }
     cout <<endl<<endl;
 }
-const char* FlacDemon::File::getMetaDataEntry(string* key){
+std::string * FlacDemon::File::getMetaDataEntry(string* key){
     return this->getMetaDataEntry(key->c_str());
 }
-const char* FlacDemon::File::getMetaDataEntry(const char *key){
+std::string * FlacDemon::File::getMetaDataEntry(const char *key){
 //    const char * tKey = this->standardiseKey(key);
     if(key == NULL)
         return NULL;
     AVDictionaryEntry *t = av_dict_get(this->metadata, key, NULL, AV_DICT_IGNORE_SUFFIX);
     if(!t)
         return NULL;
-    char * str = (char*)malloc(sizeof(t->value));
-    strcpy(str, t->value);
-    return (const char*)str;
+    return new std::string(t->value);
 }
 vector<FlacDemon::File*> * FlacDemon::File::getAlbumDirectories(int max){
     vector<FlacDemon::File*> * albumDirectories = new vector<FlacDemon::File*>;

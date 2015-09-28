@@ -11,7 +11,7 @@
 using namespace std;
 
 SignalHandler::SignalHandler() {
-    this->signalMap = new std::map<const char *, FD_SIGNAL*>;
+    this->signalMap = new std::map<const char *, fd_signal*>;
 }
 SignalHandler::~SignalHandler() {
     
@@ -27,12 +27,12 @@ void SignalHandler::systemSignalHandler(int signum){
     cout << "received signal " << signum << endl;
     exit(signum);
 }
-FD_SIGNAL * SignalHandler::signals(const char *signalName, bool returnNull) const {
-    FD_SIGNAL * sig = NULL;
+fd_signal * SignalHandler::signals(const char *signalName, bool returnNull) const {
+    fd_signal * sig = NULL;
     if(this->signalMap->count(signalName) == 0){
         if(!returnNull){
-            sig = new FD_SIGNAL;
-            this->signalMap->insert(std::pair<const char *, FD_SIGNAL*>(signalName, sig));
+            sig = new fd_signal;
+            this->signalMap->insert(std::pair<const char *, fd_signal*>(signalName, sig));
         }
     } else {
         sig = this->signalMap->find(signalName)->second;
@@ -40,7 +40,7 @@ FD_SIGNAL * SignalHandler::signals(const char *signalName, bool returnNull) cons
     return sig;
 }
 void SignalHandler::call(const char * signalName, void * arg) const{
-    FD_SIGNAL * sig = this->signals(signalName, true);
+    fd_signal * sig = this->signals(signalName, true);
     if(sig){
         (*sig)(signalName, arg);
     }

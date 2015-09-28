@@ -14,9 +14,6 @@
 #include "FlacDemonNameSpace.h"
 #include "File.h"
 
-#define FD_KEYMAP std::map<std::string, const unsigned char *>
-
-
 class FlacDemon::Track {
 private:
     void init();
@@ -29,7 +26,7 @@ protected:
     std::string * filepath;
     
     std::map<std::string, long> * trackinfo;
-    FD_KEYMAP * keymap = NULL;
+    fd_keymap * keymap = NULL;
     
 public:
     string * uuid;
@@ -37,15 +34,16 @@ public:
     struct MediaStreamInfo * mediaStreamInfo;
 
     Track (FlacDemon::File* file = NULL);
-    Track (FD_KEYMAP * keymap);
+    Track (fd_keymap * keymap);
     ~Track();
     
     void incrementPlaycount ();
     void decrementPlaycount ();
     
-    const char * valueForKey (std::string * key);
+    string * valueForKey (const char * key);
+    string * valueForKey (std::string * key);
     void setValueForKey(std::string * value, std::string* key);
-    void setValueForKey(const unsigned char * value, const std::string *key);
+//    void setValueForKey(const unsigned char * value, const std::string *key);
 
     long getTrackInfoForKey(const char * key);
     long getTrackInfoForKey(std::string * key);
@@ -54,6 +52,7 @@ public:
     void setValuesFromAudioContext(AVCodecContext*);
     
     void initInfo();
+    int openFilePath();
     
 //    void addGroup(&Group group);
 //    void removeGroup(&Group group);
