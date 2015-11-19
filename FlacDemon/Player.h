@@ -27,6 +27,8 @@ private:
         0
     };
     
+    AVAudioResampleContext * audioResampleContext = NULL;
+    
     std::thread * playerThread = NULL;
     int killPlaybackFlag = 0;
 protected:
@@ -43,7 +45,7 @@ public:
     void playAudio(FlacDemon::Track * track, AVCodecContext * codecContext, AVPacket * packet, AVFrame * frame, int planar);
     void stopAudio();
     
-    void startInterleave();
+    uint8_t * interleave(AVFrame * frame);
 };
 
 #endif /* defined(__FlacDemon__Player__) */
