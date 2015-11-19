@@ -13,4 +13,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+#include "boost/filesystem.hpp"
+
 #endif

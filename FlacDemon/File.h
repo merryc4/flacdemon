@@ -43,8 +43,9 @@ private:
 public:
     AVFormatContext * formatContext = NULL;
     
-    std::string * path;
-    std::string * type;
+    std::string * path = NULL;
+    std::string * type = NULL;
+    std::string * albumuuid = NULL;
     AVCodecID codecID;
     AVDictionary * metadata;
     vector<FlacDemon::File*> *files;
@@ -57,12 +58,16 @@ public:
     FlacDemon::Track* track;
     MediaStreamInfo * mediaStreamInfo;
     unsigned long fileSize;
+    int trackNumber;
+    int trackCount;
     
     File(string* path = NULL, bool readTags = true);
     ~File();
     
     string* getPath();
     void setPath(string*);
+    
+    void setAlbumDirectoryUUID(std::string * uuid);
     
     void parse();
     void addFile(FlacDemon::File *);
@@ -75,9 +80,10 @@ public:
     bool isDirectory();
     bool isMediaFile();
     bool isAlbumDirectory();
-    
+    void checkAlbumValues();
+    void parseTrackNumber();
     int readMediaInfo();
-    int openFormatContext();
+    int openFormatContext(bool reset = false);
     void setToMediaFile(AVFormatContext*);
     void makeTrack();
     void standardiseMetaTags();
@@ -89,10 +95,16 @@ public:
     void printMetaDataDict(AVDictionary* dict);
     std::string* getMetaDataEntry(const char* key);
     std::string* getMetaDataEntry(string* key);
+    void setMetaDataEntry(std::string *key, std::string * value);
+    void setMetaDataEntry(const char * key, std::string * value);
+    void setMetaDataEntry(const char * key, const char * value);
+
     
     vector<FlacDemon::File*> * getAlbumDirectories(int depth = INT_MAX);
     vector<FlacDemon::File*> * getMediaFiles(int depth = INT_MAX);
     vector<FlacDemon::File*> * getNoneAlbumFiles(int depth = INT_MAX);
+    
+    void standardisePath(std::string * workingDirectory);
 };
 
 #endif /* defined(__FlacDemon__File__) */

@@ -27,14 +27,23 @@ FlacDemon::Database::Database(){
         "tracktime",
         "playcount",
         "dateadded",
-        "filepath"
+        "filepath",
+        "albumuuid"
     };
     this->initDB();
     this->initSignals();
+    
+    char buf[PATH_MAX];
+    if(getcwd(buf, PATH_MAX) == NULL){
+        cout << "Error getting current working directory: " << strerror(errno) << endl;
+        return;
+    }
+    this->currentWorkingDirectory = new std::string(buf);
 }
 FlacDemon::Database::~Database(){
     
 }
+
 void FlacDemon::Database::initSignals(){
     auto f = boost::bind(&FlacDemon::Database::signalReceiver, this, _1, _2);
     signalHandler->signals("addAlbumDirectory")->connect(f);
@@ -48,16 +57,56 @@ void FlacDemon::Database::signalReceiver(const char * signalName, void * arg){
 }
 void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
     std::cout << "add album directory: " << *albumDirectory->path << endl;
-    std::vector<FlacDemon::File*> * files = albumDirectory->getMediaFiles();
-    for(std::vector<FlacDemon::File*>::iterator it = files->begin(); it != files->end(); it++){
+    
+    albumDirectory->standardisePath(NULL);
+    
+    std::string * uuid = this->albumDirectoryUUIDForPath(albumDirectory->path);
+    albumDirectory->setAlbumDirectoryUUID(uuid);
+    free(uuid);
+    
+    albumDirectory->checkAlbumValues();
+    
+    this->add(albumDirectory);
+    
+    for(std::vector<FlacDemon::File*>::iterator it = albumDirectory->files->begin(); it != albumDirectory->files->end(); it++){
         this->add(*it);
     }
 }
 void FlacDemon::Database::add(FlacDemon::File * file){
-    this->add(file->track);
+    file->standardisePath(NULL);
+    if(file->isMediaFile()){
+        this->add(file->track);
+        return;
+    }
+    if(!file->albumuuid)
+        return;
+    
+    if(this->hasEntryForFile(file->path, "associate_files")){
+        cout << "not adding file '" << *file->path << "' already in database" << endl;
+        return;
+    }
+    
+    cout << "adding album file " << *file->path << endl;
+    
+    std::string values = "'";
+    values.append(*file->path);
+    values.append("','");
+    values.append(*file->albumuuid);
+    values.append("'");
+
+    std::string sql = this->sql_statements.addFileFormat;
+    size_t pos = sql.find("%s");
+    sql.erase(pos, 2);
+    sql.insert(pos, values);
+    this->runSQL(&sql);
 }
 void FlacDemon::Database::add(FlacDemon::Track *track){
     cout << "adding track: " << *track->file->path << endl;
+    
+    if(this->hasEntryForFile(track->file->path, "tracks")){
+        cout << "not adding file " << *track->file->path << ". already in database" << endl;
+        return;
+    }
     
     track->initInfo();
     
@@ -67,10 +116,6 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
         sql.append("','");
     }
     sql.pop_back();
-//    for(std::vector<std::string>::iterator it = this->trackinfokeys->begin(); it != this->trackinfokeys->end(); it++){
-//        sql.append(track->valueForKey<const char*>((*it).c_str()));
-//        sql.append(",");
-//    }
     sql.pop_back();
     
     std::string sql2 = this->sql_statements.addTrackFormat;
@@ -80,7 +125,6 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
     
     cout << sql2.c_str() << endl;
     this->runSQL(sql2.c_str());
-//    this->runSQL("insert into tracks (track,title,albumartist,artist,album,genre,composer,disc,tracktime,playcount,dateadded) values('01','The Fusion','Dusty Fingers','Jason Havelock','Dusty Fingers','','','00','','','')");
 }
 sqlite3 * FlacDemon::Database::openDB(){
     sqlite3 * db = NULL;
@@ -92,11 +136,16 @@ sqlite3 * FlacDemon::Database::openDB(){
 void FlacDemon::Database::closeDB(sqlite3* db){
     sqlite3_close_v2(db);
 }
+void FlacDemon::Database::runSQL(std::string * sql, int (*callback)(void*,int,char**,char**), void * arg){
+    this->runSQL(sql->c_str(), callback, arg);
+}
 void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char**,char**), void * arg){
     sqlite3 * db = this->openDB();
     if(!db)
         return;
     char * err = NULL;
+    
+    cout << "running sql " << sql << endl;
     
     sqlite3_exec(db, sql, callback, arg, &err);
     
@@ -106,10 +155,8 @@ void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char*
     }
     this->closeDB(db);
 }
-fd_keymap * FlacDemon::Database::sqlSelect(std::string *sql){
-    return this->sqlSelect(sql->c_str());
-}
-fd_keymap * FlacDemon::Database::sqlSelect(const char *sql){
+fd_keymap * FlacDemon::Database::sqlSelect(std::string *isql){
+    const char * sql = isql->c_str();
     sqlite3_stmt * stmt;
     if(this->sqlSelectStatment == NULL){
         if(sql == NULL)
@@ -146,6 +193,46 @@ fd_keymap * FlacDemon::Database::sqlSelect(const char *sql){
         this->clearSelect();
     }
 
+    return results;
+}
+std::string * FlacDemon::Database::sqlSelectOne(std::string * isql){
+    fd_keymap * results = this->sqlSelect(isql);
+    this->clearSelect();
+    if(results->size() == 1){
+        return results->begin()->second;
+    }
+    return NULL;
+}
+int FlacDemon::Database::sqlCount(std::string *sql){
+    return this->sqlCount(sql->c_str());
+}int FlacDemon::Database::sqlCount(const char *sql){
+    sqlite3_stmt * stmt;
+    
+    // create functions to avoid repeat code between this function and sqlSelect
+
+    sqlite3 * db = this->openDB();
+    if(!db)
+        return NULL;
+    if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK){
+        //error
+        cout << "Error occured while preparing sql statement: " << sql << endl;
+        return NULL;
+    }
+    
+    int stepCode, columns, results=0;
+    if ((stepCode = sqlite3_step(stmt)) == SQLITE_ROW) {
+        columns = sqlite3_column_count(stmt);
+        if(columns == 1){
+            results = sqlite3_column_int(stmt, 0);
+        }
+    } else {
+        if(stepCode != SQLITE_DONE){
+            //error occurred, check result code
+            cout << "Error stepping through sql select" << endl;
+        }
+    }
+    sqlite3_finalize(stmt);
+    this->closeDB(db);
     return results;
 }
 void FlacDemon::Database::clearSelect(){
@@ -191,8 +278,7 @@ void FlacDemon::Database::initDB(){
     sql2.erase(pos, 2);
     sql2.insert(pos, sql);
     
-    cout << sql2 << endl;
-    this->runSQL(sql2.c_str(), NULL);
+    this->runSQL(&sql2, NULL);
     
     std::string addTrackSQL = this->sql_statements.addTrackFormat;
     pos = addTrackSQL.find("%s");
@@ -204,6 +290,7 @@ void FlacDemon::Database::initDB(){
     this->sql_statements.fields = new char [fields.length() + 1];
     std::strcpy(this->sql_statements.fields, fields.c_str());
     
+    this->runSQL(this->sql_statements.createTableFiles);
 }
 
 FlacDemon::Track * FlacDemon::Database::trackForID(long ID){
@@ -229,5 +316,32 @@ FlacDemon::Track * FlacDemon::Database::trackWithKeyMap(fd_keymap *keyMap){
     this->openTracks->push_back(track);
     return track;
 }
-
+std::string * FlacDemon::Database::getUUID(){
+    uuid_t uuid;
+    uuid_generate_random(uuid);
+    char s[37];
+    uuid_unparse(uuid, s);
+    return new std::string(s);
+}
+int FlacDemon::Database::hasEntryForFile(std::string * filepath, const char * table){
+    std::string sql = "select count(*) from ";
+    sql.append(table);
+    sql.append(" where filepath='");
+    sql.append(*filepath);
+    sql.append("'");
+    int results = this->sqlCount(&sql);
+    if(results > 0){
+        return 1;
+    }
+    return 0;
+}
+std::string * FlacDemon::Database::albumDirectoryUUIDForPath(std::string * path){
+    std::string sql = "select (albumuuid) from associate_files where filepath='";
+    sql.append(*path);
+    sql.append("'");
+    std::string * value = this->sqlSelectOne(&sql);
+    if(value == NULL)
+        value = this->getUUID();
+    return value;
+}
 

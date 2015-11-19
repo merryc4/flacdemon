@@ -11,7 +11,6 @@
 FlacDemon::Player::Player(){
     ao_initialize();
     this->defaultDriverID = ao_default_driver_id();
-    this->device = ao_open_live(this->defaultDriverID, &this->sampleFormat, NULL);
     cout << "default driver: " << defaultDriverID << endl;
 }
 FlacDemon::Player::~Player(){
@@ -19,6 +18,9 @@ FlacDemon::Player::~Player(){
 }
 void FlacDemon::Player::setDatabase(FlacDemon::Database * idatabase){
     this->database = idatabase;
+}
+void FlacDemon::Player::stop(){
+    this->killPlaybackFlag = 1;
 }
 void FlacDemon::Player::playTrackWithID(long ID){
     FlacDemon::Track * track = this->database->trackForID(ID);
@@ -39,7 +41,9 @@ void FlacDemon::Player::playTrack(FlacDemon::Track * track){
 //        cout << "error getting codec context";
 //        return;
 //    }
-
+    
+    this->stopAudio();
+    this->killPlaybackFlag = 0;
     
     /* find the mpeg audio decoder */
     AVCodec * codec = avcodec_find_decoder(track->file->codecID);
@@ -57,39 +61,114 @@ void FlacDemon::Player::playTrack(FlacDemon::Track * track){
         cout << "could not open codec" << endl;
 
     }
+    av_dump_format(track->file->formatContext, 0, "", 0);
+    int bits=16;
+    int planar = 0;
+    switch (codecContext->sample_fmt) {
+        case AV_SAMPLE_FMT_U8P:
+            planar = 1;
+        case AV_SAMPLE_FMT_U8:
+            bits = 8;
+            break;
+            
+        case AV_SAMPLE_FMT_S16P:
+            planar = 1;
+        case AV_SAMPLE_FMT_S16:
+            bits = 16;
+            break;
+            
+        case AV_SAMPLE_FMT_S32P:
+            planar = 1;
+        case AV_SAMPLE_FMT_S32:
+            bits = 32;
+            break;
+            
+        case AV_SAMPLE_FMT_NONE:
+            break;
+        default:
+            cout << "unsupported sample format" <<endl;
+            // should clean up before return;
+            return;
+            break;
+    }
+    this->sampleFormat.rate = (int)track->file->mediaStreamInfo->sampleRate;
+    this->sampleFormat.bits = bits;
+    
     AVFrame * frame = av_frame_alloc();
     AVPacket packet;
     av_init_packet(&packet);
     packet.data = NULL;
     packet.size = 0;
     
+    this->playerThread = new std::thread(&FlacDemon::Player::playAudio, this, track, codecContext, &packet, frame, planar);
+    
+}
+
+void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * codecContext, AVPacket * packet, AVFrame * frame, int planar){
+    cout << "playing audio" << endl;
     int error, endoffile=0, gotFrame=0, samplelength=0;
-    while(endoffile == 0 && error >=0 ){
-        if((error = av_read_frame(track->file->formatContext, &packet)) < 0){
+    
+    this->device = ao_open_live(this->defaultDriverID, &this->sampleFormat, NULL);
+    
+
+    while(endoffile == 0 && error >=0 && this->killPlaybackFlag == 0){
+        if((error = av_read_frame(track->file->formatContext, packet)) < 0){
             if(error == AVERROR_EOF){
                 endoffile = 1;
             } else {
                 cout << "error reading frame from file " << track->valueForKey("filepath") << endl;
-                return;
+                break;
             }
         }
         
         
-        if((error = avcodec_decode_audio4(codecContext, frame, &gotFrame, &packet)) < 0){
+        
+        if((error = avcodec_decode_audio4(codecContext, frame, &gotFrame, packet)) < 0){
             char errbuf[255];
             av_strerror(error, errbuf, sizeof(errbuf));
             cout << "could not read decode audio frame: " << *track->valueForKey("filepath") << ". " << errbuf << endl;
-            av_free_packet(&packet);
+            break;
         }
+//        cout << "got audio frame " << endl;
         samplelength = error;
-        if(ao_play(this->device, (char*)frame->extended_data[0], frame->linesize[0]) == 0){
+        uint size = frame->linesize[0];
+        char * samples;
+        if(planar){ // this doesnt work, need to resample to interleaved for libao, for future development
+            samples = (char*)frame->data[0];
+            size *= 2;
+        } else {
+            samples = (char*)frame->extended_data[0];
+        }
+        if(ao_play(this->device, samples, size) == 0){
             cout << "ao play error" << endl;
             //close device
             error = -1;
         }
     }
     
-    av_free_packet(&packet);
+    ao_close(this->device);
+    av_frame_free(&frame);
+}
+void FlacDemon::Player::stopAudio(){
+    if(this->playerThread && this->playerThread->joinable()){
+        this->killPlaybackFlag = 1;
+        this->playerThread->join();
+    }
+}
+void FlacDemon::Player::startInterleave(){
+    //unfinished feature
+    AVAudioResampleContext *avr = avresample_alloc_context();
+    av_opt_set_int(avr, "in_channel_layout",  AV_CH_LAYOUT_STEREO, 0);
+    av_opt_set_int(avr, "out_channel_layout", AV_CH_LAYOUT_STEREO,  0);
+    av_opt_set_int(avr, "in_sample_rate",     this->sampleFormat.rate,0);
+    av_opt_set_int(avr, "out_sample_rate",    this->sampleFormat.rate,0);
+    av_opt_set_int(avr, "in_sample_fmt",      AV_SAMPLE_FMT_FLTP,   0);
+    av_opt_set_int(avr, "out_sample_fmt",     AV_SAMPLE_FMT_S16,    0);
     
-    //av_frame_free(&frame);
+    int error;
+    if((error = avresample_open(avr)) < 0){
+        cout << "open resampler failed" << endl;
+        //free avr
+    }
+    return;
 }

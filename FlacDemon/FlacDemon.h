@@ -32,7 +32,7 @@ public:
     void run();
     int add(vector<string>*);
     int play(vector<string>*);
-    
+    int stop(vector<string>*);
 };
 
 #endif /* defined(__FlacDemon__FlacDemon__) */

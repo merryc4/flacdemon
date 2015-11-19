@@ -23,15 +23,18 @@ protected:
     unsigned int playCount;
     time_t trackTime;
     
-    std::string * filepath;
+    std::string * filepath = NULL;
+//    std::string * albumuuid = NULL;
     
-    std::map<std::string, long> * trackinfo;
+    std::map<std::string, long> * trackinfo = NULL;
     fd_keymap * keymap = NULL;
     
 public:
-    string * uuid;
-    FlacDemon::File* file;
-    struct MediaStreamInfo * mediaStreamInfo;
+    friend FlacDemon::File;
+    
+    string * uuid = NULL;
+    FlacDemon::File* file = NULL;
+    struct MediaStreamInfo * mediaStreamInfo = NULL;
 
     Track (FlacDemon::File* file = NULL);
     Track (fd_keymap * keymap);
@@ -44,6 +47,8 @@ public:
     string * valueForKey (std::string * key);
     void setValueForKey(std::string * value, std::string* key);
 //    void setValueForKey(const unsigned char * value, const std::string *key);
+    
+    std::string * standardiseMetaValue(std::string * value, std::string * key);
 
     long getTrackInfoForKey(const char * key);
     long getTrackInfoForKey(std::string * key);

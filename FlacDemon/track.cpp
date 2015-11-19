@@ -17,9 +17,6 @@ FlacDemon::Track::Track(fd_keymap * ikeymap){
     Track();
     this->keymap = ikeymap;
     this->filepath = this->keymap->at("filepath");
-//    for(FD_KEYMAP::iterator it = keymap->begin(); it != keymap->end(); it++){
-//        this->setValueForKey(it->second, &(it->first));
-//    }
 }
 FlacDemon::Track::~Track(){
 
@@ -53,15 +50,23 @@ std::string * FlacDemon::Track::valueForKey(std::string* key){
     }
     if(this->keymap)
         value = this->keymap->at(*key);
-    else if(this->file)
+    else if(this->file){
+        if(key->compare("albumuuid")==0){
+            return this->file->albumuuid;
+        }
         value = this->file->getMetaDataEntry(key);
+        value = this->standardiseMetaValue(value, key);
+    }
     //query db if no file?
     if(value == NULL){
         value = new std::string(std::to_string(this->getTrackInfoForKey(key)));
     }
     return value;
 }
-
+std::string * FlacDemon::Track::standardiseMetaValue(std::string *value, std::string *key){
+    
+    return value;
+}
 //template <class KValue>
 void FlacDemon::Track::setValueForKey(std::string * value, std::string *key){
     
@@ -85,7 +90,13 @@ void FlacDemon::Track::initInfo(){
 }
 int FlacDemon::Track::openFilePath(){
     //will need to do more checks, path exists, relative pathname, file opened succesfully etc
-    if(this->filepath && !this->file)
-        this->file = new FlacDemon::File(this->filepath, false);
+    if(this->filepath){
+        if(!this->file){
+            this->file = new FlacDemon::File(this->filepath, false);
+        } else {
+            this->file->openFormatContext(true); //reset
+        }
+    }
+    
     return this->file==NULL ? 0 : 1;
 }

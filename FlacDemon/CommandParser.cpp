@@ -45,6 +45,8 @@ void FlacDemon::CommandParser::parseCommand(string* command) {
 		word = command->substr(0, pos);
 		*command = command->substr(pos, (unsigned long int)(command->length() - pos));
         
+        pos -= word.length();
+        
         if(word.compare(" ") == 0){
             continue;
         }

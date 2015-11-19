@@ -22,7 +22,8 @@ FlacDemon::Demon::Demon() {
     
     this->commandParser->setMapForDemon(this, new std::map<string, demonCommandFunction>{
         {"add", &FlacDemon::Demon::add},
-        {"play", &FlacDemon::Demon::play}
+        {"play", &FlacDemon::Demon::play},
+        {"stop", &FlacDemon::Demon::stop}
     });
 }
 FlacDemon::Demon::~Demon() {
@@ -33,7 +34,7 @@ void FlacDemon::Demon::run() {
 	while (true) {
         this->commandParser->getCommand();
         
-		sleep(1); //revise sleep length
+		usleep(100); //revise sleep length
 	}
 }
 
@@ -48,6 +49,15 @@ int FlacDemon::Demon::add(vector<string> * args){
 }
 int FlacDemon::Demon::play(vector<string> * args){
     cout << "play some tunes" << endl;
-    this->player->playTrackWithID(1);
+    long ID = 1;
+    if(args && args->size()){
+        ID = std::strtol((*args)[0].c_str(), NULL, 0);
+    }
+    this->player->playTrackWithID(ID);
+    return 0;
+}
+int FlacDemon::Demon::stop(vector<string> * args){
+    cout << "stop playback" << endl;
+    this->player->stop();
     return 0;
 }
