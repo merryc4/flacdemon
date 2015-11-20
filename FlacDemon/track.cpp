@@ -54,8 +54,9 @@ std::string * FlacDemon::Track::valueForKey(std::string* key){
         if(key->compare("albumuuid")==0){
             return this->file->albumuuid;
         }
-        value = this->file->getMetaDataEntry(key);
-        value = this->standardiseMetaValue(value, key);
+        if((value = this->file->getMetaDataEntry(key)) != NULL){
+            value = this->standardiseMetaValue(value, key);
+        }
     }
     //query db if no file?
     if(value == NULL){
@@ -64,6 +65,10 @@ std::string * FlacDemon::Track::valueForKey(std::string* key){
     return value;
 }
 std::string * FlacDemon::Track::standardiseMetaValue(std::string *value, std::string *key){
+    if(key->compare("disc") == 0){
+        int ivalue = std::stoi(*value);
+        value = new std::string(std::to_string(ivalue));
+    }
     
     return value;
 }

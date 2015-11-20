@@ -18,7 +18,9 @@ int main(int argc, const char * argv[])
     // insert code here...
     std::cout << "Hello, World!\n";
     
-    chdir("/Users/merryclarke/Documents/Xcode Projects/FlacDemon/");
+    char dir[] = "/Users/merryclarke/Documents/Xcode Projects/FlacDemon/";
+    
+    chdir(dir);
     
     FlacDemon::Demon * demon = new FlacDemon::Demon();
     

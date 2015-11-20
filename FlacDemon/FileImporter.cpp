@@ -21,7 +21,7 @@ void FlacDemon::FileImporter::sigtest(const char * signalName){
 void FlacDemon::FileImporter::importFilesFromPath(string *path){
 	cout << "Importing files from " << path << endl;
     FlacDemon::File * file = new FlacDemon::File(path);
-    vector<FlacDemon::File*> * albumDirectories = file->getAlbumDirectories();
+    vector<FlacDemon::File*> * albumDirectories = file->getAlbumDirectories(-1);
     
     cout << "------------------ ALBUM DIRECTORIES ------------------" << endl;
     for(vector<FlacDemon::File*>::iterator it = albumDirectories->begin(); it != albumDirectories->end(); it++){
@@ -32,6 +32,18 @@ void FlacDemon::FileImporter::importFilesFromPath(string *path){
     for(vector<FlacDemon::File*>::iterator it = albumDirectories->begin(); it != albumDirectories->end(); it++){
         signalHandler->call("addAlbumDirectory", (*it));
     }
+    
+    vector<FlacDemon::File*> * noneAlbumFiles = file->getNoneAlbumFiles(-1);
+    
+    cout << "------------------ NONE ALBUM FILES ------------------" << endl;
+    for(vector<FlacDemon::File*>::iterator it = noneAlbumFiles->begin(); it != noneAlbumFiles->end(); it++){
+        cout << *(*it)->path << endl;
+    }
+    cout << "-------------------------------------------------------" << endl;
+    
+//    for(vector<FlacDemon::File*>::iterator it = albumDirectories->begin(); it != albumDirectories->end(); it++){
+//        signalHandler->call("addAlbumDirectory", (*it));
+//    }
     
     //need to free memory allocated in getAlbumDirectories
     

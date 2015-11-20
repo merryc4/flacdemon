@@ -258,18 +258,22 @@ void FlacDemon::File::parseTrackNumber(){
     int trackNum = 0,
         trackCnt = 0;
     int nonDigitFound = 0;
-    trackNum = std::stoi(*trackNumStr);
     
-    //check value of trackNum
-    for(std::string::iterator it = trackNumStr->begin(); it != trackNumStr->end(); it++){
-        if(!isdigit((*it))){
-            nonDigitFound = true;
-        }
-        else if(nonDigitFound){
-            std::string tempStr(it, trackNumStr->end());
-            trackCnt = std::stoi(tempStr);
-            cout << trackCnt << endl;
-            break;
+    if(trackNumStr){
+    
+        trackNum = std::stoi(*trackNumStr);
+        
+        //check value of trackNum
+        for(std::string::iterator it = trackNumStr->begin(); it != trackNumStr->end(); it++){
+            if(!isdigit((*it))){
+                nonDigitFound = true;
+            }
+            else if(nonDigitFound){
+                std::string tempStr(it, trackNumStr->end());
+                trackCnt = std::stoi(tempStr);
+                cout << trackCnt << endl;
+                break;
+            }
         }
     }
     
@@ -405,7 +409,7 @@ std::string * FlacDemon::File::getMetaDataEntry(const char *key){
 //    const char * tKey = this->standardiseKey(key);
     if(key == NULL)
         return NULL;
-    AVDictionaryEntry *t = av_dict_get(this->metadata, key, NULL, AV_DICT_IGNORE_SUFFIX);
+    AVDictionaryEntry *t = av_dict_get(this->metadata, key, NULL, 0);
     if(!t)
         return NULL;
     return new std::string(t->value);
@@ -428,7 +432,7 @@ void FlacDemon::File::setMetaDataEntry(const char * key, const char * value){
 }
 vector<FlacDemon::File*> * FlacDemon::File::getAlbumDirectories(int max){
     vector<FlacDemon::File*> * albumDirectories = new vector<FlacDemon::File*>;
-    if(max > 0 && this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA){
+    if(max != 0 && this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA){
         vector<FlacDemon::File*> * subdirectoryAlbumDirectories = NULL;
         for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
             if(!((*it)->flags & FLACDEMON_FILE_IS_DIRECTORY))
@@ -467,8 +471,30 @@ vector<FlacDemon::File*> * FlacDemon::File::getMediaFiles(int max){
     return mediaFiles;
 }
 vector<FlacDemon::File*> * FlacDemon::File::getNoneAlbumFiles(int max){
-    
-    return NULL;
+    vector<FlacDemon::File*> * noneAlbumFiles = new vector<FlacDemon::File*>;
+    if(this->isAlbumDirectory()){
+        return noneAlbumFiles;
+    } else if(this->isMediaFile()){
+        noneAlbumFiles->push_back(this);
+        return noneAlbumFiles;
+    }
+    if(max != 0 && this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY){
+        vector<FlacDemon::File*> * subdirectoryNoneAlbumFiles = NULL;
+        for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
+            if((*it)->flags & FLACDEMON_FILE_IS_DIRECTORY){
+                if((*it)->isAlbumDirectory()){
+                    continue;
+                } else if((*it)->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY){
+                    subdirectoryNoneAlbumFiles = (*it)->getNoneAlbumFiles(max - 1);
+                    noneAlbumFiles->insert(noneAlbumFiles->end(), subdirectoryNoneAlbumFiles->begin(), subdirectoryNoneAlbumFiles->end());
+                    free(subdirectoryNoneAlbumFiles);
+                }
+            } else if((*it)->flags && FLACDEMON_FILE_IS_MEDIA) {
+                noneAlbumFiles->push_back((*it));
+            }
+        }
+    }
+    return noneAlbumFiles;
 }
 void FlacDemon::File::standardisePath(std::string * workingDirectory){
     if(this->path->at(0) == '/')

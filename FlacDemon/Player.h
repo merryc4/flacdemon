@@ -27,7 +27,8 @@ private:
         0
     };
     
-    AVAudioResampleContext * audioResampleContext = NULL;
+//    AVAudioResampleContext * audioResampleContext = NULL;
+    SwrContext * audioResampleContext = NULL;
     
     std::thread * playerThread = NULL;
     int killPlaybackFlag = 0;
