@@ -46,7 +46,7 @@ public:
     void playAudio(FlacDemon::Track * track, AVCodecContext * codecContext, AVPacket * packet, AVFrame * frame, int planar);
     void stopAudio();
     
-    uint8_t * interleave(AVFrame * frame);
+    uint8_t * interleave(AVFrame * frame, uint * size);
 };
 
 #endif /* defined(__FlacDemon__Player__) */

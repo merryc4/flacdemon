@@ -134,7 +134,7 @@ void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * cod
         uint size = frame->linesize[0];
         uint8_t * samples;
         if(planar){
-            samples = this->interleave(frame);
+            samples = this->interleave(frame, &size);
         } else {
             samples = frame->extended_data[0];
         }
@@ -157,7 +157,7 @@ void FlacDemon::Player::stopAudio(){
         this->playerThread->join();
     }
 }
-uint8_t * FlacDemon::Player::interleave(AVFrame * frame){
+uint8_t * FlacDemon::Player::interleave(AVFrame * frame, uint * size){
     //unfinished feature
     if(!this->audioResampleContext){
         this->audioResampleContext = swr_alloc();
@@ -179,6 +179,7 @@ uint8_t * FlacDemon::Player::interleave(AVFrame * frame){
     uint8_t * output;
     int out_linesize,
     samples_written;
+
     
     int num_samples = (int)swr_get_delay(this->audioResampleContext, frame->sample_rate) + frame->linesize[0];
     
@@ -186,36 +187,7 @@ uint8_t * FlacDemon::Player::interleave(AVFrame * frame){
     
     samples_written = swr_convert(this->audioResampleContext, &output, out_linesize, (const uint8_t**)&frame->data[0], frame->linesize[0]);
 
-    
-//    samples_written = avresample_convert(this->audioResampleContext, &output, out_linesize, out_linesize, &frame->data[0], frame->linesize[0], frame->nb_samples * frame->channels);
+    *size = out_linesize / frame->channels;
     
     return output;
 }
-//uint8_t * FlacDemon::Player::interleave(AVFrame * frame){
-//    //unfinished feature
-//    if(!this->audioResampleContext){
-//        this->audioResampleContext = avresample_alloc_context();
-//        av_opt_set_int(this->audioResampleContext, "in_channel_layout",  AV_CH_LAYOUT_STEREO, 0);
-//        av_opt_set_int(this->audioResampleContext, "out_channel_layout", AV_CH_LAYOUT_STEREO,  0);
-//        av_opt_set_int(this->audioResampleContext, "in_sample_rate",     this->sampleFormat.rate,0);
-//        av_opt_set_int(this->audioResampleContext, "out_sample_rate",    this->sampleFormat.rate,0);
-//        av_opt_set_int(this->audioResampleContext, "in_sample_fmt",      AV_SAMPLE_FMT_S16P,   0);
-//        av_opt_set_int(this->audioResampleContext, "out_sample_fmt",     AV_SAMPLE_FMT_S16,    0);
-//        int error;
-//        if((error = avresample_open(this->audioResampleContext)) < 0){
-//            cout << "open resampler failed" << endl;
-//            //free avr
-//        }
-//    }
-//    uint8_t * output;
-//    int out_linesize,
-//        samples_written;
-//    
-//    int num_samples = avresample_available(this->audioResampleContext) + avresample_get_delay(this->audioResampleContext) + frame->linesize[0];
-//    
-//    av_samples_alloc(&output, &out_linesize, frame->channels, num_samples, AV_SAMPLE_FMT_S16, 1);
-//
-//    samples_written = avresample_convert(this->audioResampleContext, &output, out_linesize, out_linesize, &frame->data[0], frame->linesize[0], frame->nb_samples * frame->channels);
-//
-//    return output;
-//}
