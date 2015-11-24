@@ -13,6 +13,9 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+//if mac os x
+#include <libgen.h>
+
 #include "boost/filesystem.hpp"
 
 #endif

@@ -42,10 +42,21 @@ string* FlacDemon::File::getPath(){
 }
 void FlacDemon::File::setPath(string* iPath){
     this->path->assign(*iPath);
+    
+    this->setNameFromPath();
+    
     if(this->checkDirectory()){
         this->parse();
     } else {
         this->readMediaInfo();
+    }
+}
+void FlacDemon::File::setNameFromPath(){
+    size_t pos = this->path->rfind("/");
+    if(pos == string::npos){
+        this->name = new std::string(*this->path);
+    } else {
+        this->name = new std::string(this->path->substr(pos+1));
     }
 }
 void FlacDemon::File::setAlbumDirectoryUUID(std::string * iuuid){
@@ -57,7 +68,6 @@ void FlacDemon::File::setAlbumDirectoryUUID(std::string * iuuid){
     }
 }
 void FlacDemon::File::parse(){
-    if(this)
     cout << "Checking directory " << *this->path << endl;
     struct dirent *ent;
     DIR* dir;
@@ -126,26 +136,104 @@ void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
     }
 }
 void FlacDemon::File::checkFileStructure(){
-    int lookForCDs = 0;
-    if(!this->flags & FLACDEMON_FILE_IS_MEDIA){
-        if(!(lookForCDs = (this->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA)))
-            return;
+    cout << "Checking file structure for " << *this->path << endl;
+    int lookForDiscs = 0;
+    if(!(this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY) && (this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA)){
+        lookForDiscs = 1;
     }
-//    for(vector<FlacDemon::File*>::iterator it = files->begin(); it != files->end(); it++){
-//        
-//    }
 
     AVDictionaryEntry * t = NULL;
+    
+    bool albumConsistency = false,
+        artistConsistency = false;
     
     while ((t = av_dict_get(this->metadata, "", t, AV_DICT_IGNORE_SUFFIX))){
         if(strcmp(t->value, FlacDemonMetaDataMultipleValues) == 0){
             this->inconsistentMetadata->push_back(new string(t->key));
         } else {
-            this->consistentMetadata->push_back(new string(t->key));
+            std::string * skey = new string(t->key);
+            this->consistentMetadata->push_back(skey);
+            
+//            cout << *skey << ", ";
+            
+            if(!albumConsistency || !artistConsistency){
+
+                if((skey->compare("album"))==0 ) {
+                    albumConsistency = true;
+                } else if (skey->compare("albumartist")==0) {
+                    artistConsistency = true;
+                } else if((skey->compare("artist"))==0){
+                    artistConsistency = true;
+                }
+            }
+        }
+    }
+//    cout << endl;
+    
+    if(artistConsistency){
+        if(albumConsistency){
+            this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+            //only need to check 'disc' tag / file names to try and identify correct disc numbers
+            if(lookForDiscs)
+                this->checkDiscs(FLACDEMON_CHECK_DISC_METHOD_ALBUM);
+        } else {
+            //need to check "album" tag to see if they include disc numbers in album name
+            if(lookForDiscs)
+                this->checkDiscs(FLACDEMON_CHECK_DISC_METHOD_ARTST);
+        }
+    }
+}
+void FlacDemon::File::checkDiscs(int method){
+    std::string * discStr = nullptr;
+    int discNumber = 0;
+    
+    for(std::vector<FlacDemon::File * >::iterator it = this->files->begin(); it != this->files->end(); it++){
+        switch (method) {
+            case FLACDEMON_CHECK_DISC_METHOD_ALBUM:
+                discStr = (*it)->getMetaDataEntry("disc", AV_DICT_IGNORE_SUFFIX);
+                if(!discStr)
+                    discStr = (*it)->getMetaDataEntry("cd", AV_DICT_IGNORE_SUFFIX);
+                if(!discStr){
+                    std::regex e("(?:disc|cd)\\s*(\\w+)", regex_constants::icase);
+                    std::smatch ematch;
+                    if(regex_search(*(*it)->name, ematch, e)){
+                        if(ematch.size()){
+                            std::ssub_match sub_match = ematch[ematch.size() - 1];
+                            discStr = new std::string(sub_match.str());
+                        }
+                    } else {
+                        //no disc number found
+                    }
+
+                }
+                break;
+            case FLACDEMON_CHECK_DISC_METHOD_ARTST:
+                
+                break;
+        }
+        if(fd_stringtoint(discStr, &discNumber)){
+            //some error
+            cout << "error getting disc number from string " << discStr << endl;
+        } else if(discNumber){
+            (*it)->setDiscNumber(discNumber);
         }
     }
     
-    
+}
+void FlacDemon::File::setDiscNumber(int discNumber){
+    this->discNumber = discNumber;
+    if(this->isDirectory()){
+        if(discNumber){
+            this->flags = this->flags | FLACDEMON_DIRECTORY_IS_DISC;
+        } else {
+            this->flags = this->flags & ~ FLACDEMON_DIRECTORY_IS_DISC;
+        }
+        for(std::vector< FlacDemon::File * >::iterator it = this->files->begin(); it != this->files->end(); it++){
+            (*it)->setDiscNumber(discNumber);
+        }
+    }
+    std::string s = std::to_string(discNumber);
+    this->setMetaDataEntry("disc", &s);
 }
 bool FlacDemon::File::checkExists(struct stat * buffer){
     bool makeBuffer = false;
@@ -193,26 +281,35 @@ bool FlacDemon::File::isMediaFile(){
     return this->flags & FLACDEMON_FILE_IS_MEDIA && !(this->flags & FLACDEMON_FILE_IS_DIRECTORY);
 }
 bool FlacDemon::File::isAlbumDirectory(){
-
+    if(this->flags & FLACDEMON_DIRECTORY_IS_ALBUM)
+        return true;
+    
     if(!(this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY))
         return false;
     
-    bool albumConsistency = false,
-    artistConsistency = false;
-    
-    for(vector<string*>::iterator it = this->consistentMetadata->begin(); it != this->consistentMetadata->end(); it++){
-        cout << **it << ", ";
-        if(((*it)->compare("album"))==0 ) {
-            albumConsistency = true;
-        } else if ((*it)->compare("albumartist")==0) {
-            artistConsistency = true;
-        } else if(((*it)->compare("artist"))==0){
-            artistConsistency = true;
-        }
-    }
-    cout << endl;
-
-    return albumConsistency && artistConsistency;
+    return this->hasConsistantAlbumMetaData();
+}
+bool FlacDemon::File::hasConsistantAlbumMetaData(){ //deprecated
+//    bool albumConsistency = false,
+//    artistConsistency = false;
+//    
+//    for(vector<string*>::iterator it = this->consistentMetadata->begin(); it != this->consistentMetadata->end() && !(albumConsistency && artistConsistency); it++){
+//        cout << **it << ", ";
+//        if(((*it)->compare("album"))==0 ) {
+//            albumConsistency = true;
+//        } else if ((*it)->compare("albumartist")==0) {
+//            artistConsistency = true;
+//        } else if(((*it)->compare("artist"))==0){
+//            artistConsistency = true;
+//        }
+//    }
+//    cout << endl;
+//    
+//    if(albumConsistency && artistConsistency){
+//        this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+//        return true;
+//    }
+    return false;
 }
 void FlacDemon::File::checkAlbumValues(){
     if(!this->albumuuid) //set by database when adding an album directory
@@ -410,17 +507,22 @@ void FlacDemon::File::printMetaDataDict(AVDictionary *dict){
     }
     cout <<endl<<endl;
 }
-std::string * FlacDemon::File::getMetaDataEntry(string* key){
-    return this->getMetaDataEntry(key->c_str());
+std::string * FlacDemon::File::getMetaDataEntry(string* key, int flags){
+    return this->getMetaDataEntry(key->c_str(), NULL, flags);
 }
-std::string * FlacDemon::File::getMetaDataEntry(const char *key){
-//    const char * tKey = this->standardiseKey(key);
+std::string * FlacDemon::File::getMetaDataEntry(const char *key, int flags){
+    return this->getMetaDataEntry(key, NULL, flags);
+}
+std::string* FlacDemon::File::getMetaDataEntry(string* key, AVDictionaryEntry *t, int flags){
+    return this->getMetaDataEntry(key->c_str(), t, flags);
+}
+std::string* FlacDemon::File::getMetaDataEntry(const char* key, AVDictionaryEntry * t, int flags){
     if(key == NULL)
         return NULL;
-    AVDictionaryEntry *t = av_dict_get(this->metadata, key, NULL, 0);
-    if(!t)
+    AVDictionaryEntry *newt = av_dict_get(this->metadata, key, t, flags);
+    if(!newt)
         return NULL;
-    return new std::string(t->value);
+    return new std::string(newt->value);
 }
 void FlacDemon::File::setMetaDataEntry(std::string * key, std::string * value){
 

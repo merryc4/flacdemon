@@ -9,27 +9,10 @@
 #ifndef FlacDemon_FlacDemonNameSpace_h
 #define FlacDemon_FlacDemonNameSpace_h
 
-#include <iostream>
-#include <unistd.h>
-#include <vector>
-#include <algorithm>
-#include <functional>
-#include <map>
-#include <boost/uuid/uuid.hpp>
-#include <thread>
-#include <uuid/uuid.h>
+#include "includes.h"
 
 #include "SignalHandler.h"
-
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/avutil.h>
-#include <libavutil/dict.h>
-//#include <libavresample/avresample.h>
-#include <libswresample/swresample.h>
-#include <libavutil/opt.h>
-}
+#include "FlacDemonUtils.h"
 
 typedef std::map<std::string, std::string *> fd_keymap;
 

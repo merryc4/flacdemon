@@ -17,10 +17,6 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #ifndef __FlacDemon__File__
 #define __FlacDemon__File__
 
-#include <stdio.h>
-#include <iostream>
-#include <sstream>
-#include <regex>
 #include "FlacDemonNameSpace.h"
 #include "FlacDemonFileSystem.h"
 
@@ -34,6 +30,13 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_DIRECTORY_HAS_MULTIPLE_CODECS 32
 #define FLACDEMON_SUBDIRECTORY_HAS_MEDIA 64
 #define FLACDEMON_FILE_IS_MEDIA_DIRECTORY 128
+#define FLACDEMON_DIRECTORY_IS_DISC 256
+
+
+enum {
+    FLACDEMON_CHECK_DISC_METHOD_ALBUM,
+    FLACDEMON_CHECK_DISC_METHOD_ARTST
+};
 
 #define FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA (FLACDEMON_FILE_IS_MEDIA_DIRECTORY | FLACDEMON_SUBDIRECTORY_HAS_MEDIA)
 
@@ -45,6 +48,7 @@ public:
     AVFormatContext * formatContext = NULL;
     
     std::string * path = NULL;
+    std::string * name = NULL;
     std::string * type = NULL;
     std::string * albumuuid = NULL;
     AVCodecID codecID;
@@ -61,11 +65,14 @@ public:
     unsigned long fileSize;
     int trackNumber;
     int trackCount;
+    int discNumber;
+    //discCount?
     
     File(string* path = NULL, bool readTags = true);
     ~File();
     
     string* getPath();
+    void setNameFromPath();
     void setPath(string*);
     
     void setAlbumDirectoryUUID(std::string * uuid);
@@ -74,6 +81,8 @@ public:
     void addFile(FlacDemon::File *);
     void addMetaDataFromFile(FlacDemon::File*);
     void checkFileStructure();
+    void checkDiscs(int method);
+    void setDiscNumber(int discNumber);
     
     bool checkExists(struct stat * buffer = NULL);
     bool checkDirectory();
@@ -81,6 +90,7 @@ public:
     bool isDirectory();
     bool isMediaFile();
     bool isAlbumDirectory();
+    bool hasConsistantAlbumMetaData();
     void checkAlbumValues();
     void parseTrackNumber();
     int readMediaInfo();
@@ -94,8 +104,11 @@ public:
     void setToDirectory();
     
     void printMetaDataDict(AVDictionary* dict);
-    std::string* getMetaDataEntry(const char* key);
-    std::string* getMetaDataEntry(string* key);
+    std::string* getMetaDataEntry(const char* key, int flags = 0);
+    std::string* getMetaDataEntry(string* key, int flags = 0);
+    std::string* getMetaDataEntry(const char* key, AVDictionaryEntry * t, int flags = 0);
+    std::string* getMetaDataEntry(string* key, AVDictionaryEntry *t, int flags = 0);
+    
     void setMetaDataEntry(std::string *key, std::string * value);
     void setMetaDataEntry(const char * key, std::string * value);
     void setMetaDataEntry(const char * key, const char * value);

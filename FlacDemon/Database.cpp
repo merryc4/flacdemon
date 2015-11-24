@@ -73,6 +73,8 @@ void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
     }
 }
 void FlacDemon::Database::add(FlacDemon::File * file){
+    if(!file)
+        return;
     file->standardisePath(NULL);
     if(file->isMediaFile()){
         this->add(file->track);

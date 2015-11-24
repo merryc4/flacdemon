@@ -22,6 +22,8 @@ int main(int argc, const char * argv[])
     
     chdir(dir);
     
+    initGlobals();
+    
     FlacDemon::Demon * demon = new FlacDemon::Demon();
     
     demon->run();
