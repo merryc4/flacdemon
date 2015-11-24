@@ -351,15 +351,17 @@ void FlacDemon::File::checkAlbumValues(){
     }
 }
 void FlacDemon::File::parseTrackNumber(){
-    std::string * trackNumStr = this->getMetaDataEntry("track");
+    std::string * trackNumStr = this->getMetaDataEntry("track"),
+        * trackNumStr2 = NULL;
     int trackNum = 0,
+        trackNum2 = 0,
         trackCnt = 0;
     int nonDigitFound = 0;
     
+    if(!trackNumStr || fd_stringtoint(trackNumStr, &trackNum)){
+        cout << "could not parse track number from metadata for" << *this->path << endl;
+    }
     if(trackNumStr){
-    
-        trackNum = std::stoi(*trackNumStr);
-        
         //check value of trackNum
         for(std::string::iterator it = trackNumStr->begin(); it != trackNumStr->end(); it++){
             if(!isdigit((*it))){
@@ -372,6 +374,30 @@ void FlacDemon::File::parseTrackNumber(){
                 break;
             }
         }
+    }
+    
+    std::regex e("^([0-9]{1,2})[^0-9]");
+    std::smatch ematch;
+    if(regex_search(*this->name, ematch, e)){
+        if(ematch.size()){
+            std::ssub_match sub_match = ematch[0];
+            cout << "found track number " << sub_match.str() << endl;
+            trackNumStr2 = new std::string(sub_match.str());
+            if(fd_stringtoint(trackNumStr, &trackNum2)){
+                cout << "Could not parse track number from file for " << *this->path << endl;
+            }
+            
+        }
+    }
+    
+    if(trackNum == trackNum2){
+        if(trackNum == 0){ //no track number could be determined
+            return;
+        } else {
+            //both track numbers match
+        }
+    } else if(!trackNum){
+        trackNum = trackNum2;
     }
     
     this->trackNumber = trackNum;
