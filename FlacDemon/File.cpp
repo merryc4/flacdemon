@@ -347,6 +347,14 @@ int FlacDemon::File::openFormatContext(bool reset){
         this->formatContext = NULL;
         return averror;
     }
+    if(this->formatContext->probe_score <= 1){ //revise this number
+        std::stringstream ss;
+        ss << "\\." << this->formatContext->iformat->name << "$";
+        std::regex e(ss.str(), regex_constants::icase);
+        if(!regex_match(*this->path, e)){
+            return -1;
+        }
+    }
     return 0;
 }
 void FlacDemon::File::setToMediaFile(AVFormatContext* formatContext){

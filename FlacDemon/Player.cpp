@@ -144,7 +144,7 @@ void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * cod
             error = -1;
         }
         if(planar){
-//            av_freep(&samples);
+            av_freep(&samples);
         }
     }
     

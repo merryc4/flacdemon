@@ -19,6 +19,7 @@ extern const char * FlacDemonMetaDataMultipleValues;
 
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 #include <regex>
 #include "FlacDemonNameSpace.h"
 #include "FlacDemonFileSystem.h"
