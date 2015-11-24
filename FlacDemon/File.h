@@ -33,6 +33,12 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_DIRECTORY_IS_DISC 256
 
 
+/* Error Flags */
+#define FLACDEMON_TRACKNUMBER_MISMATCH 1
+#define FLACDEMON_NO_TRACKNUMBER 2
+#define FLACDEMON_TRACKNUMBER_MISSING 4
+#define FLACDEMON_TRACKCOUNT_INCONSISTENT 8
+
 enum {
     FLACDEMON_CHECK_DISC_METHOD_ALBUM,
     FLACDEMON_CHECK_DISC_METHOD_ARTST
@@ -59,6 +65,7 @@ public:
     bool readTags = true;
     
     unsigned int flags;
+    unsigned int errorFlags;
     
     FlacDemon::Track* track;
     MediaStreamInfo * mediaStreamInfo;

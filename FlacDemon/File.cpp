@@ -13,6 +13,7 @@ const char * FlacDemonMetaDataMultipleValues = "FlacDemonMetaDataMultipleValues"
 FlacDemon::File::File(string* path, bool readTags){
     this->codecID = AV_CODEC_ID_NONE;
     this->flags = 0;
+    this->errorFlags = 0;
     this->metadata = NULL;
     this->files = NULL;
     this->path = new string;
@@ -327,6 +328,7 @@ void FlacDemon::File::checkAlbumValues(){
             if((*it)->trackCount != tTrackCount){
                 //track count incosistency, handle error
                 cout << "track count incosistency" << endl;
+                this->errorFlags = this->errorFlags | FLACDEMON_TRACKCOUNT_INCONSISTENT;
             }
         } else {
             tTrackCount = (*it)->trackCount;
@@ -345,6 +347,7 @@ void FlacDemon::File::checkAlbumValues(){
     for(int i = 1; i <= maxTrackNumber; i++){
         if(!availableTracks[i]){
             cout << "Track Missing!";
+            this->errorFlags = this->errorFlags | FLACDEMON_TRACKNUMBER_MISSING;
             //flag album as track missing
         }
         cout << i << ": " << availableTracks[i] << endl;
@@ -392,12 +395,13 @@ void FlacDemon::File::parseTrackNumber(){
     
     if(trackNum == trackNum2){
         if(trackNum == 0){ //no track number could be determined
+            this->errorFlags = this->errorFlags | FLACDEMON_NO_TRACKNUMBER;
             return;
-        } else {
-            //both track numbers match
         }
     } else if(!trackNum){
         trackNum = trackNum2;
+    } else {
+        this->errorFlags = this->errorFlags | FLACDEMON_TRACKNUMBER_MISMATCH;
     }
     
     this->trackNumber = trackNum;
