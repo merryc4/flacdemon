@@ -28,7 +28,7 @@ void SignalHandler::systemSignalHandler(int signum){
     exit(signum);
 }
 fd_signal * SignalHandler::signals(const char *signalName, bool returnNull) const {
-    fd_signal * sig = NULL;
+    fd_signal * sig = nullptr;
     if(this->signalMap->count(signalName) == 0){
         if(!returnNull){
             sig = new fd_signal;

@@ -18,7 +18,7 @@ class FlacDemon::Player {
 private:
     FlacDemon::Database * database;
     int defaultDriverID = -1;
-    ao_device * device = NULL;
+    ao_device * device = nullptr;
     ao_sample_format sampleFormat = {
         16,
         44100,
@@ -27,10 +27,10 @@ private:
         0
     };
     
-//    AVAudioResampleContext * audioResampleContext = NULL;
-    SwrContext * audioResampleContext = NULL;
+//    AVAudioResampleContext * audioResampleContext = nullptr;
+    SwrContext * audioResampleContext = nullptr;
     
-    std::thread * playerThread = NULL;
+    std::thread * playerThread = nullptr;
     int killPlaybackFlag = 0;
 protected:
     

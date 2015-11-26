@@ -57,7 +57,7 @@ void FlacDemon::Player::playTrack(FlacDemon::Track * track){
         return;
     }
     /* open it */
-    if (avcodec_open2(codecContext, codec, NULL) < 0) {
+    if (avcodec_open2(codecContext, codec, nullptr) < 0) {
         cout << "could not open codec" << endl;
 
     }
@@ -97,7 +97,7 @@ void FlacDemon::Player::playTrack(FlacDemon::Track * track){
     AVFrame * frame = av_frame_alloc();
     AVPacket packet;
     av_init_packet(&packet);
-    packet.data = NULL;
+    packet.data = nullptr;
     packet.size = 0;
     
     this->playerThread = new std::thread(&FlacDemon::Player::playAudio, this, track, codecContext, &packet, frame, planar);
@@ -108,7 +108,7 @@ void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * cod
     cout << "playing audio" << endl;
     int error, endoffile=0, gotFrame=0, samplelength=0;
     
-    this->device = ao_open_live(this->defaultDriverID, &this->sampleFormat, NULL);
+    this->device = ao_open_live(this->defaultDriverID, &this->sampleFormat, nullptr);
     
 
     while(endoffile == 0 && error >=0 && this->killPlaybackFlag == 0){

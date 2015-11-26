@@ -25,7 +25,7 @@ protected:
     
     struct SQLStatements {
         const char * createTableTracksFormat = "create table if not exists `tracks` (id INTEGER PRIMARY KEY AUTOINCREMENT, %s)";
-        char * fields = NULL;
+        char * fields = nullptr;
         char * addTrackFormat = (char *)"insert into tracks (%s) values(%s)";
         const char * createTableFiles = "create table if not exists `associate_files` (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath varchar(255), albumuuid varchar(255))";
         char * addFileFormat = (char *)"insert into associate_files (filepath, albumuuid) values(%s)";
@@ -37,14 +37,14 @@ protected:
     
     std::vector<FlacDemon::Track *> * openTracks = new std::vector<FlacDemon::Track *>;
     
-    sqlite3_stmt * sqlSelectStatment = NULL;
+    sqlite3_stmt * sqlSelectStatment = nullptr;
     
-    std::string * currentWorkingDirectory = NULL;
+    std::string * currentWorkingDirectory = nullptr;
     
     sqlite3 * openDB();
     void closeDB(sqlite3 * db);
-    void runSQL(std::string * sql, int (*callback)(void*,int,char**,char**) = NULL, void * arg = NULL); //add return code
-    void runSQL(const char * sql, int (*callback)(void*,int,char**,char**) = NULL, void * arg = NULL); //add return code
+    void runSQL(std::string * sql, int (*callback)(void*,int,char**,char**) = nullptr, void * arg = nullptr); //add return code
+    void runSQL(const char * sql, int (*callback)(void*,int,char**,char**) = nullptr, void * arg = nullptr); //add return code
     fd_keymap * sqlSelect(std::string * sql);
     fd_keymap * sqlSelect(const char * sql);
     

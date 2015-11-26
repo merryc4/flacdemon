@@ -28,7 +28,7 @@ void FlacDemon::CommandParser::parseCommand(string* command) {
 		return;
     
 	unsigned long pos;
-	string word, *commandWord = NULL;
+	string word, *commandWord = nullptr;
     vector<string> args;
     std::map<string, demonCommandFunction>::iterator it;
     

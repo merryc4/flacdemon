@@ -39,43 +39,57 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_TRACKNUMBER_MISSING 4
 #define FLACDEMON_TRACKCOUNT_INCONSISTENT 8
 
-enum {
+#define FLACDEMON_DISCNUMBER_MISMATCH 16
+#define FLACDEMON_NO_DISCNUMBER 32
+#define FLACDEMON_DISCNUMBER_MISSING 64
+
+//files loop
+#define FLACDEMON_LOOP_ALL_FILES fd_filevector::iterator it = this->files->begin(); it != this->files->end(); it++
+
+enum checkDiscMethod {
     FLACDEMON_CHECK_DISC_METHOD_ALBUM,
     FLACDEMON_CHECK_DISC_METHOD_ARTST
+};
+
+enum setChildMetadata {
+    FLACDEMON_DO_NOT_SET_CHILD_METADATA,
+    FLACDEMON_SET_FIRST_CHILD_METADATA,
+    FLACDEMON_SET_ALL_CHILD_METADATA
 };
 
 #define FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA (FLACDEMON_FILE_IS_MEDIA_DIRECTORY | FLACDEMON_SUBDIRECTORY_HAS_MEDIA)
 
 class FlacDemon::File {
 private:
-    vector<string*>* consistentMetadata;
-    vector<string*>* inconsistentMetadata;
+    vector<string*>* consistentMetadata = nullptr;
+    vector<string*>* inconsistentMetadata = nullptr;
 public:
-    AVFormatContext * formatContext = NULL;
+    AVFormatContext * formatContext = nullptr;
     
-    std::string * path = NULL;
-    std::string * name = NULL;
-    std::string * type = NULL;
-    std::string * albumuuid = NULL;
+    std::string * path = nullptr;
+    std::string * name = nullptr;
+    std::string * type = nullptr;
+    std::string * albumuuid = nullptr;
     AVCodecID codecID;
-    AVDictionary * metadata;
-    vector<FlacDemon::File*> *files;
+    AVDictionary * metadata = nullptr;
+    vector<FlacDemon::File*> *files = nullptr;
     int error;
+    int verified;
     bool exists;
     bool readTags = true;
     
     unsigned int flags;
     unsigned int errorFlags;
     
-    FlacDemon::Track* track;
-    MediaStreamInfo * mediaStreamInfo;
+    FlacDemon::Track* track = nullptr;
+    MediaStreamInfo * mediaStreamInfo = nullptr;
     unsigned long fileSize;
     int trackNumber;
     int trackCount;
     int discNumber;
     //discCount?
     
-    File(string* path = NULL, bool readTags = true);
+    File(string* path = nullptr, bool readTags = true);
     ~File();
     
     string* getPath();
@@ -90,15 +104,18 @@ public:
     void checkFileStructure();
     void checkDiscs(int method);
     void setDiscNumber(int discNumber);
+    void reparseTags();
     
-    bool checkExists(struct stat * buffer = NULL);
+    bool checkExists(struct stat * buffer = nullptr);
     bool checkDirectory();
     
     bool isDirectory();
     bool isMediaFile();
+    bool containsMedia();
     bool isAlbumDirectory();
     bool hasConsistantAlbumMetaData();
-    void checkAlbumValues();
+    void verifyAlbum();
+    void setVerified(bool verified);
     void parseTrackNumber();
     int readMediaInfo();
     int openFormatContext(bool reset = false);
@@ -116,12 +133,13 @@ public:
     std::string* getMetaDataEntry(const char* key, AVDictionaryEntry * t, int flags = 0);
     std::string* getMetaDataEntry(string* key, AVDictionaryEntry *t, int flags = 0);
     
-    void setMetaDataEntry(std::string *key, std::string * value);
-    void setMetaDataEntry(const char * key, std::string * value);
-    void setMetaDataEntry(const char * key, const char * value);
+    void setMetaDataEntry(std::string *key, std::string * value, setChildMetadata setChildren = FLACDEMON_DO_NOT_SET_CHILD_METADATA);
+    void setMetaDataEntry(const char * key, std::string * value, setChildMetadata setChildren = FLACDEMON_DO_NOT_SET_CHILD_METADATA);
+    void setMetaDataEntry(const char * key, const char * value, setChildMetadata setChildren = FLACDEMON_DO_NOT_SET_CHILD_METADATA);
 
     
     vector<FlacDemon::File*> * getAlbumDirectories(int depth = INT_MAX);
+    vector<FlacDemon::File*> * getAllFiles(int depth = INT_MAX);
     vector<FlacDemon::File*> * getMediaFiles(int depth = INT_MAX);
     vector<FlacDemon::File*> * getNoneAlbumFiles(int depth = INT_MAX);
     

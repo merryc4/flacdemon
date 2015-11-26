@@ -8,11 +8,16 @@
 
 #include "FlacDemonUtils.h"
 
+std::vector< std::string > * fd_numbers;
+
 void initGlobals(){
     fd_numbers = new std::vector< std::string >{"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"};
 }
 
 int fd_stringtoint(std::string * str, int * value){
+    if(!str)
+        return 0;
+    
     const char * cstr = str->c_str();
     int val = std::atoi(cstr);
     if(val || cstr[0] == '0'){

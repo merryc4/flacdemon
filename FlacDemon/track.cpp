@@ -29,7 +29,8 @@ void FlacDemon::Track::init(){
     this->trackinfo = new std::map<std::string, long>{
         {"playcount", 0},
         {"dateadded", 0},
-        {"tracktime", 0}
+        {"tracktime", 0},
+        {"verified", 0}
     };
 }
 void FlacDemon::Track::setFile(FlacDemon::File * file){
@@ -44,7 +45,7 @@ std::string * FlacDemon::Track::valueForKey (const char * key){
     return this->valueForKey(&tkey);
 }
 std::string * FlacDemon::Track::valueForKey(std::string* key){
-    std::string * value = NULL;
+    std::string * value = nullptr;
     if(key->compare("filepath")==0){
         return this->filepath;
     }
@@ -54,12 +55,12 @@ std::string * FlacDemon::Track::valueForKey(std::string* key){
         if(key->compare("albumuuid")==0){
             return this->file->albumuuid;
         }
-        if((value = this->file->getMetaDataEntry(key)) != NULL){
+        if((value = this->file->getMetaDataEntry(key)) != nullptr){
             value = this->standardiseMetaValue(value, key);
         }
     }
     //query db if no file?
-    if(value == NULL){
+    if(value == nullptr){
         value = new std::string(std::to_string(this->getTrackInfoForKey(key)));
     }
     return value;
@@ -89,9 +90,18 @@ long FlacDemon::Track::getTrackInfoForKey(std::string * key){
     }
     return -1;
 }
+void FlacDemon::Track::setTrackInfoForKey(const char * key, long value){
+    std::string tkey = key;
+    this->setTrackInfoForKey(&tkey, value);
+}
+void FlacDemon::Track::setTrackInfoForKey(std::string * key, long value){
+    cout << this->trackinfo->at(*key) << endl;
+    this->trackinfo->at(*key) = value;
+}
+
 void FlacDemon::Track::initInfo(){
-    cout << time(NULL) << endl;
-    this->trackinfo->at("dateadded") = time(NULL);
+    cout << time(nullptr) << endl;
+    this->trackinfo->at("dateadded") = time(nullptr);
 }
 int FlacDemon::Track::openFilePath(){
     //will need to do more checks, path exists, relative pathname, file opened succesfully etc
@@ -103,5 +113,5 @@ int FlacDemon::Track::openFilePath(){
         }
     }
     
-    return this->file==NULL ? 0 : 1;
+    return this->file==nullptr ? 0 : 1;
 }

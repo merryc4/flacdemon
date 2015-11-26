@@ -23,20 +23,20 @@ protected:
     unsigned int playCount;
     time_t trackTime;
     
-    std::string * filepath = NULL;
-//    std::string * albumuuid = NULL;
+    std::string * filepath = nullptr;
+//    std::string * albumuuid = nullptr;
     
-    std::map<std::string, long> * trackinfo = NULL;
-    fd_keymap * keymap = NULL;
+    std::map<std::string, long> * trackinfo = nullptr;
+    fd_keymap * keymap = nullptr;
     
 public:
     friend FlacDemon::File;
     
-    string * uuid = NULL;
-    FlacDemon::File* file = NULL;
-    struct MediaStreamInfo * mediaStreamInfo = NULL;
+    string * uuid = nullptr;
+    FlacDemon::File* file = nullptr;
+    struct MediaStreamInfo * mediaStreamInfo = nullptr;
 
-    Track (FlacDemon::File* file = NULL);
+    Track (FlacDemon::File* file = nullptr);
     Track (fd_keymap * keymap);
     ~Track();
     
@@ -52,6 +52,9 @@ public:
 
     long getTrackInfoForKey(const char * key);
     long getTrackInfoForKey(std::string * key);
+    
+    void setTrackInfoForKey(const char * key, long value);
+    void setTrackInfoForKey(std::string * key, long value);
     
     void setFile(FlacDemon::File*);
     void setValuesFromAudioContext(AVCodecContext*);

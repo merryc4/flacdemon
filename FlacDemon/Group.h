@@ -30,7 +30,7 @@ protected:
     vector<FlacDemon::Track*> * tracks; //pointers?
     vector<FlacDemon::Group*> * groups;
     
-    Group(string * iTitle = NULL, string * iFilepath = NULL, string * iTypeKey = NULL);
+    Group(string * iTitle = nullptr, string * iFilepath = nullptr, string * iTypeKey = nullptr);
     ~Group();
     
 public:

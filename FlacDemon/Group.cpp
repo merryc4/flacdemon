@@ -68,9 +68,9 @@ unsigned int FlacDemon::Group::trackCount(){
 
 vector<FlacDemon::Track*> * FlacDemon::Group::allTracks(){
     
-    return NULL;
+    return nullptr;
 }
 vector<FlacDemon::Group*> * FlacDemon::Group::allGroups(const char* key){
     
-    return NULL;
+    return nullptr;
 }

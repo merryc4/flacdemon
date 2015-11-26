@@ -51,7 +51,7 @@ int FlacDemon::Demon::play(vector<string> * args){
     cout << "play some tunes" << endl;
     long ID = 1;
     if(args && args->size()){
-        ID = std::strtol((*args)[0].c_str(), NULL, 0);
+        ID = std::strtol((*args)[0].c_str(), nullptr, 0);
     }
     this->player->playTrackWithID(ID);
     return 0;

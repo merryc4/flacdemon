@@ -33,6 +33,7 @@ namespace FlacDemon {
 using namespace std;
 
 typedef int (FlacDemon::Demon::*demonCommandFunction) (vector<string>*);
+typedef std::vector< FlacDemon::File * > fd_filevector;
 
 struct MediaStreamInfo {
     unsigned long bitRate;
