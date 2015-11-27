@@ -43,8 +43,9 @@ int FlacDemon::Demon::add(vector<string> * args){
     cout << "add some files" << endl;
     for(vector<string>::iterator it = args->begin(); it != args->end(); it++){
         cout << *it << endl;
-        string path = *it;
-        this->fileImporter->importFilesFromPath(&path);
+        std::string * path = new std::string(*it);
+        this->fileImporter->importFilesFromPath(path);
+        free(path);
     }
     return 0;
 }

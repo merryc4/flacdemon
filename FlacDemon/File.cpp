@@ -12,11 +12,11 @@ const char * FlacDemonMetaDataMultipleValues = "FlacDemonMetaDataMultipleValues"
 
 FlacDemon::File::File(string* path, bool readTags){
     this->codecID = AV_CODEC_ID_NONE;
+
     this->flags = 0;
     this->errorFlags = 0;
     this->metadata = nullptr;
     this->files = nullptr;
-    this->path = new string;
     this->error = 0;
     this->fileSize = 0;
     this->readTags = readTags;
@@ -42,7 +42,10 @@ string* FlacDemon::File::getPath(){
     return this->path;
 }
 void FlacDemon::File::setPath(string* iPath){
-    this->path->assign(*iPath);
+    if(this->path)
+        this->path->assign(*iPath);
+    else
+        this->path = new std::string(*iPath);
     
     this->setNameFromPath();
     
@@ -100,8 +103,7 @@ void FlacDemon::File::parse(){
         perror ("");
     }
     if(!this->files->size()){
-        cout << "No files in directory " << *this->path << endl
-        ;
+        cout << "No files in directory " << *this->path << endl;
         return;
     }
     this->checkFileStructure();

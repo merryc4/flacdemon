@@ -65,31 +65,37 @@ private:
     vector<string*>* consistentMetadata = nullptr;
     vector<string*>* inconsistentMetadata = nullptr;
 public:
+    
+    unsigned long fileSize;
+    
+    int trackNumber = 0;
+    int trackCount = 0;
+    int discNumber = 0;
+    int discCount = 0;
+    
+    int error;
+    int verified;
+    
+    unsigned int flags;
+    unsigned int errorFlags;
+    
+    bool exists;
+    bool readTags = true;
+    
     AVFormatContext * formatContext = nullptr;
     
     std::string * path = nullptr;
     std::string * name = nullptr;
     std::string * type = nullptr;
     std::string * albumuuid = nullptr;
+    
     AVCodecID codecID;
     AVDictionary * metadata = nullptr;
     vector<FlacDemon::File*> *files = nullptr;
-    int error;
-    int verified;
-    bool exists;
-    bool readTags = true;
-    
-    unsigned int flags;
-    unsigned int errorFlags;
     
     FlacDemon::Track* track = nullptr;
     MediaStreamInfo * mediaStreamInfo = nullptr;
-    unsigned long fileSize;
-    int trackNumber;
-    int trackCount;
-    int discNumber;
-    int discCount;
-    //discCount?
+
     
     File(string* path = nullptr, bool readTags = true);
     ~File();
