@@ -23,7 +23,8 @@ FlacDemon::Demon::Demon() {
     this->commandParser->setMapForDemon(this, new std::map<string, demonCommandFunction>{
         {"add", &FlacDemon::Demon::add},
         {"play", &FlacDemon::Demon::play},
-        {"stop", &FlacDemon::Demon::stop}
+        {"stop", &FlacDemon::Demon::stop},
+        {"set", &FlacDemon::Demon::set}
     });
 }
 FlacDemon::Demon::~Demon() {
@@ -59,5 +60,22 @@ int FlacDemon::Demon::play(vector<string> * args){
 int FlacDemon::Demon::stop(vector<string> * args){
     cout << "stop playback" << endl;
     this->player->stop();
+    return 0;
+}
+int FlacDemon::Demon::set(vector<string> * args){
+    if(args->size() < 3){
+        cout << "command error: incorrect arguments" << endl;
+        return 1;
+    }
+
+    int id;
+    if(fd_stringtoint(&(*args)[0], &id)){
+        cout << "command error : unknown id: " << (*args)[0] << endl;
+        return 1;
+    }
+    std::string metaTagName = (*args)[1];
+    std::string metaTagValue = (*args)[2];
+    
+    
     return 0;
 }

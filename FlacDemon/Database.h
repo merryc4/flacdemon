@@ -66,13 +66,15 @@ public:
     void add(FlacDemon::File * file);
     void add(FlacDemon::Track* track);
     
-    FlacDemon::Track * trackForID(long ID);
+    FlacDemon::Track * trackForID(unsigned long ID);
     FlacDemon::Track * trackWithKeyMap(fd_keymap * keyMap);
     std::string * albumDirectoryUUIDForPath(std::string * path);
     
     int hasEntryForFile(std::string * filepath, const char * table);
     
     std::string * getUUID();
+    
+    int setValue(unsigned long ID, std::string * key, std::string * value);
 };
 
 #endif /* defined(__FlacDemon__Database__) */

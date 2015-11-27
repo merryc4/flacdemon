@@ -210,6 +210,10 @@ void FlacDemon::File::checkDiscs(int method){
     std::smatch ematch;
     std::ssub_match sub_match;
     
+    this->discCount = 0;
+    
+    int maxDiscNumber = 0;
+    
     bool reparseNeeded = false;
 
     
@@ -278,9 +282,18 @@ void FlacDemon::File::checkDiscs(int method){
         
         if(discNumber){
             (*it)->setDiscNumber(discNumber);
+            if(maxDiscNumber < discNumber)
+                maxDiscNumber = discNumber;
+            this->discCount++;
             reparseNeeded = true;
         }
     }
+    if(maxDiscNumber != this->discCount)
+        this->errorFlags = this->errorFlags | FLACDEMON_DISCCOUNT_INCONSISTENT;
+    
+    if(!this->discCount)
+        this->discCount = 1;
+    
     if(reparseNeeded)
         this->reparseTags();
     
@@ -399,12 +412,21 @@ void FlacDemon::File::verifyAlbum(){
     int tTrackCount = 0,
         tTrackNumber = 0,
         maxTrackNumber = 0;
-    std::vector<int> availableTracks;
+    std::vector<std::vector<int> *> availableTracksPerDisc;
+    std::vector<int> * availableTracks = nullptr;
     
     bool verified = true;
-    
+    int disc = 0;
     for(vector < FlacDemon::File * >::iterator it = files->begin(); it != files->end(); it++){
         (*it)->parseTrackNumber();
+        if(!disc || (*it)->discNumber != disc){
+            disc = (*it)->discNumber;
+            tTrackCount = 0;
+            maxTrackNumber = 0;
+            availableTracks = new std::vector<int>;
+            availableTracksPerDisc.push_back(availableTracks);
+        }
+
         if(tTrackCount){
             if((*it)->trackCount != tTrackCount){
                 //track count incosistency, handle error
@@ -417,9 +439,10 @@ void FlacDemon::File::verifyAlbum(){
         if((tTrackNumber = (*it)->trackNumber)){
             if(maxTrackNumber < tTrackNumber){
                 maxTrackNumber = tTrackNumber;
-                availableTracks.resize(maxTrackNumber + 1);
+                availableTracks->resize(maxTrackNumber + 1);
             }
-            availableTracks[tTrackNumber] = 1;
+            if(tTrackNumber > 0)
+                availableTracks->at(tTrackNumber) = 1;
         } else {
             cout << "no track number for file" << endl;
             //no track number for file, handle error
@@ -427,10 +450,14 @@ void FlacDemon::File::verifyAlbum(){
         if(verified && (*it)->errorFlags)
             verified = false;
     }
-    for(int i = 1; i <= maxTrackNumber; i++){
-        if(!availableTracks[i]){
-            cout << "Track Missing!";
-            this->errorFlags = this->errorFlags | FLACDEMON_TRACKNUMBER_MISSING;
+    for(std::vector<std::vector<int> *>::iterator it = availableTracksPerDisc.begin(); it != availableTracksPerDisc.end(); it++){
+        int count = 0; //not currently used
+        for(std::vector<int>::iterator it2 = (*it)->begin()+1; it2 != (*it)->end(); it2++) {
+            if(!(*it2)){
+                cout << "Track Missing!";
+                this->errorFlags = this->errorFlags | FLACDEMON_TRACKNUMBER_MISSING;
+            }
+            count ++;
         }
     }
     if(verified && this->errorFlags){

@@ -42,6 +42,7 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_DISCNUMBER_MISMATCH 16
 #define FLACDEMON_NO_DISCNUMBER 32
 #define FLACDEMON_DISCNUMBER_MISSING 64
+#define FLACDEMON_DISCCOUNT_INCONSISTENT 128
 
 //files loop
 #define FLACDEMON_LOOP_ALL_FILES fd_filevector::iterator it = this->files->begin(); it != this->files->end(); it++
@@ -87,6 +88,7 @@ public:
     int trackNumber;
     int trackCount;
     int discNumber;
+    int discCount;
     //discCount?
     
     File(string* path = nullptr, bool readTags = true);

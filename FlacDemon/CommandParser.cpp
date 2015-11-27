@@ -27,15 +27,42 @@ void FlacDemon::CommandParser::parseCommand(string* command) {
 	if (!command->length())
 		return;
     
-	unsigned long pos;
+	unsigned long pos = 0, skip;
 	string word, *commandWord = nullptr;
     vector<string> args;
     std::map<string, demonCommandFunction>::iterator it;
     
-	do {
-		if ((pos = command->find(" ")) == string::npos){
+    std::regex reg("[\\s\\'\\\"]");
+    std::regex reg2 = reg;
+    std::match_results<std::string::iterator> regmatch;
+
+    bool matchQuote = false;
+    
+    std::string::iterator last = command->end();
+    std::string::iterator first;
+    
+    do {
+        first = command->begin();
+        skip = 0;
+        if(regex_search(first, last, regmatch, reg2)){
+            pos = regmatch.position();
+            if(regmatch.str().compare(" ")){
+                if(matchQuote){
+                    matchQuote = false;
+                    skip = 1;
+                    reg2 = reg;
+                } else {
+                    reg2 = regmatch.str();
+                    matchQuote = true;
+                }
+            } else if(matchQuote){
+                continue;
+            }
+            
+        } else {
 			pos = command->length();
 		}
+        
         if(pos == 0)
             pos++;
         
@@ -43,11 +70,11 @@ void FlacDemon::CommandParser::parseCommand(string* command) {
             break;
         
 		word = command->substr(0, pos);
-		*command = command->substr(pos, (unsigned long int)(command->length() - pos));
+		*command = command->substr(pos+skip, (unsigned long int)(command->length() - (pos+skip)));
         
         pos -= word.length();
         
-        if(word.compare(" ") == 0){
+        if(word.compare(" ") == 0 || matchQuote){
             continue;
         }
         
@@ -61,6 +88,7 @@ void FlacDemon::CommandParser::parseCommand(string* command) {
             }
         } else {
             args.push_back(word);
+            cout << "argument: " << word << endl;
         }
         
 	} while (pos < command->length());

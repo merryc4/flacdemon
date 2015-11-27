@@ -350,4 +350,7 @@ std::string * FlacDemon::Database::albumDirectoryUUIDForPath(std::string * path)
         value = this->getUUID();
     return value;
 }
+int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::string * value){
+    
+}
 
