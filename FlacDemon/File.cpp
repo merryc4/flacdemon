@@ -10,19 +10,42 @@
 
 const char * FlacDemonMetaDataMultipleValues = "FlacDemonMetaDataMultipleValues";
 
-FlacDemon::File::File(string* path, bool readTags){
-    this->codecID = AV_CODEC_ID_NONE;
-
+FlacDemon::File::File(string* iPath, bool readTags){
+    
+    this->fileSize = 0;
+    
+    this->trackNumber = 0;
+    this->trackCount = 0;
+    this->discNumber = 0;
+    this->discCount = 0;
+    
+    this->error = 0;
+    this->verified = 0;
+    
     this->flags = 0;
     this->errorFlags = 0;
-    this->metadata = nullptr;
-    this->files = nullptr;
-    this->error = 0;
-    this->fileSize = 0;
+    
+    this->exists = 0;
     this->readTags = readTags;
     
-    if(path)
-        this->setPath(path);
+    this->codecID = AV_CODEC_ID_NONE;
+
+    
+    this->formatContext = nullptr;
+    
+    this->filepath = nullptr;
+    this->name = nullptr;
+    this->type = nullptr;
+    this->albumuuid = nullptr;
+    
+    this->metadata = nullptr;
+    this->files = nullptr;
+    
+    this->track = nullptr;
+    this->mediaStreamInfo = nullptr;
+    
+    if(iPath)
+        this->setPath(iPath);
 }
 FlacDemon::File::~File(){
     if(this->files){
@@ -39,13 +62,13 @@ FlacDemon::File::~File(){
     }
 }
 string* FlacDemon::File::getPath(){
-    return this->path;
+    return this->filepath;
 }
-void FlacDemon::File::setPath(string* iPath){
-    if(this->path)
-        this->path->assign(*iPath);
+void FlacDemon::File::setPath(std::string* iPath){
+    if(this->filepath)
+        this->filepath->assign(*iPath);
     else
-        this->path = new std::string(*iPath);
+        this->filepath = new std::string(*iPath);
     
     this->setNameFromPath();
     
@@ -56,11 +79,13 @@ void FlacDemon::File::setPath(string* iPath){
     }
 }
 void FlacDemon::File::setNameFromPath(){
-    size_t pos = this->path->rfind("/");
+    if(this->filepath == nullptr)
+        return;
+    size_t pos = this->filepath->rfind("/");
     if(pos == string::npos){
-        this->name = new std::string(*this->path);
+        this->name = new std::string(*this->filepath);
     } else {
-        this->name = new std::string(this->path->substr(pos+1));
+        this->name = new std::string(this->filepath->substr(pos+1));
     }
 }
 void FlacDemon::File::setAlbumDirectoryUUID(std::string * iuuid){
@@ -72,22 +97,22 @@ void FlacDemon::File::setAlbumDirectoryUUID(std::string * iuuid){
     }
 }
 void FlacDemon::File::parse(){
-    cout << "Checking directory " << *this->path << endl;
+    cout << "Checking directory " << *this->filepath << endl;
     struct dirent *ent;
     DIR* dir;
     string subpath;
-    if(path->back() != '/'){
-        path->append("/");
+    if(this->filepath->back() != '/'){
+        this->filepath->append("/");
     }
     
-    if ((dir = opendir (this->path->c_str())) != nullptr) {
+    if ((dir = opendir (this->filepath->c_str())) != nullptr) {
         while ((ent = readdir (dir)) != nullptr) {
             if(ent->d_name[0] == '.'){
                 //hidden file
                 cout << "skipping hidden file " << ent->d_name << endl;
                 continue;
             }
-            subpath = *path + ent->d_name;
+            subpath = *this->filepath + ent->d_name;
             cout << subpath << endl;
             
             FlacDemon::File* tFile = new FlacDemon::File(&subpath);
@@ -103,7 +128,7 @@ void FlacDemon::File::parse(){
         perror ("");
     }
     if(!this->files->size()){
-        cout << "No files in directory " << *this->path << endl;
+        cout << "No files in directory " << *this->filepath << endl;
         return;
     }
     this->checkFileStructure();
@@ -130,7 +155,7 @@ void FlacDemon::File::addFile(FlacDemon::File * file){
     this->addMetaDataFromFile(file);
 }
 void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
-    if(!this->metadata){
+    if(this->metadata == nullptr){
         av_dict_copy(&this->metadata, file->metadata, 0);
         return;
     }
@@ -150,7 +175,7 @@ void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
 void FlacDemon::File::checkFileStructure(){
     if(!this->containsMedia())
         return;
-    cout << "Checking file structure for " << *this->path << endl;
+    cout << "Checking file structure for " << *this->filepath << endl;
     int lookForDiscs = 0;
     if(!(this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY) && (this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA)){
         lookForDiscs = 1;
@@ -246,7 +271,7 @@ void FlacDemon::File::checkDiscs(int method){
             metaDiscStr = (*it)->getMetaDataEntry("cd", 0);
         
         if(fd_stringtoint(metaDiscStr, &metaDiscNumber) || metaDiscNumber == 0){
-            cout << "could not get disc number from metadata for " << *(*it)->path << endl;
+            cout << "could not get disc number from metadata for " << *(*it)->filepath << endl;
         } else {
             numbers.push_back(metaDiscNumber);
         }
@@ -257,7 +282,7 @@ void FlacDemon::File::checkDiscs(int method){
             fd_stringtoint(fileNameDiscStr, &filenameDiscNumber);
         }
         if(!filenameDiscNumber){
-            cout << "could not get disc number from filename for " << *(*it)->path << endl;
+            cout << "could not get disc number from filename for " << *(*it)->filepath << endl;
         } else {
             numbers.push_back(filenameDiscNumber);
         }
@@ -275,7 +300,7 @@ void FlacDemon::File::checkDiscs(int method){
                 }
             }
             if(!albumTagDiscNumber){
-                cout << "could not get disc number from album tag for " << *(*it)->path << endl;
+                cout << "could not get disc number from album tag for " << *(*it)->filepath << endl;
             } else {
                 numbers.push_back(albumTagDiscNumber);
             }
@@ -344,8 +369,8 @@ bool FlacDemon::File::checkExists(struct stat * buffer){
         buffer = new struct stat;
     }
     this->exists = false;
-    if(stat(path->c_str(), buffer) == -1){
-        cout << "error stat-ing file " << path << " errno: " << errno << endl;
+    if(stat(this->filepath->c_str(), buffer) == -1){
+        cout << "error stat-ing file " << this->filepath << " errno: " << errno << endl;
         if(errno == ENOENT){
             cout << "File does not exist" << endl;
         }
@@ -498,7 +523,7 @@ void FlacDemon::File::parseTrackNumber(){
     int nonDigitFound = 0;
     
     if(!trackNumStr || fd_stringtoint(trackNumStr, &trackNum)){
-        cout << "could not parse track number from metadata for " << *this->path << endl;
+        cout << "could not parse track number from metadata for " << *this->filepath << endl;
     }
     if(trackNumStr){
         //check value of trackNum
@@ -522,7 +547,7 @@ void FlacDemon::File::parseTrackNumber(){
 //            cout << "found track number " << sub_match.str() << endl;
         trackNumStr2 = new std::string(sub_match.str());
         if(fd_stringtoint(trackNumStr2, &trackNum2)){
-            cout << "Could not parse track number from file for " << *this->path << endl;
+            cout << "Could not parse track number from file for " << *this->filepath << endl;
         }
             
     }
@@ -530,14 +555,14 @@ void FlacDemon::File::parseTrackNumber(){
     if(trackNum == trackNum2){
         if(trackNum == 0){ //no track number could be determined
             this->errorFlags = this->errorFlags | FLACDEMON_NO_TRACKNUMBER;
-            cout << "no track number for file " << *this->path << endl;
+            cout << "no track number for file " << *this->filepath << endl;
             return;
         }
     } else if(!trackNum){
         trackNum = trackNum2;
     } else {
         this->errorFlags = this->errorFlags | FLACDEMON_TRACKNUMBER_MISMATCH;
-        cout << "tracknumber mismatch for file " << * this->path << endl;
+        cout << "tracknumber mismatch for file " << * this->filepath << endl;
         trackNum = -1;
         
     }
@@ -570,7 +595,7 @@ int FlacDemon::File::readMediaInfo(){
     }
     
     if(inputCodec->type != AVMEDIA_TYPE_AUDIO){
-        cout << "skipping none audio file " << *path << endl;
+        cout << "skipping none audio file " << *this->filepath << endl;
         this->flags = this->flags & ~ FLACDEMON_FILE_IS_MEDIA;
     } else {
         this->setToMediaFile(this->formatContext);
@@ -606,7 +631,7 @@ int FlacDemon::File::openFormatContext(bool reset){
     int averror;
     this->formatContext = avformat_alloc_context();
 
-    if ((averror = avformat_open_input(&this->formatContext, this->path->c_str(), nullptr,
+    if ((averror = avformat_open_input(&this->formatContext, this->filepath->c_str(), nullptr,
                                        nullptr)) < 0) {
         cout << "could not open input file" << endl;
         this->formatContext = nullptr;
@@ -616,7 +641,7 @@ int FlacDemon::File::openFormatContext(bool reset){
         std::stringstream ss;
         ss << "\\." << this->formatContext->iformat->name << "$";
         std::regex e(ss.str(), regex_constants::icase);
-        if(!regex_match(*this->path, e)){
+        if(!regex_match(*this->filepath, e)){
             return -1;
         }
     }
@@ -633,6 +658,9 @@ void FlacDemon::File::setToMediaFile(AVFormatContext* formatContext){
     this->mediaStreamInfo->channels = codecContext->channels;
     this->mediaStreamInfo->codecID = codecContext->codec_id;
     this->mediaStreamInfo->duration = formatContext->streams[0]->duration;
+    
+    this->discNumber = 1;
+    this->discCount = 1;
     
     this->makeTrack();
 }
@@ -668,7 +696,7 @@ const char * FlacDemon::File::standardiseKey(const char *key){
     return this->standardiseKey(new string(key))->c_str();
 }
 void FlacDemon::File::printMetaDataDict(AVDictionary *dict){
-    cout << "Metadata for " << *this->path << ":" <<endl;
+    cout << "Metadata for " << *this->filepath << ":" <<endl;
     AVDictionaryEntry *t = nullptr;
     while ((t = av_dict_get(dict, "", t, AV_DICT_IGNORE_SUFFIX))){
         cout << t->key << " : " << t->value << endl;
@@ -800,13 +828,13 @@ vector<FlacDemon::File*> * FlacDemon::File::getNoneAlbumFiles(int max){
     return noneAlbumFiles;
 }
 void FlacDemon::File::standardisePath(std::string * workingDirectory){
-    if(this->path->at(0) == '/')
+    if(this->filepath->at(0) == '/')
         return;
-    boost::filesystem::path tpath = (*this->path);
+    boost::filesystem::path tpath = (*this->filepath);
     tpath = boost::filesystem::absolute(tpath);
-    this->path = new std::string(tpath.string<std::string>()); //may need to free old this->path
+    this->filepath = new std::string(tpath.string<std::string>()); //may need to free old this->filepath
     if(this->isMediaFile() && this->track){
-        this->track->filepath = this->path;
+        this->track->filepath = this->filepath;
     }
 }
 

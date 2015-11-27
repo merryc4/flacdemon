@@ -25,7 +25,7 @@ void FlacDemon::FileImporter::importFilesFromPath(string *path){
     
     cout << "------------------ ALBUM DIRECTORIES ------------------" << endl;
     for(vector<FlacDemon::File*>::iterator it = albumDirectories->begin(); it != albumDirectories->end(); it++){
-        cout << *(*it)->path << endl;
+        cout << *(*it)->filepath << endl;
     }
     cout << "-------------------------------------------------------" << endl;
     
@@ -37,7 +37,7 @@ void FlacDemon::FileImporter::importFilesFromPath(string *path){
     
     cout << "------------------ NONE ALBUM FILES ------------------" << endl;
     for(vector<FlacDemon::File*>::iterator it = noneAlbumFiles->begin(); it != noneAlbumFiles->end(); it++){
-        cout << *(*it)->path << endl;
+        cout << *(*it)->filepath << endl;
     }
     cout << "-------------------------------------------------------" << endl;
     

@@ -62,16 +62,17 @@ enum setChildMetadata {
 
 class FlacDemon::File {
 private:
-    vector<string*>* consistentMetadata = nullptr;
-    vector<string*>* inconsistentMetadata = nullptr;
+    vector<string*>* consistentMetadata;
+    vector<string*>* inconsistentMetadata;
+    AVDictionary * metadata;
 public:
     
     unsigned long fileSize;
     
-    int trackNumber = 0;
-    int trackCount = 0;
-    int discNumber = 0;
-    int discCount = 0;
+    int trackNumber;
+    int trackCount;
+    int discNumber;
+    int discCount;
     
     int error;
     int verified;
@@ -80,29 +81,31 @@ public:
     unsigned int errorFlags;
     
     bool exists;
-    bool readTags = true;
+    bool readTags;
     
-    AVFormatContext * formatContext = nullptr;
+    AVFormatContext * formatContext;
     
-    std::string * path = nullptr;
-    std::string * name = nullptr;
-    std::string * type = nullptr;
-    std::string * albumuuid = nullptr;
+    std::string * filepath;
+    std::string * name;
+    std::string * type;
+    std::string * albumuuid;
     
-    AVCodecID codecID;
-    AVDictionary * metadata = nullptr;
-    vector<FlacDemon::File*> *files = nullptr;
-    
-    FlacDemon::Track* track = nullptr;
-    MediaStreamInfo * mediaStreamInfo = nullptr;
+    vector<FlacDemon::File*> *files;
 
     
-    File(string* path = nullptr, bool readTags = true);
+    AVCodecID codecID;
+    
+    MediaStreamInfo * mediaStreamInfo;
+
+    FlacDemon::Track* track;
+
+    
+    File(string* iPath = nullptr, bool readTags = true);
     ~File();
     
     string* getPath();
     void setNameFromPath();
-    void setPath(string*);
+    void setPath(std::string* iPath);
     
     void setAlbumDirectoryUUID(std::string * uuid);
     
@@ -130,7 +133,7 @@ public:
     void setToMediaFile(AVFormatContext*);
     void makeTrack();
     void standardiseMetaTags();
-    string * standardiseKey(string* key);
+    std::string * standardiseKey(string* key);
     const char * standardiseKey(const char *key);
     
     void setToDirectory();

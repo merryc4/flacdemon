@@ -57,11 +57,11 @@ void FlacDemon::Database::signalReceiver(const char * signalName, void * arg){
     }
 }
 void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
-    std::cout << "add album directory: " << *albumDirectory->path << endl;
+    std::cout << "add album directory: " << *albumDirectory->filepath << endl;
     
     albumDirectory->standardisePath(nullptr);
     
-    std::string * uuid = this->albumDirectoryUUIDForPath(albumDirectory->path);
+    std::string * uuid = this->albumDirectoryUUIDForPath(albumDirectory->filepath);
     albumDirectory->setAlbumDirectoryUUID(uuid);
     free(uuid);
     
@@ -86,15 +86,15 @@ void FlacDemon::Database::add(FlacDemon::File * file){
     if(!file->albumuuid)
         return;
     
-    if(this->hasEntryForFile(file->path, "associate_files")){
-        cout << "not adding file '" << *file->path << "' already in database" << endl;
+    if(this->hasEntryForFile(file->filepath, "associate_files")){
+        cout << "not adding file '" << *file->filepath << "' already in database" << endl;
         return;
     }
     
-    cout << "adding album file " << *file->path << endl;
+    cout << "adding album file " << *file->filepath << endl;
     
     std::string values = "'";
-    values.append(regex_replace(*file->path, std::regex("'"), "''"));
+    values.append(regex_replace(*file->filepath, std::regex("'"), "''"));
     values.append("','");
     values.append(*file->albumuuid);
     values.append("'");
@@ -106,10 +106,10 @@ void FlacDemon::Database::add(FlacDemon::File * file){
     this->runSQL(&sql);
 }
 void FlacDemon::Database::add(FlacDemon::Track *track){
-    cout << "adding track: " << *track->file->path << endl;
+    cout << "adding track: " << *track->file->filepath << endl;
     
-    if(this->hasEntryForFile(track->file->path, "tracks")){
-        cout << "not adding file " << *track->file->path << ". already in database" << endl;
+    if(this->hasEntryForFile(track->file->filepath, "tracks")){
+        cout << "not adding file " << *track->file->filepath << ". already in database" << endl;
         return;
     }
     

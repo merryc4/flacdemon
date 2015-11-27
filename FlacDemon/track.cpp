@@ -37,7 +37,7 @@ void FlacDemon::Track::setFile(FlacDemon::File * file){
     this->file = file;
     this->trackinfo->at("tracktime") = (long) this->file->mediaStreamInfo->duration / (0.001 * this->file->mediaStreamInfo->sampleRate);
     
-    this->filepath = new std::string(*file->path);
+    this->filepath = new std::string(*file->filepath);
 }
 
 std::string * FlacDemon::Track::valueForKey (const char * key){
