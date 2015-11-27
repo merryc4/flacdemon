@@ -29,6 +29,7 @@ protected:
         char * addTrackFormat = (char *)"insert into tracks (%s) values(%s)";
         const char * createTableFiles = "create table if not exists `associate_files` (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath varchar(255), albumuuid varchar(255))";
         char * addFileFormat = (char *)"insert into associate_files (filepath, albumuuid) values(%s)";
+        char * setValueFormat = (char *)"update tracks set %s=`%s` where id=%lu";
     } sql_statements;
     
     std::vector<std::string> * metakeys;

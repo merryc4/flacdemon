@@ -76,6 +76,7 @@ int FlacDemon::Demon::set(vector<string> * args){
     std::string metaTagName = (*args)[1];
     std::string metaTagValue = (*args)[2];
     
+    this->database->setValue(id, &metaTagName, &metaTagValue);
     
     return 0;
 }

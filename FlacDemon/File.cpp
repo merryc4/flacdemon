@@ -99,6 +99,11 @@ void FlacDemon::File::parse(){
         /* could not open directory */
         perror ("");
     }
+    if(!this->files->size()){
+        cout << "No files in directory " << *this->path << endl
+        ;
+        return;
+    }
     this->checkFileStructure();
     this->printMetaDataDict(this->metadata);
 }
@@ -179,10 +184,15 @@ void FlacDemon::File::checkFileStructure(){
     
     if(artistConsistency){
         if(albumConsistency){
-            
-            this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
-            if(lookForDiscs)
+            if(lookForDiscs){
                 this->checkDiscs(FLACDEMON_CHECK_DISC_METHOD_ALBUM);
+                if(this->discCount > 1){
+                    this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+                }
+            } else {
+                this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+            }
+            
             //only need to check 'disc' tag / file names to try and identify correct disc numbers
 
         } else {
@@ -454,7 +464,7 @@ void FlacDemon::File::verifyAlbum(){
         int count = 0; //not currently used
         for(std::vector<int>::iterator it2 = (*it)->begin()+1; it2 != (*it)->end(); it2++) {
             if(!(*it2)){
-                cout << "Track Missing!";
+                cout << "Track Missing!" << endl;
                 this->errorFlags = this->errorFlags | FLACDEMON_TRACKNUMBER_MISSING;
             }
             count ++;

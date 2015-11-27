@@ -94,7 +94,7 @@ void FlacDemon::Database::add(FlacDemon::File * file){
     cout << "adding album file " << *file->path << endl;
     
     std::string values = "'";
-    values.append(*file->path);
+    values.append(regex_replace(*file->path, std::regex("'"), "''"));
     values.append("','");
     values.append(*file->albumuuid);
     values.append("'");
@@ -116,8 +116,11 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
     track->initInfo();
     
     std::string sql="'";
+    std::string value;
     for(std::vector<std::string>::iterator it = this->allkeys->begin(); it != this->allkeys->end(); it++){
-        sql.append(*track->valueForKey(&(*it)));
+        value = regex_replace(*track->valueForKey(&(*it)), std::regex("'"), "''");
+
+        sql.append(value);
         sql.append("','");
     }
     sql.pop_back();
@@ -128,7 +131,7 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
     sql2.erase(pos, 2);
     sql2.insert(pos, sql);
     
-    cout << sql2.c_str() << endl;
+//    cout << sql2.c_str() << endl;
     this->runSQL(sql2.c_str());
 }
 sqlite3 * FlacDemon::Database::openDB(){
@@ -149,7 +152,7 @@ void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char*
     if(!db)
         return;
     char * err = nullptr;
-    
+
     cout << "running sql " << sql << endl;
     
     sqlite3_exec(db, sql, callback, arg, &err);
@@ -264,12 +267,12 @@ void FlacDemon::Database::initDB(){
         this->allkeys->push_back(*new std::string((*it)));
 
     }
+    std::string value;
     for(std::vector<std::string>::iterator it = this->trackinfokeys->begin(); it != this->trackinfokeys->end(); it++){
         sql.append((*it));
 //        sql.append(" unsigned int,");
         sql.append(" varchar(255),");
 
-        
         fields.append((*it));
         fields.append(",");
         
@@ -299,7 +302,7 @@ void FlacDemon::Database::initDB(){
     this->runSQL(this->sql_statements.createTableFiles);
 }
 
-FlacDemon::Track * FlacDemon::Database::trackForID(long ID){
+FlacDemon::Track * FlacDemon::Database::trackForID(unsigned long ID){
     for(std::vector<FlacDemon::Track *>::iterator it = this->openTracks->begin(); it != this->openTracks->end(); it++){
         std::string * value = nullptr;
         std::string strID = std::to_string(ID);
@@ -351,6 +354,20 @@ std::string * FlacDemon::Database::albumDirectoryUUIDForPath(std::string * path)
     return value;
 }
 int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::string * value){
+    std::string sql = this->sql_statements.setValueFormat;
+    size_t pos = sql.find("%s");
+    sql.erase(pos, 2);
+    sql.insert(pos, *key);
     
+    pos = sql.find("%s");
+    sql.erase(pos, 2);
+    sql.insert(pos, *value);
+    
+    pos = sql.find("%lu");
+    sql.erase(pos, 3);
+    sql.insert(pos, std::to_string(ID));
+    this->runSQL(&sql);
+    
+    return 0;
 }
 
