@@ -38,3 +38,54 @@ int fd_stringtoint(std::string * str, int * value){
     
     return 1;
 }
+int fd_comparetags(std::string * tag1, std::string * tag2){
+    if(!tag1->length() || !tag2->length())
+        return 0;
+    tag1 = new std::string(*tag1); fd_tolowercase(tag1);
+    tag2 = new std::string(*tag2); fd_tolowercase(tag2);
+    struct varray * ses = varray_new(sizeof(struct diff_edit), NULL);
+    int numElements;
+    int editDistance = diff(tag1, 0, (int)tag1->length(), tag2, 0, (int)tag2->length(), characterAtIndex, compareCharacters, NULL, 0, ses, &numElements, NULL);
+    std::cout << "edit distance " << editDistance << std::endl;
+    int match_count = 0;
+    int nonmatch_count = 0;
+    int diff_delete = 0;
+    for(int i = 0; i < numElements; i++){
+        struct diff_edit * e = (struct diff_edit *)varray_get(ses, i);
+        switch (e->op) {
+            case DIFF_MATCH:
+                if(diff_delete){
+                    nonmatch_count+=diff_delete;
+                    diff_delete = 0;
+                }
+                match_count+=e->len;
+                break;
+            case DIFF_DELETE:
+                diff_delete += e->len;
+                break;
+            case DIFF_INSERT:
+                if(diff_delete){
+                    nonmatch_count += abs((e->len - diff_delete));
+                    diff_delete = 0;
+                } else {
+                    nonmatch_count += e->len;
+                }
+                break;
+        }
+    }
+    
+    int percent = (int)100 * (match_count - nonmatch_count) / tag1->length();
+    free(tag1);
+    free(tag2);
+    return percent;
+}
+
+const void * characterAtIndex(const void * str, int index, void * context){
+    return &((std::string *)str)->at(index);
+}
+int compareCharacters(const void * c1, const void * c2, void * context){
+    return (*((char*)c1)) != (*((char*)c2));
+}
+void fd_tolowercase(std::string * str){
+    transform(str->begin(), str->end(), str->begin(), ::tolower);
+}

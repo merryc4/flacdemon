@@ -336,7 +336,7 @@ int FlacDemon::Database::hasEntryForFile(std::string * filepath, const char * ta
     std::string sql = "select count(*) from ";
     sql.append(table);
     sql.append(" where filepath='");
-    sql.append(*filepath);
+    sql.append(regex_replace(*filepath, std::regex("'"), "''"));
     sql.append("'");
     int results = this->sqlCount(&sql);
     if(results > 0){

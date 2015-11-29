@@ -15,6 +15,8 @@
 #include "Database.h"
 #include "Player.h"
 
+#include "tests.h"
+
 using namespace std;
 
 class FlacDemon::Demon {

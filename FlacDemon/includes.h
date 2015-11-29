@@ -21,6 +21,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <thread>
 #include <uuid/uuid.h>
+#include <mba/diff.h>
 
 extern "C" {
 #include <libavformat/avformat.h>

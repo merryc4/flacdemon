@@ -20,6 +20,7 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #include "FlacDemonNameSpace.h"
 #include "FlacDemonFileSystem.h"
 
+
 //#define FLACDEMON_METADATA_MULTIPLE_VALUES "FlacDemonMetaDataMultipleValues"
 
 #define FLACDEMON_FILE_IS_MEDIA         1
@@ -44,8 +45,14 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_DISCNUMBER_MISSING 64
 #define FLACDEMON_DISCCOUNT_INCONSISTENT 128
 
+#define FLACDEMON_METADATA_HAS_SIMILARITY 256
+
 //files loop
 #define FLACDEMON_LOOP_ALL_FILES fd_filevector::iterator it = this->files->begin(); it != this->files->end(); it++
+
+
+/* other constants */
+#define FLACDEMON_TAG_SIMILARITY_THRESHOLD 80 //percent
 
 enum checkDiscMethod {
     FLACDEMON_CHECK_DISC_METHOD_ALBUM,
@@ -64,6 +71,7 @@ class FlacDemon::File {
 private:
     vector<string*>* consistentMetadata;
     vector<string*>* inconsistentMetadata;
+    vector<string*>* similarMetadata;
     AVDictionary * metadata;
 public:
     
@@ -115,6 +123,7 @@ public:
     void checkFileStructure();
     void checkDiscs(int method);
     void setDiscNumber(int discNumber);
+    void checkMetaData();
     void reparseTags();
     
     bool checkExists(struct stat * buffer = nullptr);
@@ -128,6 +137,7 @@ public:
     void verifyAlbum();
     void setVerified(bool verified);
     void parseTrackNumber();
+    int checkTrackNumbers();
     int readMediaInfo();
     int openFormatContext(bool reset = false);
     void setToMediaFile(AVFormatContext*);

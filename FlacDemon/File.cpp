@@ -193,8 +193,6 @@ void FlacDemon::File::checkFileStructure(){
             std::string * skey = new string(t->key);
             this->consistentMetadata->push_back(skey);
             
-//            cout << *skey << ", ";
-            
             if(!albumConsistency || !artistConsistency){
 
                 if((skey->compare("album"))==0 ) {
@@ -234,19 +232,67 @@ void FlacDemon::File::checkFileStructure(){
                         }
                     }
                     this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+                    albumConsistency = true;
                 }
             }
             //need to check "album" tag to see if they include disc numbers in album name
 
         }
     }
+    if(!this->isAlbumDirectory() && this->consistentMetadata->size()){
+        //if there is any consistent metadata do a more thorough check for an album with mislabeled tags.
+        this->checkTrackNumbers();
+        this->checkMetaData();
+    }
+}
+void FlacDemon::File::checkMetaData(){
+    FlacDemon::File * tFile;
+    std::string * value, * key;
+    int count;
+    std::map< std::string, int > * valueCounts;
+    std::map< std::string,  std::map<std::string, int> * > values;
+    
+    this->similarMetadata = new std::vector< std:: string * >;
+    
+    for(std::vector< std::string * >::iterator metaIterator = this->inconsistentMetadata->begin(); metaIterator != this->inconsistentMetadata->end(); metaIterator++){
+        if((*metaIterator)->compare("track") == 0) //track numbers checked in checkTrackNumbers()
+            continue;
+        key = (*metaIterator);
+        valueCounts = new std::map< std::string , int >;
+        values.insert(std::pair<std::string, std::map< std::string , int> * >{(*key), valueCounts});
+        for(FLACDEMON_LOOP_ALL_FILES){
+            count = 1;
+            tFile = (*it);
+            value = tFile->getMetaDataEntry((*metaIterator));
+            if(valueCounts->count(*value)){
+//                valueCounts->at(*value) = valueCounts->at(*value) + 1;
+                valueCounts->at(*value) += 1;
+            } else {
+                valueCounts->insert(std::pair<std::string, int> { *value, 1});
+            }
+        }
+        std::string * previous = nullptr;
+        for(std::map< std::string , int >::iterator valueIterator = valueCounts->begin(); valueIterator != valueCounts->end(); valueIterator++){
+            value->assign((*valueIterator).first);
+            if(previous && fd_comparetags(value, previous) > FLACDEMON_TAG_SIMILARITY_THRESHOLD){
+                cout << "Found high tag similarity for " << *previous << " and " << *value << endl;
+                this->similarMetadata->push_back(key);
+                this->errorFlags = this->errorFlags | FLACDEMON_METADATA_HAS_SIMILARITY;
+            } else {
+                previous = new std::string();
+            }
+            previous->assign(*value);
+        }
+    }
+    
+    //free maps
 }
 void FlacDemon::File::checkDiscs(int method){
     
     std::regex e("(?:disc|cd)\\s*(\\w+)", regex_constants::icase);
     std::smatch ematch;
     std::ssub_match sub_match;
-    
+
     this->discCount = 0;
     
     int maxDiscNumber = 0;
@@ -444,59 +490,11 @@ bool FlacDemon::File::hasConsistantAlbumMetaData(){ //deprecated
 void FlacDemon::File::verifyAlbum(){
     if(!this->albumuuid) //set by database when adding an album directory
         return;
-    
-    vector < FlacDemon::File * > * files = this->getMediaFiles();
-    int tTrackCount = 0,
-        tTrackNumber = 0,
-        maxTrackNumber = 0;
-    std::vector<std::vector<int> *> availableTracksPerDisc;
-    std::vector<int> * availableTracks = nullptr;
-    
     bool verified = true;
-    int disc = 0;
-    for(vector < FlacDemon::File * >::iterator it = files->begin(); it != files->end(); it++){
-        (*it)->parseTrackNumber();
-        if(!disc || (*it)->discNumber != disc){
-            disc = (*it)->discNumber;
-            tTrackCount = 0;
-            maxTrackNumber = 0;
-            availableTracks = new std::vector<int>;
-            availableTracksPerDisc.push_back(availableTracks);
-        }
+    
+    if(this->checkTrackNumbers())
+        verified = false;
 
-        if(tTrackCount){
-            if((*it)->trackCount != tTrackCount){
-                //track count incosistency, handle error
-                cout << "track count incosistency" << endl;
-                this->errorFlags = this->errorFlags | FLACDEMON_TRACKCOUNT_INCONSISTENT;
-            }
-        } else {
-            tTrackCount = (*it)->trackCount;
-        }
-        if((tTrackNumber = (*it)->trackNumber)){
-            if(maxTrackNumber < tTrackNumber){
-                maxTrackNumber = tTrackNumber;
-                availableTracks->resize(maxTrackNumber + 1);
-            }
-            if(tTrackNumber > 0)
-                availableTracks->at(tTrackNumber) = 1;
-        } else {
-            cout << "no track number for file" << endl;
-            //no track number for file, handle error
-        }
-        if(verified && (*it)->errorFlags)
-            verified = false;
-    }
-    for(std::vector<std::vector<int> *>::iterator it = availableTracksPerDisc.begin(); it != availableTracksPerDisc.end(); it++){
-        int count = 0; //not currently used
-        for(std::vector<int>::iterator it2 = (*it)->begin()+1; it2 != (*it)->end(); it2++) {
-            if(!(*it2)){
-                cout << "Track Missing!" << endl;
-                this->errorFlags = this->errorFlags | FLACDEMON_TRACKNUMBER_MISSING;
-            }
-            count ++;
-        }
-    }
     if(verified && this->errorFlags){
         verified = false;
     } else {
@@ -571,6 +569,66 @@ void FlacDemon::File::parseTrackNumber(){
     this->trackCount = trackCnt;
     std::string track = std::to_string(trackNum);
     this->setMetaDataEntry("track", &track);
+}
+int FlacDemon::File::checkTrackNumbers(){
+    
+    vector < FlacDemon::File * > * files = this->getMediaFiles();
+    int tTrackCount = 0,
+    tTrackNumber = 0,
+    maxTrackNumber = 0;
+    std::vector<std::vector<int> *> availableTracksPerDisc;
+    std::vector<int> * availableTracks = nullptr;
+    
+    int error = 0;
+    
+    int disc = 0;
+    for(vector < FlacDemon::File * >::iterator it = files->begin(); it != files->end(); it++){
+        (*it)->parseTrackNumber();
+        if(!disc || (*it)->discNumber != disc){
+            disc = (*it)->discNumber;
+            tTrackCount = 0;
+            maxTrackNumber = 0;
+            availableTracks = new std::vector<int>;
+            availableTracksPerDisc.push_back(availableTracks);
+        }
+        
+        if(tTrackCount){
+            if((*it)->trackCount != tTrackCount){
+                //track count incosistency, handle error
+                cout << "track count incosistency" << endl;
+                this->errorFlags = this->errorFlags | FLACDEMON_TRACKCOUNT_INCONSISTENT;
+                error = 1;
+            }
+        } else {
+            tTrackCount = (*it)->trackCount;
+        }
+        if((tTrackNumber = (*it)->trackNumber)){
+            if(maxTrackNumber < tTrackNumber){
+                maxTrackNumber = tTrackNumber;
+                availableTracks->resize(maxTrackNumber + 1);
+            }
+            if(tTrackNumber > 0)
+                availableTracks->at(tTrackNumber) = 1;
+        } else {
+            cout << "no track number for file" << endl;
+            error = 1;
+            //no track number for file, handle error
+        }
+        if(!error && (*it)->errorFlags)
+            error = 1;
+    }
+    for(std::vector<std::vector<int> *>::iterator it = availableTracksPerDisc.begin(); it != availableTracksPerDisc.end(); it++){
+        int count = 0; //not currently used
+        for(std::vector<int>::iterator it2 = (*it)->begin()+1; it2 != (*it)->end(); it2++) {
+            if(!(*it2)){
+                cout << "Track Missing!" << endl;
+                this->errorFlags = this->errorFlags | FLACDEMON_TRACKNUMBER_MISSING;
+                error = 1;
+            }
+            count ++;
+        }
+    }
+    return error;
 }
 int FlacDemon::File::readMediaInfo(){
     AVCodec* inputCodec;
@@ -685,7 +743,7 @@ void FlacDemon::File::standardiseMetaTags(){
 }
 string * FlacDemon::File::standardiseKey(string *key){
     key = new string(*key);
-    transform(key->begin(), key->end(), key->begin(), ::tolower);
+    fd_tolowercase(key);
     regex e("album[^a-zA-Z]artist", regex_constants::icase);
     if(regex_match((*key), e)){
         key->assign("albumartist");
@@ -809,13 +867,13 @@ vector<FlacDemon::File*> * FlacDemon::File::getNoneAlbumFiles(int max){
         noneAlbumFiles->push_back(this);
         return noneAlbumFiles;
     }
-    if(max != 0 && this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY){
+    if(max != 0 && this->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
         vector<FlacDemon::File*> * subdirectoryNoneAlbumFiles = nullptr;
         for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
             if((*it)->flags & FLACDEMON_FILE_IS_DIRECTORY){
                 if((*it)->isAlbumDirectory()){
                     continue;
-                } else if((*it)->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY){
+                } else if((*it)->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
                     subdirectoryNoneAlbumFiles = (*it)->getNoneAlbumFiles(max - 1);
                     noneAlbumFiles->insert(noneAlbumFiles->end(), subdirectoryNoneAlbumFiles->begin(), subdirectoryNoneAlbumFiles->end());
                     free(subdirectoryNoneAlbumFiles);

@@ -32,6 +32,9 @@ FlacDemon::Demon::~Demon() {
 }
 
 void FlacDemon::Demon::run() {
+#ifdef DEBUG
+    run_tests();
+#endif
 	while (true) {
         this->commandParser->getCommand();
         
