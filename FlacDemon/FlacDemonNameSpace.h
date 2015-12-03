@@ -44,6 +44,7 @@ struct MediaStreamInfo {
 };
 
 extern const SignalHandler * signalHandler;
+extern FlacDemon::Demon * demon;
 
 typedef std::basic_string <unsigned char> ustring;
 

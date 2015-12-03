@@ -11,8 +11,10 @@
 
 #include "includes.h"
 #include "FlacDemonNameSpace.h"
+#include "FlacDemon.h"
 
 void run_tests();
 void test_comparetags();
+void test_insertsql();
 
 #endif /* defined(__FlacDemon__tests__) */

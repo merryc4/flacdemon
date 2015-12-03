@@ -32,7 +32,7 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_SUBDIRECTORY_HAS_MEDIA 64
 #define FLACDEMON_FILE_IS_MEDIA_DIRECTORY 128
 #define FLACDEMON_DIRECTORY_IS_DISC 256
-
+#define FLACDEMON_IS_TAG_SIMILARITY_ALBUM_DIRECTORY 512
 
 /* Error Flags */
 #define FLACDEMON_TRACKNUMBER_MISMATCH 1
@@ -47,8 +47,12 @@ extern const char * FlacDemonMetaDataMultipleValues;
 
 #define FLACDEMON_METADATA_HAS_SIMILARITY 256
 
+// flag accessors
+#define set_flag this->flags = this->flags |
+#define unset_flag this->flags = this->flags & ~
+#define has_flag this->flags &
 //files loop
-#define FLACDEMON_LOOP_ALL_FILES fd_filevector::iterator it = this->files->begin(); it != this->files->end(); it++
+#define flacdemon_loop_all_files(files) for(fd_filevector::iterator it = files->begin(); it != files->end(); it++)
 
 
 /* other constants */
@@ -116,6 +120,9 @@ public:
     void setPath(std::string* iPath);
     
     void setAlbumDirectoryUUID(std::string * uuid);
+    void setFlag(int flag);
+    void unsetFlag(int flag);
+    int hasFlag(int flag);
     
     void parse();
     void addFile(FlacDemon::File *);
@@ -123,7 +130,7 @@ public:
     void checkFileStructure();
     void checkDiscs(int method);
     void setDiscNumber(int discNumber);
-    void checkMetaData();
+    void checkMetaData(bool albumConsistency, bool artistConsistency);
     void reparseTags();
     
     bool checkExists(struct stat * buffer = nullptr);

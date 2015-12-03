@@ -48,12 +48,18 @@ FlacDemon::Database::~Database(){
 void FlacDemon::Database::initSignals(){
     auto f = boost::bind(&FlacDemon::Database::signalReceiver, this, _1, _2);
     signalHandler->signals("addAlbumDirectory")->connect(f);
+    signalHandler->signals("runSQL")->connect(f);
+//    for(std::vector<std::string>::iterator it = this->signalFuns.begin(); it != this->signalFuns.end(); it++){
+//        signalHandler->signals(it->c_str())->connect(f);
+//    }
     
 }
 void FlacDemon::Database::signalReceiver(const char * signalName, void * arg){
     cout << "signal received: " << signalName << endl;
     if(strcmp(signalName, "addAlbumDirectory")==0){
         this->addAlbumDirectory(static_cast<FlacDemon::File *>(arg));
+    } else if(strcmp(signalName, "runSQL")==0){
+        this->runSQL(static_cast<std::string *>(arg));
     }
 }
 void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
@@ -153,7 +159,7 @@ void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char*
         return;
     char * err = nullptr;
 
-    cout << "running sql " << sql << endl;
+//    cout << "running sql " << sql << endl;
     
     sqlite3_exec(db, sql, callback, arg, &err);
     
@@ -369,5 +375,12 @@ int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::stri
     this->runSQL(&sql);
     
     return 0;
+}
+
+void FlacDemon::Database::fillDatabase(int entries){
+    std::string sql = "insert into tracks (track,title,albumartist,artist,album,genre,composer,disc,tracktime,playcount,dateadded,filepath,albumuuid,verified) values('3','Loin Des Villes','Yann Tiersen','Yann Tiersen','Les Retrouvailles','Other','-1','0','199866','0','1449148992','/mnt/Backup/Storage/FLACS/Yann Tiersen/Les Retrouvailles/03 Yann Tiersen - Loin Des Villes.flac','729489FE-9124-49B2-927C-8D1E246F2D6C','1')";
+    for(int i = 0; i < entries; i++){
+        this->runSQL(&sql);
+    }
 }
 

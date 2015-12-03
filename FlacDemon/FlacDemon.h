@@ -24,10 +24,11 @@ protected:
     vector<string>* commands;
     FlacDemon::CommandParser* commandParser;
     FlacDemon::FileImporter* fileImporter;
-    FlacDemon::Database* database;
     FlacDemon::Player * player;
     
 public:
+    FlacDemon::Database* database;
+
     Demon();
     ~Demon();
     

@@ -44,6 +44,10 @@ FlacDemon::File::File(string* iPath, bool readTags){
     this->track = nullptr;
     this->mediaStreamInfo = nullptr;
     
+    this->consistentMetadata = nullptr;
+    this->inconsistentMetadata = nullptr;
+    this->similarMetadata = nullptr;
+    
     if(iPath)
         this->setPath(iPath);
 }
@@ -96,6 +100,15 @@ void FlacDemon::File::setAlbumDirectoryUUID(std::string * iuuid){
         }
     }
 }
+void FlacDemon::File::setFlag(int flag){
+    this->flags |= flag;
+}
+void FlacDemon::File::unsetFlag(int flag){
+    unset_flag flag;
+}
+int FlacDemon::File::hasFlag(int flag){
+    return has_flag flag;
+}
 void FlacDemon::File::parse(){
     cout << "Checking directory " << *this->filepath << endl;
     struct dirent *ent;
@@ -137,20 +150,20 @@ void FlacDemon::File::parse(){
 void FlacDemon::File::addFile(FlacDemon::File * file){
     this->files->push_back(file);
     if(file->isDirectory()){
-        this->flags = this->flags | FLACDEMON_DIRECTORY_HAS_SUBDIRECTORIES;
+        set_flag FLACDEMON_DIRECTORY_HAS_SUBDIRECTORIES;
         if(file->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA)
-            this->flags = this->flags | FLACDEMON_SUBDIRECTORY_HAS_MEDIA;
+            set_flag FLACDEMON_SUBDIRECTORY_HAS_MEDIA;
         
     } else if(file->isMediaFile()){
-        this->flags = this->flags | FLACDEMON_FILE_IS_MEDIA;
-        this->flags = this->flags | FLACDEMON_FILE_IS_MEDIA_DIRECTORY;
+        set_flag FLACDEMON_FILE_IS_MEDIA;
+        set_flag FLACDEMON_FILE_IS_MEDIA_DIRECTORY;
         if(this->codecID == AV_CODEC_ID_NONE){
             this->codecID = file->codecID;
         } else if(this->codecID != file->codecID){
-            this->flags = this->flags | FLACDEMON_DIRECTORY_HAS_MULTIPLE_CODECS;
+            set_flag FLACDEMON_DIRECTORY_HAS_MULTIPLE_CODECS;
         }
     } else {
-        this->flags = this->flags | FLACDEMON_FILE_IS_NON_MEDIA;
+        set_flag FLACDEMON_FILE_IS_NON_MEDIA;
     }
     this->addMetaDataFromFile(file);
 }
@@ -177,7 +190,7 @@ void FlacDemon::File::checkFileStructure(){
         return;
     cout << "Checking file structure for " << *this->filepath << endl;
     int lookForDiscs = 0;
-    if(!(this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY) && (this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA)){
+    if(!(has_flag FLACDEMON_FILE_IS_MEDIA_DIRECTORY) && (has_flag FLACDEMON_SUBDIRECTORY_HAS_MEDIA)){
         lookForDiscs = 1;
     }
 
@@ -197,9 +210,7 @@ void FlacDemon::File::checkFileStructure(){
 
                 if((skey->compare("album"))==0 ) {
                     albumConsistency = true;
-                } else if (skey->compare("albumartist")==0) {
-                    artistConsistency = true;
-                } else if((skey->compare("artist"))==0){
+                } else if (skey->compare("albumartist") == 0 || skey->compare("artist") == 0) {
                     artistConsistency = true;
                 }
             }
@@ -212,10 +223,10 @@ void FlacDemon::File::checkFileStructure(){
             if(lookForDiscs){
                 this->checkDiscs(FLACDEMON_CHECK_DISC_METHOD_ALBUM);
                 if(this->discCount > 1){
-                    this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+                    set_flag FLACDEMON_DIRECTORY_IS_ALBUM;
                 }
             } else {
-                this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+                set_flag FLACDEMON_DIRECTORY_IS_ALBUM;
             }
             
             //only need to check 'disc' tag / file names to try and identify correct disc numbers
@@ -231,7 +242,7 @@ void FlacDemon::File::checkFileStructure(){
                             this->inconsistentMetadata->erase(it);
                         }
                     }
-                    this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+                    set_flag FLACDEMON_DIRECTORY_IS_ALBUM;
                     albumConsistency = true;
                 }
             }
@@ -239,20 +250,18 @@ void FlacDemon::File::checkFileStructure(){
 
         }
     }
-    if(!this->isAlbumDirectory() && this->consistentMetadata->size()){
+    if(!lookForDiscs && !this->isAlbumDirectory() && this->consistentMetadata->size()){
         //if there is any consistent metadata do a more thorough check for an album with mislabeled tags.
         this->checkTrackNumbers();
-        this->checkMetaData();
+        this->checkMetaData(albumConsistency, artistConsistency);
     }
 }
-void FlacDemon::File::checkMetaData(){
+void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistency){
     FlacDemon::File * tFile;
     std::string * value, * key;
     int count;
     std::map< std::string, int > * valueCounts;
     std::map< std::string,  std::map<std::string, int> * > values;
-    
-    this->similarMetadata = new std::vector< std:: string * >;
     
     for(std::vector< std::string * >::iterator metaIterator = this->inconsistentMetadata->begin(); metaIterator != this->inconsistentMetadata->end(); metaIterator++){
         if((*metaIterator)->compare("track") == 0) //track numbers checked in checkTrackNumbers()
@@ -260,10 +269,12 @@ void FlacDemon::File::checkMetaData(){
         key = (*metaIterator);
         valueCounts = new std::map< std::string , int >;
         values.insert(std::pair<std::string, std::map< std::string , int> * >{(*key), valueCounts});
-        for(FLACDEMON_LOOP_ALL_FILES){
+        flacdemon_loop_all_files(this->files){
             count = 1;
             tFile = (*it);
-            value = tFile->getMetaDataEntry((*metaIterator));
+            if((value = tFile->getMetaDataEntry((*metaIterator))) == nullptr){
+                continue;
+            }
             if(valueCounts->count(*value)){
 //                valueCounts->at(*value) = valueCounts->at(*value) + 1;
                 valueCounts->at(*value) += 1;
@@ -276,16 +287,28 @@ void FlacDemon::File::checkMetaData(){
             value->assign((*valueIterator).first);
             if(previous && fd_comparetags(value, previous) > FLACDEMON_TAG_SIMILARITY_THRESHOLD){
                 cout << "Found high tag similarity for " << *previous << " and " << *value << endl;
+                if(this->similarMetadata == nullptr)
+                    this->similarMetadata = new std::vector< std:: string * >;
                 this->similarMetadata->push_back(key);
                 this->errorFlags = this->errorFlags | FLACDEMON_METADATA_HAS_SIMILARITY;
+                if(key->compare("album") == 0)
+                    albumConsistency = true;
+                if(key->compare("artist") == 0 || key->compare("albumartist") == 0)
+                    artistConsistency = true;
+                
             } else {
                 previous = new std::string();
             }
             previous->assign(*value);
         }
     }
+    if(albumConsistency && artistConsistency)
+        set_flag FLACDEMON_IS_TAG_SIMILARITY_ALBUM_DIRECTORY;
     
     //free maps
+    for(std::map< std::string,  std::map<std::string, int> * >::iterator valuesIterator = values.begin(); valuesIterator != values.end(); valuesIterator++){
+        free((*valuesIterator).second);
+    }
 }
 void FlacDemon::File::checkDiscs(int method){
     
@@ -386,7 +409,7 @@ void FlacDemon::File::reparseTags(){
         av_dict_free(&this->metadata);
     }
     this->metadata = nullptr;
-    for(FLACDEMON_LOOP_ALL_FILES){
+    flacdemon_loop_all_files(this->files){
         if((*it)->isDirectory())
             (*it)->reparseTags();
         this->addMetaDataFromFile((*it));
@@ -397,9 +420,9 @@ void FlacDemon::File::setDiscNumber(int discNumber){
     this->discNumber = discNumber;
     if(this->isDirectory()){
         if(discNumber){
-            this->flags = this->flags | FLACDEMON_DIRECTORY_IS_DISC;
+            set_flag FLACDEMON_DIRECTORY_IS_DISC;
         } else {
-            this->flags = this->flags & ~ FLACDEMON_DIRECTORY_IS_DISC;
+            unset_flag FLACDEMON_DIRECTORY_IS_DISC;
         }
         for(std::vector< FlacDemon::File * >::iterator it = this->files->begin(); it != this->files->end(); it++){
             (*it)->setDiscNumber(discNumber);
@@ -442,25 +465,25 @@ void FlacDemon::File::setToDirectory(){
     if (this->isDirectory())     //once set can not be unset
         return;
     
-    this->flags = this->flags | FLACDEMON_FILE_IS_DIRECTORY;
+    set_flag FLACDEMON_FILE_IS_DIRECTORY;
     this->files = new vector<FlacDemon::File*>;
     this->consistentMetadata = new vector<string*>;
     this->inconsistentMetadata = new vector<string*>;
 }
 bool FlacDemon::File::isDirectory(){
-    return this->flags & FLACDEMON_FILE_IS_DIRECTORY;
+    return has_flag FLACDEMON_FILE_IS_DIRECTORY;
 }
 bool FlacDemon::File::isMediaFile(){
-    return this->flags & FLACDEMON_FILE_IS_MEDIA && !(this->flags & FLACDEMON_FILE_IS_DIRECTORY);
+    return has_flag FLACDEMON_FILE_IS_MEDIA && !(has_flag FLACDEMON_FILE_IS_DIRECTORY);
 }
 bool FlacDemon::File::containsMedia(){
-    return this->flags & FLACDEMON_FILE_IS_MEDIA || this->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA;
+    return has_flag FLACDEMON_FILE_IS_MEDIA || has_flag FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA;
 }
 bool FlacDemon::File::isAlbumDirectory(){
-    if(this->flags & FLACDEMON_DIRECTORY_IS_ALBUM && !(this->flags & FLACDEMON_DIRECTORY_IS_DISC))
+    if(has_flag FLACDEMON_DIRECTORY_IS_ALBUM && !(has_flag FLACDEMON_DIRECTORY_IS_DISC))
         return true;
     
-    if(!(this->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY))
+    if(!(has_flag FLACDEMON_FILE_IS_MEDIA_DIRECTORY))
         return false;
     
     return this->hasConsistantAlbumMetaData();
@@ -482,7 +505,7 @@ bool FlacDemon::File::hasConsistantAlbumMetaData(){ //deprecated
 //    cout << endl;
 //    
 //    if(albumConsistency && artistConsistency){
-//        this->flags = this->flags | FLACDEMON_DIRECTORY_IS_ALBUM;
+//        set_flag FLACDEMON_DIRECTORY_IS_ALBUM;
 //        return true;
 //    }
     return false;
@@ -506,7 +529,7 @@ void FlacDemon::File::setVerified(bool verified){
     if(this->track){
         this->track->setTrackInfoForKey("verified", verified);
     }
-    if(this->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
+    if(has_flag FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
         for(vector < FlacDemon::File * >::iterator it = files->begin(); it != files->end(); it++){
             (*it)->setVerified(verified);
         }
@@ -654,7 +677,7 @@ int FlacDemon::File::readMediaInfo(){
     
     if(inputCodec->type != AVMEDIA_TYPE_AUDIO){
         cout << "skipping none audio file " << *this->filepath << endl;
-        this->flags = this->flags & ~ FLACDEMON_FILE_IS_MEDIA;
+        unset_flag FLACDEMON_FILE_IS_MEDIA;
     } else {
         this->setToMediaFile(this->formatContext);
     }
@@ -706,7 +729,7 @@ int FlacDemon::File::openFormatContext(bool reset){
     return 0;
 }
 void FlacDemon::File::setToMediaFile(AVFormatContext* formatContext){
-    this->flags = this->flags | FLACDEMON_FILE_IS_MEDIA;
+    set_flag FLACDEMON_FILE_IS_MEDIA;
     
     AVCodecContext* codecContext = formatContext->streams[0]->codec;
     
@@ -802,7 +825,7 @@ void FlacDemon::File::setMetaDataEntry(const char * key, const char * value, set
 }
 vector<FlacDemon::File*> * FlacDemon::File::getAlbumDirectories(int max){
     vector<FlacDemon::File*> * albumDirectories = new vector<FlacDemon::File*>;
-    if(max != 0 && this->flags & FLACDEMON_SUBDIRECTORY_HAS_MEDIA){
+    if(max != 0 && has_flag FLACDEMON_SUBDIRECTORY_HAS_MEDIA){
         vector<FlacDemon::File*> * subdirectoryAlbumDirectories = nullptr;
         for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
             if(!((*it)->flags & FLACDEMON_FILE_IS_DIRECTORY))
@@ -842,7 +865,7 @@ vector<FlacDemon::File*> * FlacDemon::File::getAllFiles(int max){
 }
 vector<FlacDemon::File*> * FlacDemon::File::getMediaFiles(int max){
     vector<FlacDemon::File*> * mediaFiles = new vector<FlacDemon::File*>;
-    if(max > 0 && this->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
+    if(max > 0 && has_flag FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
         vector<FlacDemon::File*> * subdirectoryMediaFiles = nullptr;
         for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
             if((*it)->isMediaFile()){
@@ -867,7 +890,7 @@ vector<FlacDemon::File*> * FlacDemon::File::getNoneAlbumFiles(int max){
         noneAlbumFiles->push_back(this);
         return noneAlbumFiles;
     }
-    if(max != 0 && this->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
+    if(max != 0 && has_flag FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
         vector<FlacDemon::File*> * subdirectoryNoneAlbumFiles = nullptr;
         for(vector<FlacDemon::File*>::iterator it = this->files->begin(); it != this->files->end(); it++){
             if((*it)->flags & FLACDEMON_FILE_IS_DIRECTORY){

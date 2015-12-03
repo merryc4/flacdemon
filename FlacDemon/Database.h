@@ -32,6 +32,8 @@ protected:
         char * setValueFormat = (char *)"update tracks set %s=`%s` where id=%lu";
     } sql_statements;
     
+    std::vector<std::string> signalFuns {"addAlbumDirectory", "runSQL"};
+    
     std::vector<std::string> * metakeys;
     std::vector<std::string> * trackinfokeys;
     std::vector<std::string> * allkeys;
@@ -76,6 +78,8 @@ public:
     std::string * getUUID();
     
     int setValue(unsigned long ID, std::string * key, std::string * value);
+    
+    void fillDatabase(int entries);
 };
 
 #endif /* defined(__FlacDemon__Database__) */
