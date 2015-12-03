@@ -15,10 +15,12 @@ extern std::vector< std::string > * fd_numbers;
 
 void initGlobals();
 int fd_stringtoint(std::string * str, int * value);
-int fd_comparetags(std::string * tag1, std::string * tag2);
+float fd_comparetags(std::string * tag1, std::string * tag2);
 const void * characterAtIndex(const void * str, int index, void * context);
 int compareCharacters(const void * c1, const void * c2, void * context);
 
 void fd_tolowercase(std::string * str);
+
+std::string fd_sqlescape(std::string isql);
 
 #endif /* defined(__FlacDemon__FlacDemonUtils__) */

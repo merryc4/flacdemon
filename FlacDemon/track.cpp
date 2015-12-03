@@ -54,6 +54,8 @@ std::string * FlacDemon::Track::valueForKey(std::string* key){
     else if(this->file){
         if(key->compare("albumuuid")==0){
             return this->file->albumuuid;
+        } else if(key->compare("errorflags")==0){
+            return new std::string(std::to_string(this->file->errorFlags)); //this will need to be released
         }
         if((value = this->file->getMetaDataEntry(key)) != nullptr){
             value = this->standardiseMetaValue(value, key);

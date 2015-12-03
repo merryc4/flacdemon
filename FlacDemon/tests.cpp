@@ -13,7 +13,7 @@ void run_tests(){
     //add tests here
 //    test_comparetags();
 //    test_insertsql();
-    demon->database->fillDatabase(50000);
+//    demon->database->fillDatabase(50000);
 }
 void test_comparetags(){
     std::string tag1 = "compare test string";

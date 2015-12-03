@@ -38,7 +38,7 @@ int fd_stringtoint(std::string * str, int * value){
     
     return 1;
 }
-int fd_comparetags(std::string * tag1, std::string * tag2){
+float fd_comparetags(std::string * tag1, std::string * tag2){
     if(!tag1->length() || !tag2->length())
         return 0;
     tag1 = new std::string(*tag1); fd_tolowercase(tag1);
@@ -74,7 +74,7 @@ int fd_comparetags(std::string * tag1, std::string * tag2){
         }
     }
     
-    int percent = (int)100 * (match_count - nonmatch_count) / tag1->length();
+    float percent = 1.0 * (match_count - nonmatch_count) / tag1->length();
     free(tag1);
     free(tag2);
     return percent;
@@ -88,4 +88,7 @@ int compareCharacters(const void * c1, const void * c2, void * context){
 }
 void fd_tolowercase(std::string * str){
     transform(str->begin(), str->end(), str->begin(), ::tolower);
+}
+std::string fd_sqlescape(std::string isql) { //pointer version might save memory
+    return regex_replace(isql, std::regex("'"), "''");
 }

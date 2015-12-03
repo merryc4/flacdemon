@@ -260,20 +260,46 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
     FlacDemon::File * tFile;
     std::string * value, * key;
     int count;
+    float filenameSimilarity;
     std::map< std::string, int > * valueCounts;
     std::map< std::string,  std::map<std::string, int> * > values;
+    
+    bool keyIsArtist, keyIsAlbum, keyIsAlbumArtist;
     
     for(std::vector< std::string * >::iterator metaIterator = this->inconsistentMetadata->begin(); metaIterator != this->inconsistentMetadata->end(); metaIterator++){
         if((*metaIterator)->compare("track") == 0) //track numbers checked in checkTrackNumbers()
             continue;
         key = (*metaIterator);
+        keyIsAlbum = false; keyIsArtist = false, keyIsAlbumArtist = false;
+        
+        if(key->compare("album") == 0)
+            keyIsAlbum = true;
+        else if(key->compare("artist") == 0)
+            keyIsArtist = true;
+        else if(key->compare("albumartist"))
+            keyIsAlbumArtist = true;
+        
         valueCounts = new std::map< std::string , int >;
         values.insert(std::pair<std::string, std::map< std::string , int> * >{(*key), valueCounts});
         flacdemon_loop_all_files(this->files){
             count = 1;
             tFile = (*it);
             if((value = tFile->getMetaDataEntry((*metaIterator))) == nullptr){
+                //potentially use filename with internet scraper lookup, or filename with other such use
                 continue;
+            }
+            
+            if((filenameSimilarity = fd_comparetags(value, this->name)) > FLACDEMON_TAG_SIMILARITY_THRESHOLD){
+                //tag shares similarity / is the same as filename
+                int flag = 0;
+                if(keyIsAlbum)
+                    flag = FLACDEMON_FILENAME_MATCHES_ALBUM;
+                else if(keyIsArtist)
+                    flag = FLACDEMON_FILENAME_MATCHES_ARTIST;
+                else if(keyIsAlbumArtist)
+                    flag = FLACDEMON_FILENAME_MATCHES_ALBUMARTIST;
+                
+                set_eflag flag;
             }
             if(valueCounts->count(*value)){
 //                valueCounts->at(*value) = valueCounts->at(*value) + 1;
@@ -290,10 +316,10 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
                 if(this->similarMetadata == nullptr)
                     this->similarMetadata = new std::vector< std:: string * >;
                 this->similarMetadata->push_back(key);
-                this->errorFlags = this->errorFlags | FLACDEMON_METADATA_HAS_SIMILARITY;
-                if(key->compare("album") == 0)
+                set_eflag FLACDEMON_METADATA_HAS_SIMILARITY;
+                if(keyIsAlbum)
                     albumConsistency = true;
-                if(key->compare("artist") == 0 || key->compare("albumartist") == 0)
+                else if(keyIsArtist || keyIsAlbumArtist)
                     artistConsistency = true;
                 
             } else {
@@ -480,7 +506,7 @@ bool FlacDemon::File::containsMedia(){
     return has_flag FLACDEMON_FILE_IS_MEDIA || has_flag FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA;
 }
 bool FlacDemon::File::isAlbumDirectory(){
-    if(has_flag FLACDEMON_DIRECTORY_IS_ALBUM && !(has_flag FLACDEMON_DIRECTORY_IS_DISC))
+    if((has_flag FLACDEMON_DIRECTORY_IS_ALBUM || has_flag FLACDEMON_IS_TAG_SIMILARITY_ALBUM_DIRECTORY) && !(has_flag FLACDEMON_DIRECTORY_IS_DISC))
         return true;
     
     if(!(has_flag FLACDEMON_FILE_IS_MEDIA_DIRECTORY))

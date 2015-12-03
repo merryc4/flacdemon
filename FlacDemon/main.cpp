@@ -10,7 +10,7 @@
 #include "FlacDemonNameSpace.h"
 #include "FlacDemon.h"
 
-#define FDOPTIONS_USE_FLACS_DIR 0
+#define FDOPTIONS_USE_FLACS_DIR 1
 
 const SignalHandler * signalHandler = new SignalHandler();
 FlacDemon::Demon * demon = nullptr;
@@ -21,10 +21,10 @@ int main(int argc, const char * argv[])
     // insert code here...
     std::cout << "Hello, World!\n";
     
-#ifdef FDOPTIONS_USE_FLACS_DIR
-    char dir[] = "/Users/merryclarke/Documents/Xcode Projects/FlacDemon/";
-#else
+#if FDOPTIONS_USE_FLACS_DIR
     char dir[] = "/mnt/Backup/Storage/FLACS/";
+#else
+    char dir[] = "/Users/merryclarke/Documents/Xcode Projects/FlacDemon/";
 #endif
     
     cout << "working directory: " << dir << endl;

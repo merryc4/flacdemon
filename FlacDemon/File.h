@@ -46,17 +46,24 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_DISCCOUNT_INCONSISTENT 128
 
 #define FLACDEMON_METADATA_HAS_SIMILARITY 256
+#define FLACDEMON_FILENAME_MATCHES_ALBUM 512
+#define FLACDEMON_FILENAME_MATCHES_ARTIST (1 << 10)
+#define FLACDEMON_FILENAME_MATCHES_ALBUMARTIST 2048
 
 // flag accessors
 #define set_flag this->flags = this->flags |
 #define unset_flag this->flags = this->flags & ~
 #define has_flag this->flags &
+
+#define set_eflag this->errorFlags = this->flags |
+#define unset_eflag this->errorFlags = this->flags & ~
+#define has_eflag this->errorFlags &
 //files loop
 #define flacdemon_loop_all_files(files) for(fd_filevector::iterator it = files->begin(); it != files->end(); it++)
 
 
 /* other constants */
-#define FLACDEMON_TAG_SIMILARITY_THRESHOLD 80 //percent
+#define FLACDEMON_TAG_SIMILARITY_THRESHOLD 0.8 //80 percent
 
 enum checkDiscMethod {
     FLACDEMON_CHECK_DISC_METHOD_ALBUM,

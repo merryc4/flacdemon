@@ -29,7 +29,8 @@ FlacDemon::Database::Database(){
         "dateadded",
         "filepath",
         "albumuuid",
-        "verified"
+        "verified",
+        "errorflags"
     };
     this->initDB();
     this->initSignals();
@@ -100,10 +101,11 @@ void FlacDemon::Database::add(FlacDemon::File * file){
     cout << "adding album file " << *file->filepath << endl;
     
     std::string values = "'";
-    values.append(regex_replace(*file->filepath, std::regex("'"), "''"));
+    values.append(fd_sqlescape(*(file->filepath)));
     values.append("','");
     values.append(*file->albumuuid);
-    values.append("'");
+    values.append("',");
+    values.append(std::to_string(file->errorFlags));
 
     std::string sql = this->sql_statements.addFileFormat;
     size_t pos = sql.find("%s");
@@ -124,7 +126,7 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
     std::string sql="'";
     std::string value;
     for(std::vector<std::string>::iterator it = this->allkeys->begin(); it != this->allkeys->end(); it++){
-        value = regex_replace(*track->valueForKey(&(*it)), std::regex("'"), "''");
+        value = fd_sqlescape(*track->valueForKey(&(*it)));
 
         sql.append(value);
         sql.append("','");
@@ -212,7 +214,7 @@ fd_keymap * FlacDemon::Database::sqlSelect(std::string *isql){
 std::string * FlacDemon::Database::sqlSelectOne(std::string * isql){
     fd_keymap * results = this->sqlSelect(isql);
     this->clearSelect();
-    if(results->size() == 1){
+    if(results && results->size() == 1){
         return results->begin()->second;
     }
     return nullptr;
@@ -342,7 +344,7 @@ int FlacDemon::Database::hasEntryForFile(std::string * filepath, const char * ta
     std::string sql = "select count(*) from ";
     sql.append(table);
     sql.append(" where filepath='");
-    sql.append(regex_replace(*filepath, std::regex("'"), "''"));
+    sql.append(fd_sqlescape(*filepath));
     sql.append("'");
     int results = this->sqlCount(&sql);
     if(results > 0){
