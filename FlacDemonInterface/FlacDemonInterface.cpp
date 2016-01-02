@@ -24,9 +24,26 @@ void FlacDemonInterface::initialize(){
     noecho();
     keypad(stdscr, true);
     
+    char msg[] = "FlacDemon NCURSES Interface";
+    
     WINDOW * w = initscr();
-    wprintw(w, "Enter A Command Or Search:\n");
-    refresh();
+    
+    int row,col;
+    getmaxyx(stdscr, row, col);
+    
+    WINDOW * titleWindow = newwin(1, col, 0, 0);
+    WINDOW * searchWindow = newwin(1, col, 1, 0);
+    
+    mvwprintw(titleWindow, 0, (col - strlen(msg)) / 2, "%s", msg);
+    wrefresh(titleWindow);
+    
+    mvwprintw(searchWindow, 0, 0, "Search:");
+    wrefresh(searchWindow);
+    
+    
+
+//    mvprintw(row / 2, (col - strlen(msg)) / 2, "%s", msg);
+
     int ch = getchar();
     waddch(w, ch);
     refresh();

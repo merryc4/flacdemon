@@ -11,14 +11,14 @@
 FlacDemon::Demon::Demon() {
 	cout << "New FlacDemon\n";
     
-    flags = 0;
+    this->flags = 0;
     av_register_all();
     
     this->commandParser = new FlacDemon::CommandParser();
     this->fileImporter = new FlacDemon::FileImporter();
     this->database = new FlacDemon::Database();
     this->player = new FlacDemon::Player();
-    
+    this->tcpHandler = new FlacDemon::TCPHandler();
     
     this->player->setDatabase(this->database);
     
@@ -37,6 +37,7 @@ void FlacDemon::Demon::run() {
 #ifdef DEBUG
     run_tests();
 #endif
+    this->tcpHandler->initialize();
 	while (true) {
         this->commandParser->getCommand();
         

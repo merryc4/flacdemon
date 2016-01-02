@@ -15,8 +15,8 @@
 
 class FlacDemon::CommandParser {
 protected:
-    vector<string>*commands;
-    map<string, demonCommandFunction>* commandMap;
+    std::vector<string>*commands;
+    std::map<string, demonCommandFunction>* commandMap;
     FlacDemon::Demon *demon;
 
 public:

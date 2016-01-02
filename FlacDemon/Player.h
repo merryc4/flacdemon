@@ -9,7 +9,8 @@
 #ifndef __FlacDemon__Player__
 #define __FlacDemon__Player__
 
-#include <stdio.h>
+#include "includes.h"
+#include "avincludes.h"
 #include <ao/ao.h>
 #include "FlacDemonNameSpace.h"
 #include "Database.h"
@@ -17,6 +18,10 @@
 class FlacDemon::Player {
 private:
     FlacDemon::Database * database;
+    SwrContext * audioResampleContext = nullptr;
+    std::thread * playerThread = nullptr;
+    
+    int killPlaybackFlag = 0;
     int defaultDriverID = -1;
     ao_device * device = nullptr;
     ao_sample_format sampleFormat = {
@@ -27,11 +32,6 @@ private:
         0
     };
     
-//    AVAudioResampleContext * audioResampleContext = nullptr;
-    SwrContext * audioResampleContext = nullptr;
-    
-    std::thread * playerThread = nullptr;
-    int killPlaybackFlag = 0;
 protected:
     
 public:

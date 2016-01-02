@@ -23,16 +23,6 @@ typedef std::map<std::string, const unsigned char *> fd_sqlresults;
 class FlacDemon::Database {
 protected:
     
-    struct SQLStatements {
-        const char * createTableTracksFormat = "create table if not exists `tracks` (id INTEGER PRIMARY KEY AUTOINCREMENT, %s)";
-        char * fields = nullptr;
-        char * addTrackFormat = (char *)"insert into tracks (%s) values(%s)";
-        const char * createTableFiles = "create table if not exists `associate_files` (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath varchar(255), albumuuid varchar(255), flags INTEGER)";
-        char * addFileFormat = (char *)"insert into associate_files (filepath, albumuuid, flags) values(%s)";
-        char * setValueFormat = (char *)"update tracks set %s=`%s` where id=%lu";
-        char * getJSONFormat = (char *)"select * from `tracks` where id=%lu";
-    } sql_statements;
-    
     std::vector<std::string> signalFuns {"addAlbumDirectory", "runSQL"};
     
     std::vector<std::string> * metakeys;

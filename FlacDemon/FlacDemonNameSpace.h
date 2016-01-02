@@ -10,6 +10,7 @@
 #define FlacDemon_FlacDemonNameSpace_h
 
 #include "includes.h"
+#include "avincludes.h"
 #include "typedefs.h"
 #include "SignalHandler.h"
 #include "FlacDemonUtils.h"
@@ -17,6 +18,7 @@
 namespace FlacDemon {
     class Demon;
     class CommandParser;
+    class TCPHandler;
     class NCURSESHandler;
     class FileImporter;
     class File;
@@ -29,9 +31,11 @@ namespace FlacDemon {
     class Player;
 };
 
-using namespace std;
+using std::cout;
+using std::string;
+using std::endl;
 
-typedef int (FlacDemon::Demon::*demonCommandFunction) (vector<string>*);
+typedef int (FlacDemon::Demon::*demonCommandFunction) (std::vector<string>*);
 typedef std::vector< FlacDemon::File * > fd_filevector;
 
 struct MediaStreamInfo {

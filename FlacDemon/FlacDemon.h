@@ -15,6 +15,7 @@
 #include "FileImporter.h"
 #include "Database.h"
 #include "Player.h"
+#include "TCPHandler.h"
 
 #include "tests.h"
 
@@ -29,15 +30,15 @@ using namespace std;
 class FlacDemon::Demon {
 protected:
     vector<string>* commands;
+    FlacDemon::TCPHandler * tcpHandler;
     FlacDemon::CommandParser* commandParser;
     FlacDemon::FileImporter* fileImporter;
     FlacDemon::Player * player;
-//    FlacDemon::NCURSESHandler * ncursesHandler;
-    
 public:
-    FlacDemon::Database* database;
     int flags;
     int interfaceMode;
+    
+    FlacDemon::Database* database;
 
     Demon();
     ~Demon();

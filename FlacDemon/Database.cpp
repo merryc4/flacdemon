@@ -8,6 +8,18 @@
 
 #include "Database.h"
 
+struct SQLStatements{
+    char * fields = nullptr;
+    const char * createTableTracksFormat = "create table if not exists `tracks` (id INTEGER PRIMARY KEY AUTOINCREMENT, %s)";
+    const char * addTrackFormat = "insert into tracks (%s) values(%s)";
+    const char * createTableFiles = "create table if not exists `associate_files` (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath varchar(255), albumuuid varchar(255), flags INTEGER)";
+    const char * addFileFormat = "insert into associate_files (filepath, albumuuid, flags) values(%s)";
+    const char * setValueFormat = "update tracks set %s=`%s` where id=%lu";
+    const char * getJSONFormat = "select * from `tracks` where id=%lu";
+} sql_statements;
+
+
+
 FlacDemon::Database::Database(){
 //    this->sqlSelectStatment = nullptr;
 
@@ -107,7 +119,7 @@ void FlacDemon::Database::add(FlacDemon::File * file){
     values.append("',");
     values.append(std::to_string(file->errorFlags));
 
-    std::string sql = this->sql_statements.addFileFormat;
+    std::string sql = sql_statements.addFileFormat;
     size_t pos = sql.find("%s");
     sql.erase(pos, 2);
     sql.insert(pos, values);
@@ -134,7 +146,7 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
     sql.pop_back();
     sql.pop_back();
     
-    std::string sql2 = this->sql_statements.addTrackFormat;
+    std::string sql2 = sql_statements.addTrackFormat;
     size_t pos = sql2.find("%s");
     sql2.erase(pos, 2);
     sql2.insert(pos, sql);
@@ -290,24 +302,24 @@ void FlacDemon::Database::initDB(){
     sql.pop_back();
     fields.pop_back();
     
-    std::string sql2 = this->sql_statements.createTableTracksFormat;
+    std::string sql2 = sql_statements.createTableTracksFormat;
     size_t pos = sql2.find("%s");
     sql2.erase(pos, 2);
     sql2.insert(pos, sql);
     
     this->runSQL(&sql2, nullptr);
     
-    std::string addTrackSQL = this->sql_statements.addTrackFormat;
+    std::string addTrackSQL = sql_statements.addTrackFormat;
     pos = addTrackSQL.find("%s");
     addTrackSQL.erase(pos, 2);
     addTrackSQL.insert(pos, fields);
-    this->sql_statements.addTrackFormat = new char [addTrackSQL.length() + 1];
-    std::strcpy(this->sql_statements.addTrackFormat, addTrackSQL.c_str());
+    sql_statements.addTrackFormat = new char [addTrackSQL.length() + 1];
+    std::strcpy((char *)sql_statements.addTrackFormat, addTrackSQL.c_str());
     
-    this->sql_statements.fields = new char [fields.length() + 1];
-    std::strcpy(this->sql_statements.fields, fields.c_str());
+    sql_statements.fields = new char [fields.length() + 1];
+    std::strcpy(sql_statements.fields, fields.c_str());
     
-    this->runSQL(this->sql_statements.createTableFiles);
+    this->runSQL(sql_statements.createTableFiles);
 }
 
 FlacDemon::Track * FlacDemon::Database::trackForID(unsigned long ID){
@@ -362,7 +374,7 @@ std::string * FlacDemon::Database::albumDirectoryUUIDForPath(std::string * path)
     return value;
 }
 int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::string * value){
-    std::string sql = this->sql_statements.setValueFormat;
+    std::string sql = sql_statements.setValueFormat;
     size_t pos = sql.find("%s");
     sql.erase(pos, 2);
     sql.insert(pos, *key);
@@ -379,7 +391,7 @@ int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::stri
     return 0;
 }
 std::string * FlacDemon::Database::getJSONForID(int uid){
-    std::string sql = this->sql_statements.getJSONFormat;
+    std::string sql = sql_statements.getJSONFormat;
     std::string search = "%lu";
     std::string replace = std::to_string(uid);
     fd_strreplace(&sql, &search, &replace);

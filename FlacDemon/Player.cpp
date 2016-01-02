@@ -9,6 +9,7 @@
 #include "Player.h"
 
 FlacDemon::Player::Player(){
+    this->playerThread = nullptr;
     ao_initialize();
     this->defaultDriverID = ao_default_driver_id();
     cout << "default driver: " << defaultDriverID << endl;
@@ -152,8 +153,8 @@ void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * cod
     av_frame_free(&frame);
 }
 void FlacDemon::Player::stopAudio(){
+    this->killPlaybackFlag = 1;
     if(this->playerThread && this->playerThread->joinable()){
-        this->killPlaybackFlag = 1;
         this->playerThread->join();
     }
 }

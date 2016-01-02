@@ -80,9 +80,9 @@ enum setChildMetadata {
 
 class FlacDemon::File {
 private:
-    vector<string*>* consistentMetadata;
-    vector<string*>* inconsistentMetadata;
-    vector<string*>* similarMetadata;
+    std::vector<string*>* consistentMetadata;
+    std::vector<string*>* inconsistentMetadata;
+    std::vector<string*>* similarMetadata;
     AVDictionary * metadata;
 public:
     
@@ -109,7 +109,7 @@ public:
     std::string * type;
     std::string * albumuuid;
     
-    vector<FlacDemon::File*> *files;
+    std::vector<FlacDemon::File*> *files;
 
     
     AVCodecID codecID;
@@ -173,10 +173,10 @@ public:
     void setMetaDataEntry(const char * key, const char * value, setChildMetadata setChildren = FLACDEMON_DO_NOT_SET_CHILD_METADATA);
 
     
-    vector<FlacDemon::File*> * getAlbumDirectories(int depth = INT_MAX);
-    vector<FlacDemon::File*> * getAllFiles(int depth = INT_MAX);
-    vector<FlacDemon::File*> * getMediaFiles(int depth = INT_MAX);
-    vector<FlacDemon::File*> * getNoneAlbumFiles(int depth = INT_MAX);
+    std::vector<FlacDemon::File*> * getAlbumDirectories(int depth = INT_MAX);
+    std::vector<FlacDemon::File*> * getAllFiles(int depth = INT_MAX);
+    std::vector<FlacDemon::File*> * getMediaFiles(int depth = INT_MAX);
+    std::vector<FlacDemon::File*> * getNoneAlbumFiles(int depth = INT_MAX);
     
     void standardisePath(std::string * workingDirectory);
 };
