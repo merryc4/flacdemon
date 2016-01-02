@@ -12,6 +12,11 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include "ncurses.h"
 
 class FlacDemonInterface{
@@ -23,6 +28,7 @@ public:
     FlacDemonInterface();
     ~FlacDemonInterface();
     void initialize();
+    void connect();
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */
