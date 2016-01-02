@@ -30,6 +30,7 @@ protected:
         const char * createTableFiles = "create table if not exists `associate_files` (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath varchar(255), albumuuid varchar(255), flags INTEGER)";
         char * addFileFormat = (char *)"insert into associate_files (filepath, albumuuid, flags) values(%s)";
         char * setValueFormat = (char *)"update tracks set %s=`%s` where id=%lu";
+        char * getJSONFormat = (char *)"select * from `tracks` where id=%lu";
     } sql_statements;
     
     std::vector<std::string> signalFuns {"addAlbumDirectory", "runSQL"};
@@ -78,6 +79,7 @@ public:
     std::string * getUUID();
     
     int setValue(unsigned long ID, std::string * key, std::string * value);
+    std::string * getJSONForID(int uid);
     
     void fillDatabase(int entries);
 };

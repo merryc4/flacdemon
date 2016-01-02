@@ -10,15 +10,14 @@
 #define FlacDemon_FlacDemonNameSpace_h
 
 #include "includes.h"
-
+#include "typedefs.h"
 #include "SignalHandler.h"
 #include "FlacDemonUtils.h"
-
-typedef std::map<std::string, std::string *> fd_keymap;
 
 namespace FlacDemon {
     class Demon;
     class CommandParser;
+    class NCURSESHandler;
     class FileImporter;
     class File;
     
@@ -48,5 +47,10 @@ extern FlacDemon::Demon * demon;
 
 typedef std::basic_string <unsigned char> ustring;
 
+
+//demon flags
+#define demon_set_flag demon->flags |=
+#define demon_unset_flag demon->flags = demon->flags & ~
+#define demon_has_flag demon->flags &
 
 #endif

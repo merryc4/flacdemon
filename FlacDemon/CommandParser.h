@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include "FlacDemonNameSpace.h"
+#include "FlacDemon.h"
 
 class FlacDemon::CommandParser {
 protected:

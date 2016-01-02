@@ -89,6 +89,25 @@ int compareCharacters(const void * c1, const void * c2, void * context){
 void fd_tolowercase(std::string * str){
     transform(str->begin(), str->end(), str->begin(), ::tolower);
 }
+void fd_strreplace(std::string * str, std::string * search, std::string * replace){
+    fd_strreplace(str, search->c_str(), replace->c_str());
+}
+void fd_strreplace(std::string * str, const char * search, const char * replace){
+    size_t pos = str->find(search);
+    str->erase(pos, strlen(search));
+    str->insert(pos, replace);
+}
 std::string fd_sqlescape(std::string isql) { //pointer version might save memory
     return regex_replace(isql, std::regex("'"), "''");
+}
+std::string * fd_keymaptojson(fd_keymap * ikeymap){
+    //probably need a json string escape function
+    std::stringstream ss;
+    ss << "{\n";
+    for(fd_keymap::iterator it = ikeymap->begin(); it != ikeymap->end(); it++){
+        ss << "\t\"" << it->first << "\":\"" << *(it->second) << "\",\n";
+    }
+    ss << "}";
+    std::string * json = new std::string(ss.str());
+    return json;
 }

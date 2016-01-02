@@ -10,6 +10,7 @@
 #define __FlacDemon__FlacDemonUtils__
 
 #include "includes.h"
+#include "typedefs.h"
 
 extern std::vector< std::string > * fd_numbers;
 
@@ -20,7 +21,11 @@ const void * characterAtIndex(const void * str, int index, void * context);
 int compareCharacters(const void * c1, const void * c2, void * context);
 
 void fd_tolowercase(std::string * str);
+void fd_strreplace(std::string * str, std::string * search, std::string * replace);
+void fd_strreplace(std::string * str, const char * search, const char * replace);
 
 std::string fd_sqlescape(std::string isql);
+
+std::string * fd_keymaptojson(fd_keymap * ikeymap);
 
 #endif /* defined(__FlacDemon__FlacDemonUtils__) */

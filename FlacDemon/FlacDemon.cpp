@@ -11,12 +11,14 @@
 FlacDemon::Demon::Demon() {
 	cout << "New FlacDemon\n";
     
+    flags = 0;
     av_register_all();
     
     this->commandParser = new FlacDemon::CommandParser();
     this->fileImporter = new FlacDemon::FileImporter();
     this->database = new FlacDemon::Database();
     this->player = new FlacDemon::Player();
+    
     
     this->player->setDatabase(this->database);
     

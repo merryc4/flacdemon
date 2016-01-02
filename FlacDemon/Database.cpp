@@ -378,6 +378,14 @@ int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::stri
     
     return 0;
 }
+std::string * FlacDemon::Database::getJSONForID(int uid){
+    std::string sql = this->sql_statements.getJSONFormat;
+    std::string search = "%lu";
+    std::string replace = std::to_string(uid);
+    fd_strreplace(&sql, &search, &replace);
+    fd_keymap * result = this->sqlSelect(&sql);
+    return fd_keymaptojson(result);
+}
 
 void FlacDemon::Database::fillDatabase(int entries){
     std::string sql = "insert into tracks (track,title,albumartist,artist,album,genre,composer,disc,tracktime,playcount,dateadded,filepath,albumuuid,verified) values('3','Loin Des Villes','Yann Tiersen','Yann Tiersen','Les Retrouvailles','Other','-1','0','199866','0','1449148992','/mnt/Backup/Storage/FLACS/Yann Tiersen/Les Retrouvailles/03 Yann Tiersen - Loin Des Villes.flac','729489FE-9124-49B2-927C-8D1E246F2D6C','1')";

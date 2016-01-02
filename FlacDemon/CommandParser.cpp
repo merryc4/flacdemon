@@ -20,7 +20,17 @@ void FlacDemon::CommandParser::getCommand() {
 string* FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";
 	string* input = new string();
-    getline(cin >> ws, *input);
+    switch(demon->interfaceMode){
+        case interfaceModeTerminal:
+            getline(cin >> ws, *input);
+            break;
+        case interfaceModeCurses:
+            
+            break;
+        case interfaceModeGUI:
+            
+            break;
+    }
 	return input;
 }
 void FlacDemon::CommandParser::parseCommand(string* command) {

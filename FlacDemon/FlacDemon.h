@@ -11,11 +11,18 @@
 
 #include "FlacDemonNameSpace.h"
 #include "CommandParser.h"
+#include "ncursesHandler.h"
 #include "FileImporter.h"
 #include "Database.h"
 #include "Player.h"
 
 #include "tests.h"
+
+enum flacdemonInterfaceMode {
+    interfaceModeTerminal = 0,
+    interfaceModeCurses,
+    interfaceModeGUI
+};
 
 using namespace std;
 
@@ -25,9 +32,12 @@ protected:
     FlacDemon::CommandParser* commandParser;
     FlacDemon::FileImporter* fileImporter;
     FlacDemon::Player * player;
+//    FlacDemon::NCURSESHandler * ncursesHandler;
     
 public:
     FlacDemon::Database* database;
+    int flags;
+    int interfaceMode;
 
     Demon();
     ~Demon();
