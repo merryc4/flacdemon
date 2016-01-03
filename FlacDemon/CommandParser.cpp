@@ -9,7 +9,7 @@
 #include "CommandParser.h"
 
 FlacDemon::CommandParser::CommandParser(){
-
+    this->commands = new std::vector<std::string>;
 }
 FlacDemon::CommandParser::~CommandParser(){
     

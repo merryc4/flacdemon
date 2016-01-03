@@ -20,10 +20,15 @@ private:
     std::thread * acceptThread;
 protected:
 public:
+    //variables:
+    std::vector<std::string> * commands;
+    bool commandAvailable;
+    //methods:
     TCPHandler();
     ~TCPHandler();
     void initialize();
     void runAcceptLoop(int sockfd);
+    void addCommand(char * messageBuffer);
 };
 
 #endif /* defined(__FlacDemon__TCPHandler__) */
