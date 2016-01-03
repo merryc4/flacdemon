@@ -62,9 +62,6 @@ void FlacDemon::Database::initSignals(){
     auto f = boost::bind(&FlacDemon::Database::signalReceiver, this, _1, _2);
     signalHandler->signals("addAlbumDirectory")->connect(f);
     signalHandler->signals("runSQL")->connect(f);
-//    for(std::vector<std::string>::iterator it = this->signalFuns.begin(); it != this->signalFuns.end(); it++){
-//        signalHandler->signals(it->c_str())->connect(f);
-//    }
     
 }
 void FlacDemon::Database::signalReceiver(const char * signalName, void * arg){

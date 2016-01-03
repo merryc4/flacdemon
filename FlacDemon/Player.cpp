@@ -33,16 +33,10 @@ void FlacDemon::Player::playTrack(FlacDemon::Track * track){
     if(!track->openFilePath() || !track->file->isMediaFile()){
         return;
     }
-    
-    //move variables to members of the class where possible
-
-//    AVCodecContext * codecContext = track->file->formatContext->streams[0]->codec;
-//    
-//    if(!codecContext){
-//        cout << "error getting codec context";
-//        return;
-//    }
-    
+    if(!this->playTrackMutex.try_lock()){
+        return;
+    }
+        
     this->stopAudio();
     this->killPlaybackFlag = 0;
     
@@ -96,16 +90,19 @@ void FlacDemon::Player::playTrack(FlacDemon::Track * track){
     this->sampleFormat.bits = bits;
     
     AVFrame * frame = av_frame_alloc();
-    AVPacket packet;
-    av_init_packet(&packet);
-    packet.data = nullptr;
-    packet.size = 0;
+    AVPacket * packet = new AVPacket;
+    av_init_packet(packet);
+    packet->data = nullptr;
+    packet->size = 0;
     
-    this->playerThread = new std::thread(&FlacDemon::Player::playAudio, this, track, codecContext, &packet, frame, planar);
-    
+    this->playerThread = new std::thread(&FlacDemon::Player::playAudio, this, track, codecContext, packet, frame, planar);
+    this->playTrackMutex.unlock();
 }
 
 void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * codecContext, AVPacket * packet, AVFrame * frame, int planar){
+    if(!this->playAudioMutex.try_lock())
+        return;
+    
     cout << "playing audio" << endl;
     int error, endoffile=0, gotFrame=0, samplelength=0;
     
@@ -151,6 +148,8 @@ void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * cod
     
     ao_close(this->device);
     av_frame_free(&frame);
+    this->audioPlaying = false;
+    this->playAudioMutex.unlock();
 }
 void FlacDemon::Player::stopAudio(){
     this->killPlaybackFlag = 1;

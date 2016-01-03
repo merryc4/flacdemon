@@ -10,32 +10,56 @@
 
 FlacDemon::CommandParser::CommandParser(){
     this->commands = new std::vector<std::string>;
+    this->availableInterfaces = FDInterfaceCommandLine;
+    
+    auto f = boost::bind(&FlacDemon::CommandParser::signalReceiver, this, _1, _2);
+    signalHandler->signals("interfaceAvailable")->connect(f);
+    signalHandler->signals("runCommand")->connect(f);
 }
 FlacDemon::CommandParser::~CommandParser(){
     
+}
+void FlacDemon::CommandParser::signalReceiver(const char * signalName, void * arg){
+    cout << "signal received: " << signalName << endl;
+    if(strcmp(signalName, "interfaceAvailable") == 0){
+        int interface = *((int *) arg);
+        this->availableInterfaces |= interface;
+    } else if (strcmp(signalName, "runCommand") == 0){
+        std::string command = (char*)arg;
+        this->parseCommand(&command);
+    }
+}
+void FlacDemon::CommandParser::startCommandThreads(){
+//    for(int i = FDInterfaceStartIterate; i < FDInterfaceMaxIterate; i = (i << 1)){
+//        if(i & this->availableInterfaces){
+//            
+//        }
+//    }
+    if(this->availableInterfaces & FDInterfaceCommandLine){
+        //happens on main thread
+    }
+    if(this->availableInterfaces & FDInterfaceSocket){
+        
+    }
 }
 void FlacDemon::CommandParser::getCommand() {
     this->parseCommand(this->getInput());
 }
 string* FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";
-	string* input = new string();
-    switch(demon->interfaceMode){
-        case interfaceModeTerminal:
-            getline(cin >> ws, *input);
-            break;
-        case interfaceModeCurses:
-            
-            break;
-        case interfaceModeGUI:
-            
-            break;
-    }
+    std::string* input = new std::string();
+    getline(cin >> ws, *input);
 	return input;
+}
+void FlacDemon::CommandParser::checkSocketsLoop(){
+    
 }
 void FlacDemon::CommandParser::parseCommand(string* command) {
 	if (!command->length())
 		return;
+    while(command->back() == '\n'){
+        command->pop_back();
+    }
     
 	unsigned long pos = 0, skip;
 	string word, *commandWord = nullptr;

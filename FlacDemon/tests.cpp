@@ -8,13 +8,14 @@
 
 #include "tests.h"
 
+std::mutex testMutex;
 
 void run_tests(){
     //add tests here
 //    test_comparetags();
 //    test_insertsql();
 //    demon->database->fillDatabase(50000);
-    cout << *demon->database->getJSONForID(1) << endl;
+//    cout << *demon->database->getJSONForID(1) << endl;
 }
 void test_comparetags(){
     std::string tag1 = "compare test string";
@@ -23,4 +24,10 @@ void test_comparetags(){
 }
 void test_insertsql(){
    
+}
+void lockMutex(){
+    if(!testMutex.try_lock())
+        return;
+//    std::lock_guard<std::mutex> lock(testMutex);
+//    sleep(10);
 }

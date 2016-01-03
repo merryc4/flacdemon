@@ -13,8 +13,17 @@
 #include "FlacDemonNameSpace.h"
 #include "FlacDemon.h"
 
+typedef enum {
+    FDInterfaceStartIterate = 1,
+    FDInterfaceCommandLine = 1,
+    FDInterfaceSocket = 2,
+    FDInterfaceMaxIterate = 4
+} FDInterfaceMethods;
+
 class FlacDemon::CommandParser {
 protected:
+    int availableInterfaces;
+    
     std::vector<string>*commands;
     std::map<string, demonCommandFunction>* commandMap;
     FlacDemon::Demon *demon;
@@ -22,9 +31,13 @@ protected:
 public:
     CommandParser();
     ~CommandParser();
-    
+
+    void signalReceiver(const char * signalName, void * arg);
+
+    void startCommandThreads();
     void getCommand();
     string* getInput();
+    void checkSocketsLoop();
     void parseCommand(string* command);
     void setMapForDemon(FlacDemon::Demon*, std::map<string, demonCommandFunction>*);
 };

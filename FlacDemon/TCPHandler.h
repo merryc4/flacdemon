@@ -23,6 +23,7 @@ public:
     //variables:
     std::vector<std::string> * commands;
     bool commandAvailable;
+    bool threadSync;
     //methods:
     TCPHandler();
     ~TCPHandler();

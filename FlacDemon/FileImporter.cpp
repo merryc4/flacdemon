@@ -21,7 +21,7 @@ void FlacDemon::FileImporter::sigtest(const char * signalName){
 void FlacDemon::FileImporter::importFilesFromPath(string *path){
 	cout << "Importing files from " << path << endl;
     FlacDemon::File * file = new FlacDemon::File(path);
-    vector<FlacDemon::File*> * albumDirectories = file->getAlbumDirectories(-1);
+    std::vector<FlacDemon::File*> * albumDirectories = file->getAlbumDirectories(-1);
     
     cout << "------------------ ALBUM DIRECTORIES ------------------" << endl;
     flacdemon_loop_all_files(albumDirectories){
@@ -33,7 +33,7 @@ void FlacDemon::FileImporter::importFilesFromPath(string *path){
         signalHandler->call("addAlbumDirectory", (*it));
     }
     
-    vector<FlacDemon::File*> * noneAlbumFiles = file->getNoneAlbumFiles(-1);
+    std::vector<FlacDemon::File*> * noneAlbumFiles = file->getNoneAlbumFiles(-1);
     
     cout << "------------------ NONE ALBUM FILES ------------------" << endl;
     flacdemon_loop_all_files(noneAlbumFiles){

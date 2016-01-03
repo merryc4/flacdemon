@@ -20,8 +20,11 @@ private:
     FlacDemon::Database * database;
     SwrContext * audioResampleContext = nullptr;
     std::thread * playerThread = nullptr;
+    std::mutex playTrackMutex;
+    std::mutex playAudioMutex;
     
     int killPlaybackFlag = 0;
+    bool audioPlaying = 0;
     int defaultDriverID = -1;
     ao_device * device = nullptr;
     ao_sample_format sampleFormat = {

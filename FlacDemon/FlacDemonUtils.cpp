@@ -111,3 +111,16 @@ std::string * fd_keymaptojson(fd_keymap * ikeymap){
     std::string * json = new std::string(ss.str());
     return json;
 }
+void waitfor0(int * value){
+    while (*value == 0) {
+        usleep(50);
+    }
+}
+void waitfor0(bool * value){
+    while (*value == false) {
+        usleep(50);
+    }
+}
+int isMainThread(){
+    return std::this_thread::get_id() == mainThreadID;
+}

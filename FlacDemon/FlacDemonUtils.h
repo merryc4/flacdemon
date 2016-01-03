@@ -11,6 +11,7 @@
 
 #include "includes.h"
 #include "typedefs.h"
+#include "globals.h"
 
 extern std::vector< std::string > * fd_numbers;
 
@@ -27,5 +28,10 @@ void fd_strreplace(std::string * str, const char * search, const char * replace)
 std::string fd_sqlescape(std::string isql);
 
 std::string * fd_keymaptojson(fd_keymap * ikeymap);
+
+void waitfor0(int * value);
+void waitfor0(bool * value);
+
+int isMainThread();
 
 #endif /* defined(__FlacDemon__FlacDemonUtils__) */

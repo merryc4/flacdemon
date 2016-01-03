@@ -56,6 +56,7 @@ int FlacDemon::Demon::add(vector<string> * args){
     return 0;
 }
 int FlacDemon::Demon::play(vector<string> * args){
+    
     cout << "play some tunes" << endl;
     long ID = 1;
     if(args && args->size()){

@@ -28,6 +28,7 @@ enum flacdemonInterfaceMode {
 using namespace std;
 
 class FlacDemon::Demon {
+    friend FlacDemon::CommandParser;
 protected:
     vector<string>* commands;
     FlacDemon::TCPHandler * tcpHandler;

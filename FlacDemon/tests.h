@@ -16,5 +16,6 @@
 void run_tests();
 void test_comparetags();
 void test_insertsql();
+void lockMutex();
 
 #endif /* defined(__FlacDemon__tests__) */

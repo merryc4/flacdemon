@@ -10,7 +10,7 @@
 #define FlacDemon_includes_h
 
 #include <stdio.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <sstream>
 #include <regex>
 #include <iostream>
@@ -21,6 +21,6 @@
 #include <map>
 #include <thread>
 #include <uuid/uuid.h>
-//#include <mba/diff.h>
+#include <mba/diff.h>
 
 #endif

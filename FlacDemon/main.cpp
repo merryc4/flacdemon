@@ -14,12 +14,14 @@
 
 const SignalHandler * signalHandler = new SignalHandler();
 FlacDemon::Demon * demon = nullptr;
+std::thread::id mainThreadID;
 
 int main(int argc, const char * argv[])
 {
 
     // insert code here...
     std::cout << "Hello, World!\n";
+    mainThreadID = std::this_thread::get_id();
     
 #if FDOPTIONS_USE_FLACS_DIR
     char dir[] = "/mnt/Backup/Storage/FLACS/";

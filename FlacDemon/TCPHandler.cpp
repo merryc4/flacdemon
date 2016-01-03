@@ -13,6 +13,7 @@ FlacDemon::TCPHandler::TCPHandler(){
     this->acceptThread = nullptr;
     this->commands = new std::vector<std::string>;
     this->commandAvailable = false;
+    this->threadSync = false;
 }
 FlacDemon::TCPHandler::~TCPHandler(){
     //delete
@@ -71,7 +72,12 @@ void FlacDemon::TCPHandler::runAcceptLoop(int sockfd){
 }
 void FlacDemon::TCPHandler::addCommand(char * messageBuffer){
     //synchronise reading from command parser thread?
-    std::string command = messageBuffer;
-    this->commands->push_back(command);
-    this->commandAvailable = true;
+//    waitfor0(&(this->threadSync));
+//    this->threadSync = true;
+//    std::string command;
+//    command.assign(messageBuffer);
+//    this->commands->push_back(command);
+//    this->commandAvailable = true;
+//    this->threadSync = false;
+    signalHandler->call("runCommand", messageBuffer);
 }

@@ -73,12 +73,14 @@ void FlacDemonInterface::connect(){
     if (::connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
         std::cout << "ERROR connecting" << std::endl;
 
-    bzero(buffer,256);
-    fgets(buffer,255,stdin);
-    ssize_t n = send(sockfd,buffer,strlen(buffer), 0);
-    if (n < 0)
-        std::cout << "ERROR writing to socket" << std::endl;
-    
-    std::cout << buffer << std::endl;
+    while(1){
+        bzero(buffer,256);
+        fgets(buffer,255,stdin);
+        ssize_t n = send(sockfd,buffer,strlen(buffer), 0);
+        if (n < 0){
+            std::cout << "ERROR writing to socket" << std::endl;
+            break;
+        }
+    }
     close(sockfd);
 }
