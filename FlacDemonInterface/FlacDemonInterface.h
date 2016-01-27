@@ -13,6 +13,9 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <vector>
+#include <string>
+
 
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -22,6 +25,7 @@
 
 class FlacDemonInterface{
 private:
+    WINDOW *browser;
     
 protected:
     
@@ -30,6 +34,9 @@ public:
     ~FlacDemonInterface();
     void initialize();
     void connect();
+    void run();
+    void printLibrary(int offset);
+    void printLibraryHeaders();
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

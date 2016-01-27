@@ -8,25 +8,31 @@
 
 #include "FlacDemonInterface.h"
 
+std::vector< std::string > * libraryTitles = new std::vector< std::string >{"Track", "Title", "Album", "Artist"};
+
 FlacDemonInterface::FlacDemonInterface(){
     //init
+    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
     //de-init
 }
 void FlacDemonInterface::initialize(){
     
+    
     //redirect cout to log file
     std::ofstream * out = new std::ofstream("flacdemon.log");
     std::cout.rdbuf(out->rdbuf());
-        
+
+    initscr();
+
     raw();
     noecho();
     keypad(stdscr, true);
+    refresh(); //clears screen and sets scroll to correct position
     
     char msg[] = "FlacDemon NCURSES Interface";
     
-    WINDOW * w = initscr();
     
     int row,col;
     getmaxyx(stdscr, row, col);
@@ -40,13 +46,7 @@ void FlacDemonInterface::initialize(){
     mvwprintw(searchWindow, 0, 0, "Search:");
     wrefresh(searchWindow);
     
-    
-
-//    mvprintw(row / 2, (col - strlen(msg)) / 2, "%s", msg);
-
-    int ch = getchar();
-    waddch(w, ch);
-    refresh();
+    this->browser = newwin(row - 2, col, 2, 0);
 }
 void FlacDemonInterface::connect(){
     int sockfd, port;
@@ -70,17 +70,32 @@ void FlacDemonInterface::connect(){
           (char *)&serv_addr.sin_addr.s_addr,
           server->h_length);
     serv_addr.sin_port = htons(port);
-    if (::connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
+    if (::connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0){
         std::cout << "ERROR connecting" << std::endl;
-
-    while(1){
-        bzero(buffer,256);
-        fgets(buffer,255,stdin);
-        ssize_t n = send(sockfd,buffer,strlen(buffer), 0);
-        if (n < 0){
-            std::cout << "ERROR writing to socket" << std::endl;
-            break;
-        }
+        return;
     }
-    close(sockfd);
+    std::cout << "Connected to server" << std::endl;
+
+//    while(1){
+//        bzero(buffer,256);
+//        fgets(buffer,255,stdin);
+//        ssize_t n = send(sockfd,buffer,strlen(buffer), 0);
+//        if (n < 0){
+//            std::cout << "ERROR writing to socket" << std::endl;
+//            break;
+//        }
+//    }
+//    close(sockfd);
+}
+void FlacDemonInterface::run(){
+    this->printLibrary(0);
+    while(1){
+        char c = getch();
+    }
+}
+void FlacDemonInterface::printLibrary(int offset = 0){
+    this->printLibraryHeaders();
+}
+void FlacDemonInterface::printLibraryHeaders(){
+    mvwprintw(this->browser, 0, 0, "Library");
 }

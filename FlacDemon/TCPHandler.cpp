@@ -45,20 +45,26 @@ void FlacDemon::TCPHandler::runAcceptLoop(int sockfd){
     struct sockaddr_in client_address;
     socklen_t client_length;
     int newsockfd;
-    ssize_t n;
-    char buffer[256];
     
     client_length = sizeof(client_address);
     std::cout << "waiting for tcp connection" << std::endl;
-    if((newsockfd = accept(sockfd, (struct sockaddr * )&client_address, &client_length)) < 0){
-        std::cout << "Error on tcp socket accept" << std::endl;
-        return;
-    }
-    std::cout << "Socket connection accepted" << std::endl;
+    do {
+        if((newsockfd = accept(sockfd, (struct sockaddr * )&client_address, &client_length)) < 0){
+            std::cout << "Error on tcp socket accept" << std::endl;
+            return;
+        }
+        std::cout << "Socket connection accepted" << std::endl;
+        new std::thread(&TCPHandler::messageReceiverLoop, this, newsockfd);
+    } while(1); //check server socket is still open
+}
+void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
+    ssize_t n;
+    char buffer[256];
+    
     do{ //check socket is still open
         bzero(buffer,256);
         
-        if ((n = recv(newsockfd, buffer, sizeof(buffer), 0)) < 0){
+        if ((n = recv(sockfd, buffer, sizeof(buffer), 0)) < 0){
             std::cout << "ERROR reading from socket" << std::endl;
             continue;
         }

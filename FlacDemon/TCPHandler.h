@@ -29,6 +29,7 @@ public:
     ~TCPHandler();
     void initialize();
     void runAcceptLoop(int sockfd);
+    void messageReceiverLoop(int sockfd);
     void addCommand(char * messageBuffer);
 };
 
