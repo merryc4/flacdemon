@@ -89,9 +89,10 @@ void FlacDemonInterface::connect(){
 }
 void FlacDemonInterface::run(){
     this->printLibrary(0);
-    while(1){
-        char c = getch();
-    }
+    char c;
+    do{
+        c = getch();
+    }while(c != 'c');
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
     this->printLibraryHeaders();
