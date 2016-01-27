@@ -27,6 +27,10 @@ class FlacDemonInterface{
 private:
     WINDOW *browser;
     
+    
+    int maxColumns;
+    int maxRows;
+    int browserRows;
 protected:
     
 public:
@@ -37,6 +41,7 @@ public:
     void run();
     void printLibrary(int offset);
     void printLibraryHeaders();
+    void printLibraryLine(std::vector< std:: string > * values);
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

@@ -26,7 +26,7 @@ void FlacDemonInterface::initialize(){
 
     initscr();
 
-    raw();
+    cbreak();
     noecho();
     keypad(stdscr, true);
     refresh(); //clears screen and sets scroll to correct position
@@ -34,19 +34,18 @@ void FlacDemonInterface::initialize(){
     char msg[] = "FlacDemon NCURSES Interface";
     
     
-    int row,col;
-    getmaxyx(stdscr, row, col);
+    getmaxyx(stdscr, this->maxRows, this->maxColumns);
     
-    WINDOW * titleWindow = newwin(1, col, 0, 0);
-    WINDOW * searchWindow = newwin(1, col, 1, 0);
+    WINDOW * titleWindow = newwin(1, this->maxColumns, 0, 0);
+    WINDOW * searchWindow = newwin(1, this->maxColumns, 1, 0);
     
-    mvwprintw(titleWindow, 0, (col - strlen(msg)) / 2, "%s", msg);
+    mvwprintw(titleWindow, 0, (this->maxColumns - strlen(msg)) / 2, "%s", msg);
     wrefresh(titleWindow);
     
     mvwprintw(searchWindow, 0, 0, "Search:");
     wrefresh(searchWindow);
     
-    this->browser = newwin(row - 2, col, 2, 0);
+    this->browser = newwin(this->maxRows - 2, this->maxColumns, 2, 0);
 }
 void FlacDemonInterface::connect(){
     int sockfd, port;
@@ -95,8 +94,25 @@ void FlacDemonInterface::run(){
     }while(c != 'c');
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
+    this->browserRows=1; //title always first row
     this->printLibraryHeaders();
+    
+    wrefresh(this->browser);
 }
 void FlacDemonInterface::printLibraryHeaders(){
-    mvwprintw(this->browser, 0, 0, "Library");
+    char title[] = "Library";
+    mvwprintw(this->browser, 0, (this->maxColumns - strlen(title)) / 2, title);
+    this->printLibraryLine(libraryTitles);
+}
+void FlacDemonInterface::printLibraryLine(std::vector<std::string> *values){
+    int width = (this->maxColumns / values->size());
+    int position = 0;
+    this->browserRows++;
+    
+    for(std::vector< std::string >::iterator it = values->begin(); it != values->end(); it++){
+        mvwprintw(this->browser, this->browserRows, position, it->c_str());
+        position+=width;
+        mvwprintw(this->browser, this->browserRows, position, "|");
+        position++;
+    }
 }
