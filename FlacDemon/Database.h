@@ -39,8 +39,10 @@ protected:
     void closeDB(sqlite3 * db);
     void runSQL(std::string * sql, int (*callback)(void*,int,char**,char**) = nullptr, void * arg = nullptr); //add return code
     void runSQL(const char * sql, int (*callback)(void*,int,char**,char**) = nullptr, void * arg = nullptr); //add return code
-    fd_keymap * sqlSelect(std::string * sql);
-    fd_keymap * sqlSelect(const char * sql);
+    fd_keymap_vector * sqlSelect(std::string * sql);
+    fd_keymap_vector * sqlSelect(const char * sql);
+    fd_keymap * sqlSelectRow(std::string * sql);
+    fd_keymap * sqlSelectRow(const char * sql);
     
     int sqlCount(std::string * sql);
     int sqlCount(const char * sql);
@@ -70,6 +72,7 @@ public:
     
     int setValue(unsigned long ID, std::string * key, std::string * value);
     std::string * getJSONForID(int uid);
+    std::string * getAll();
     
     void fillDatabase(int entries);
 };

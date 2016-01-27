@@ -27,6 +27,7 @@ void fd_strreplace(std::string * str, const char * search, const char * replace)
 
 std::string fd_sqlescape(std::string isql);
 
+std::string * fd_keymap_vectortojson(fd_keymap_vector* ikeymap_vector);
 std::string * fd_keymaptojson(fd_keymap * ikeymap);
 
 void waitfor0(int * value);

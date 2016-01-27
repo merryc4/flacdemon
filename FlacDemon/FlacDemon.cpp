@@ -88,3 +88,24 @@ int FlacDemon::Demon::set(vector<string> * args){
     
     return 0;
 }
+int FlacDemon::Demon::get(vector<string> * args){
+    if(args->size() < 2){
+        cout << "command error: incorrect arguments" << endl;
+        return 1;
+    }
+    if (strcmp(args->back().c_str(), "all") == 0) {
+        //get all
+        return 0;
+    }
+    
+    int id;
+    if(fd_stringtoint(&(*args)[0], &id)){
+        cout << "command error : unknown id: " << (*args)[0] << endl;
+        return 1;
+    }
+    std::string metaTagName = (*args)[1];
+    
+    //get value from database
+    
+    return 0;
+}

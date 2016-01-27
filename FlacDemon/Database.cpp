@@ -16,6 +16,7 @@ struct SQLStatements{
     const char * addFileFormat = "insert into associate_files (filepath, albumuuid, flags) values(%s)";
     const char * setValueFormat = "update tracks set %s=`%s` where id=%lu";
     const char * getJSONFormat = "select * from `tracks` where id=%lu";
+    const char * getAll = "select * from `tracks`";
 } sql_statements;
 
 
@@ -65,7 +66,7 @@ void FlacDemon::Database::initSignals(){
     
 }
 void FlacDemon::Database::signalReceiver(const char * signalName, void * arg){
-    cout << "signal received: " << signalName << endl;
+    cout << "signal received: "<< signalName << endl;
     if(strcmp(signalName, "addAlbumDirectory")==0){
         this->addAlbumDirectory(static_cast<FlacDemon::File *>(arg));
     } else if(strcmp(signalName, "runSQL")==0){
@@ -180,7 +181,7 @@ void FlacDemon::Database::runSQL(const char *sql,int (*callback)(void*,int,char*
     }
     this->closeDB(db);
 }
-fd_keymap * FlacDemon::Database::sqlSelect(std::string *isql){
+fd_keymap_vector * FlacDemon::Database::sqlSelect(std::string *isql){
     const char * sql = isql->c_str();
     sqlite3_stmt * stmt;
     if(this->sqlSelectStatment == nullptr){
@@ -198,30 +199,36 @@ fd_keymap * FlacDemon::Database::sqlSelect(std::string *isql){
     } else {
         stmt = this->sqlSelectStatment;
     }
-    fd_keymap * results = new fd_keymap;
-    int stepCode, columns, i;
+    fd_keymap_vector * results = new fd_keymap_vector;
+    int stepCode, columns = 0, i;
     const unsigned char * value = nullptr;
     const char * key = nullptr;
-    if ((stepCode = sqlite3_step(stmt)) == SQLITE_ROW) {
+    while ((stepCode = sqlite3_step(stmt)) == SQLITE_ROW) {
+        fd_keymap * result = new fd_keymap;
         columns = sqlite3_column_count(stmt);
         for (i = 0; i < columns; i++) {
             if((value = sqlite3_column_text(stmt, i)) && (key = sqlite3_column_name(stmt, i))){
-                results->insert(std::pair<std::string, std::string *>(*new std::string(key), new std::string(value, value + sqlite3_column_bytes(stmt, i)))); //will need to free the key
+                result->insert(std::pair<std::string, std::string *>(*new std::string(key), new std::string(value, value + sqlite3_column_bytes(stmt, i)))); //will need to free the key
             }
             
         }
-    } else {
-        if(stepCode != SQLITE_DONE){
-            //error occurred, check result code
-            cout << "Error stepping through sql select" << endl;
-        }
-        this->clearSelect();
+        results->push_back(result);
     }
+    if(stepCode != SQLITE_DONE){
+        //error occurred, check result code
+        cout << "Error stepping through sql select" << endl;
+    }
+    if(columns == 0)
+        this->clearSelect();
 
     return results;
 }
+fd_keymap * FlacDemon::Database::sqlSelectRow(std::string *sql){
+    fd_keymap_vector * results = sqlSelect(sql);
+    return results->back();
+}
 std::string * FlacDemon::Database::sqlSelectOne(std::string * isql){
-    fd_keymap * results = this->sqlSelect(isql);
+    fd_keymap * results = this->sqlSelectRow(isql);
     this->clearSelect();
     if(results && results->size() == 1){
         return results->begin()->second;
@@ -329,7 +336,7 @@ FlacDemon::Track * FlacDemon::Database::trackForID(unsigned long ID){
     }
     std::string sql = "select * from tracks where id=";
     sql.append(std::to_string(ID));
-    fd_keymap * results = this->sqlSelect(&sql);
+    fd_keymap * results = this->sqlSelectRow(&sql);
     this->clearSelect();
     if(results->count("filepath")){
         cout << "found track for id " << ID << endl;
@@ -392,8 +399,13 @@ std::string * FlacDemon::Database::getJSONForID(int uid){
     std::string search = "%lu";
     std::string replace = std::to_string(uid);
     fd_strreplace(&sql, &search, &replace);
-    fd_keymap * result = this->sqlSelect(&sql);
+    fd_keymap * result = this->sqlSelectRow(&sql);
     return fd_keymaptojson(result);
+}
+std::string * FlacDemon::Database::getAll(){
+    std::string sql = sql_statements.getAll;
+    fd_keymap_vector * results = this->sqlSelect(&sql);
+    return fd_keymap_vectortojson(results);
 }
 
 void FlacDemon::Database::fillDatabase(int entries){

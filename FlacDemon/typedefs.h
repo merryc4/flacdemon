@@ -10,5 +10,6 @@
 #define FlacDemon_typedefs_h
 
 typedef std::map<std::string, std::string *> fd_keymap;
+typedef std::vector< fd_keymap * > fd_keymap_vector;
 
 #endif

@@ -45,10 +45,11 @@ public:
     ~Demon();
     
     void run();
-    int add(vector<string>*);
-    int play(vector<string>*);
-    int stop(vector<string>*);
-    int set(vector<string>*);
+    int add(vector<string>* args);
+    int play(vector<string>* args);
+    int stop(vector<string>* args);
+    int set(vector<string>* args);
+    int get(vector<string>* args);
 };
 
 #endif /* defined(__FlacDemon__FlacDemon__) */

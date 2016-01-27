@@ -16,6 +16,7 @@ void run_tests(){
 //    test_insertsql();
 //    demon->database->fillDatabase(50000);
 //    cout << *demon->database->getJSONForID(1) << endl;
+    cout << *demon->database->getAll() << endl;
 }
 void test_comparetags(){
     std::string tag1 = "compare test string";
