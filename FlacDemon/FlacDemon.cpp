@@ -47,8 +47,7 @@ void FlacDemon::Demon::run() {
 }
 int FlacDemon::Demon::add(vector<string> * args){
     cout << "add some files" << endl;
-    for(vector<string>::iterator it = args->begin(); it != args->end(); it++){
-        cout << *it << endl;
+    for(vector<string>::iterator it = (args->begin() + 1); it != args->end(); it++){
         std::string * path = new std::string(*it);
         this->fileImporter->importFilesFromPath(path);
         free(path);
@@ -59,8 +58,8 @@ int FlacDemon::Demon::play(vector<string> * args){
     
     cout << "play some tunes" << endl;
     long ID = 1;
-    if(args && args->size()){
-        ID = std::strtol((*args)[0].c_str(), nullptr, 0);
+    if(args && args->size() > 1){
+        ID = std::strtol((*args)[1].c_str(), nullptr, 0);
     }
     this->player->playTrackWithID(ID);
     return 0;
@@ -71,43 +70,45 @@ int FlacDemon::Demon::stop(vector<string> * args){
     return 0;
 }
 int FlacDemon::Demon::set(vector<string> * args){
-    if(args->size() < 3){
+    if(args->size() < 4){
         cout << "command error: incorrect arguments" << endl;
         return 1;
     }
 
     int id;
-    if(fd_stringtoint(&(*args)[0], &id)){
+    if(fd_stringtoint(&(*args)[1], &id)){
         cout << "command error : unknown id: " << (*args)[0] << endl;
         return 1;
     }
-    std::string metaTagName = (*args)[1];
-    std::string metaTagValue = (*args)[2];
+    std::string metaTagName = (*args)[2];
+    std::string metaTagValue = (*args)[3];
     
     this->database->setValue(id, &metaTagName, &metaTagValue);
     
     return 0;
 }
 int FlacDemon::Demon::get(vector<string> * args){
+    std::string * results;
     if (strcmp(args->back().c_str(), "all") == 0) {
         //get all
-        std::string * results = this->database->getAll();
-        sessionManager->getSession()->setString("get all", results);
-        return 0;
+        results = this->database->getAll();
     }
-    if(args->size() < 2){
-        cout << "command error: incorrect arguments" << endl;
-        return 1;
+    else {
+        if(args->size() < 3){
+            cout << "command error: incorrect arguments" << endl;
+            return 1;
+        }
+        
+        int id;
+        if(fd_stringtoint(&(*args)[1], &id)){
+            cout << "command error : unknown id: " << (*args)[0] << endl;
+            return 1;
+        }
+        std::string metaTagName = (*args)[2];
+        results = this->database->getValue(id, &metaTagName);
     }
-    
-    int id;
-    if(fd_stringtoint(&(*args)[0], &id)){
-        cout << "command error : unknown id: " << (*args)[0] << endl;
-        return 1;
-    }
-    std::string metaTagName = (*args)[1];
-    
-    //get value from database
+
+    sessionManager->getSession()->setString(&((*args)[0]), results);
     
     return 0;
 }

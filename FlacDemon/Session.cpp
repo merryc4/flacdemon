@@ -20,6 +20,8 @@ FlacDemon::Session::~Session(){
     delete this->stringValues;
 }
 void FlacDemon::Session::setString(std::string * key, std::string * value){
+    if(!key || !value)
+        return;
     if(!this->stringValues)
         this->stringValues = new fd_keymap;
     std::string * valuecopy = new std::string(*value);

@@ -43,7 +43,10 @@ void FlacDemon::CommandParser::startCommandThreads(){
     }
 }
 void FlacDemon::CommandParser::getCommand() {
-    this->parseCommand(this->getInput());
+    std::string * cmd = this->getInput();
+    this->parseCommand(cmd);
+    std::string * results = sessionManager->getSession()->getString(cmd);
+    cout << *results << endl;
 }
 string* FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";
@@ -57,6 +60,7 @@ void FlacDemon::CommandParser::checkSocketsLoop(){
 void FlacDemon::CommandParser::parseCommand(string* command) {
 	if (!command->length())
 		return;
+    command = new std::string(*command);
     while(command->back() == '\n'){
         command->pop_back();
     }
@@ -74,6 +78,8 @@ void FlacDemon::CommandParser::parseCommand(string* command) {
     
     std::string::iterator last = command->end();
     std::string::iterator first;
+    
+    args.push_back(*command);
     
     do {
         first = command->begin();
@@ -118,6 +124,7 @@ void FlacDemon::CommandParser::parseCommand(string* command) {
                 cout << "command is '" << word << "'" << endl;                
             } else {
                 cout << "command '" << word << "' is unknown" << endl;
+                delete command;
                 return;
             }
         } else {
@@ -130,6 +137,7 @@ void FlacDemon::CommandParser::parseCommand(string* command) {
     if(it->second){
         (this->demon->*it->second)(&args);
     }
+    delete command;
     
 }
 void FlacDemon::CommandParser::setMapForDemon(FlacDemon::Demon* iDemon, std::map<string, demonCommandFunction>* iMap){

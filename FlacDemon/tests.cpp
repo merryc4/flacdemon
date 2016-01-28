@@ -17,6 +17,7 @@ void run_tests(){
 //    demon->database->fillDatabase(50000);
 //    cout << *demon->database->getJSONForID(1) << endl;
 //    cout << *demon->database->getAll() << endl;
+//    cout << *demon->database->getValue(1, new std::string("title"));
 }
 void test_comparetags(){
     std::string tag1 = "compare test string";

@@ -22,6 +22,10 @@ FlacDemon::Session * SessionManager::getSession(){
 }
 FlacDemon::Session * SessionManager::getSession(std::thread::id threadid){
     std::lock_guard<std::mutex> lock(this->sessionMutex);
+    if(!(this->sessions.count(threadid))){
+        this->sessionMutex.unlock();
+        this->newSession();
+    }
     FlacDemon::Session * session = this->sessions.at(threadid);
     return session;
 }

@@ -15,6 +15,7 @@ struct SQLStatements{
     const char * createTableFiles = "create table if not exists `associate_files` (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath varchar(255), albumuuid varchar(255), flags INTEGER)";
     const char * addFileFormat = "insert into associate_files (filepath, albumuuid, flags) values(%s)";
     const char * setValueFormat = "update tracks set %s=`%s` where id=%lu";
+    const char * getValueFormat = "select %s from `tracks` where id=%lu";
     const char * getJSONFormat = "select * from `tracks` where id=%lu";
     const char * getAll = "select * from `tracks`";
 } sql_statements;
@@ -393,6 +394,17 @@ int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::stri
     this->runSQL(&sql);
     
     return 0;
+}
+std::string * FlacDemon::Database::getValue(unsigned long ID, std::string * key){
+    std::string sql = sql_statements.getValueFormat;
+    size_t pos = sql.find("%s");
+    sql.erase(pos, 2);
+    sql.insert(pos, *key);
+    
+    pos = sql.find("%lu");
+    sql.erase(pos, 3);
+    sql.insert(pos, std::to_string(ID));
+    return this->sqlSelectOne(&sql);
 }
 std::string * FlacDemon::Database::getJSONForID(int uid){
     std::string sql = sql_statements.getJSONFormat;
