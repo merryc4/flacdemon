@@ -126,23 +126,27 @@ fd_keymap_vector * fd_jsontokeymap_vector(std::string * json){
 //    std::vector< std::string > splitobjects;
 //    std::vector< std::string > temp;
     fd_keymap_vector * rkeymap_vector = new fd_keymap_vector;
-    fd_keymap * tkeymap;
+    fd_keymap * tkeymap = nullptr;
 //    for (std::vector< std::string >::iterator it = objects.begin(); it != objects.end(); it++) {
 //        temp = fd_splitjsondescriptor(&(*it));
 //        splitobjects.insert(splitobjects.end(), temp.begin(), temp.end());
 //    }
     
-    std::vector < std::string > objects = fd_splitjsondescriptor(json);
+    std::vector < std::string > objects{*json};
     std::istringstream inStream;
     std::string line, key, value;
     size_t pos, pos2, offset;
+    int depth = 0;
+//    std::regex reg("^\{");
+//    std::regex reg2("^\}");
+//    std::smatch regmatch;
     for(std::vector < std::string >::iterator it = objects.begin(); it != objects.end(); it++){
-        tkeymap = new fd_keymap;
-        rkeymap_vector->push_back(tkeymap);
         inStream.str(*it);
+        depth = 0;
         do{
             std::getline(inStream, line);
-            if((pos = line.find("\":\"")) != std::string::npos){
+            
+            if(depth == 1 && ((pos = line.find("\":\"")) != std::string::npos)){
                 pos2 = line.find("\"");
                 if(pos2 == pos)
                     pos2 = 0;
@@ -151,8 +155,21 @@ fd_keymap_vector * fd_jsontokeymap_vector(std::string * json){
                 pos2 = line.find("\"", pos+3);
                 value = line.substr(pos+3, (pos2 - pos - 3));
                 tkeymap->insert(fd_keypair(key, new std::string(value)));
+            } else if(line.find("{") == 0){
+                if(depth == 0){
+                    tkeymap = new fd_keymap;
+                    rkeymap_vector->push_back(tkeymap);
+                }
+                depth++;
+            } else if(depth && line.find("}")==0){
+                depth--;
+                if(depth == 0)
+                    continue;
             }
         }while (!inStream.eof());
+        if(depth > 0){
+            std::cout << "Error: fd_splitjsondescriptor : no closing bracket for object, object malformed" << std::endl;
+        }
     }
     return rkeymap_vector;
 }
@@ -190,4 +207,12 @@ void waitfor0(bool * value){
 }
 int isMainThread(){
     return std::this_thread::get_id() == mainThreadID;
+}
+std::string * fd_standardiseKey(std::string * key){
+    fd_tolowercase(key);
+    std::regex e("album[^a-zA-Z]artist", std::regex_constants::icase);
+    if(regex_match((*key), e)){
+        key->assign("albumartist");
+    }
+    return key;
 }

@@ -13,11 +13,11 @@ FlacDemon::Session::Session(){
 FlacDemon::Session::~Session(){
     if(this->stringValues){
         for(fd_keymap::iterator it = this->stringValues->begin(); it != this->stringValues->end(); it++){
-            delete it->second;
+            free(it->second);
         }
         this->stringValues->clear();
     }
-    delete this->stringValues;
+    free(this->stringValues);
 }
 void FlacDemon::Session::setString(std::string * key, std::string * value){
     if(!key || !value)
@@ -32,7 +32,7 @@ void FlacDemon::Session::setString(const char * key, std::string * value){
     this->setString(&tkey, value);
 }
 std::string * FlacDemon::Session::getString(std::string *key){
-    if(this->stringValues->count(*key)){
+    if(this->stringValues && this->stringValues->count(*key)){
         return this->stringValues->at(*key);
     }
     return nullptr;

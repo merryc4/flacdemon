@@ -46,7 +46,8 @@ void FlacDemon::CommandParser::getCommand() {
     std::string * cmd = this->getInput();
     this->parseCommand(cmd);
     std::string * results = sessionManager->getSession()->getString(cmd);
-    cout << *results << endl;
+    if(results)
+        cout << *results << endl;
 }
 string* FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";

@@ -21,7 +21,7 @@ void FlacDemonInterface::initialize(){
     
     
     //redirect cout to log file
-    std::ofstream * out = new std::ofstream("flacdemon.log");
+    std::ofstream * out = new std::ofstream("fd_interface.log");
     std::cout.rdbuf(out->rdbuf());
 
     initscr();
@@ -99,7 +99,7 @@ void FlacDemonInterface::readResponse(){
             cout << "ERROR reading from socket" << std::endl;
             continue;
         }
-        response.append(buffer);
+        response.append(buffer, sizeof(buffer));
         if((pos = response.find("--data-end--")) != std::string::npos){
             cout << response.length() << ":" << (pos + 12) << endl;
             if(response.length() > (pos + 12)){
@@ -116,21 +116,37 @@ void FlacDemonInterface::readResponse(){
 void FlacDemonInterface::parseResponse(std::string response){
     cout << response << endl;
     fd_keymap_vector * results = fd_jsontokeymap_vector(&response);
-    
+    for(fd_keymap_vector::iterator it = results->begin(); it != results->end(); it++){
+        FlacDemon::TrackListing * trackListing = new FlacDemon::TrackListing(*it);
+        this->tracks.push_back(trackListing);
+        cout << "added track to listings" << endl;
+    }
 }
 
 void FlacDemonInterface::run(){
     this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
     this->sendCommand("get all");
-    this->printLibrary(0);
     char c;
+    char buf[256];
     do{
-        c = getch();
+        this->printLibrary(0);
+        c = getchar();
     }while(c != 'c');
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
+    cout << "printing library" << endl;
     this->browserRows=1; //title always first row
     this->printLibraryHeaders();
+    std::string key;
+    for(std::vector< FlacDemon::TrackListing * >::iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
+        std::vector < std::string > values;
+        for(std::vector< std::string >::iterator it2 = libraryTitles->begin(); it2 != libraryTitles->end(); it2++){
+            key = (*it2);
+            fd_standardiseKey(&key);
+            values.push_back(*(*it)->valueForKey(&key));
+        }
+        this->printLibraryLine(&values);
+    }
     
     wrefresh(this->browser);
 }
@@ -144,10 +160,20 @@ void FlacDemonInterface::printLibraryLine(std::vector<std::string> *values){
     int position = 0;
     this->browserRows++;
     
+    cout << "printing line " << this->browserRows << endl;
+    
     for(std::vector< std::string >::iterator it = values->begin(); it != values->end(); it++){
-        mvwprintw(this->browser, this->browserRows, position, it->c_str());
+        const char * val = this->formatValue(*it, width);
+        mvwprintw(this->browser, this->browserRows, position, val);
         position+=width;
         mvwprintw(this->browser, this->browserRows, position, "|");
         position++;
     }
+}
+const char * FlacDemonInterface::formatValue(std::string value, int max){
+    if(value.length() > max){
+        value = value.substr(0, max-2);
+        value.append("..");
+    }
+    return value.c_str();
 }

@@ -157,8 +157,6 @@ public:
     void setToMediaFile(AVFormatContext*);
     void makeTrack();
     void standardiseMetaTags();
-    std::string * standardiseKey(string* key);
-    const char * standardiseKey(const char *key);
     
     void setToDirectory();
     

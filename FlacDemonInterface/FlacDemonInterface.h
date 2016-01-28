@@ -24,6 +24,7 @@
 #include "ncurses.h"
 
 #include "FlacDemonUtils.h"
+#include "TrackListing.h"
 
 using std::cout;
 using std::endl;
@@ -40,6 +41,8 @@ private:
     int maxColumns;
     int maxRows;
     int browserRows;
+    
+    std::vector< FlacDemon::TrackListing * > tracks;
 protected:
     
 public:
@@ -54,6 +57,7 @@ public:
     void sendCommand(const char * command);
     void readResponse();
     void parseResponse(std::string response);
+    const char * formatValue(std::string value, int max);
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

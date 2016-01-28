@@ -17,6 +17,7 @@ namespace FlacDemon {
     class FileImporter;
     class File;
     
+    class TrackListing;
     class Track;
     class Group;
     class Album;

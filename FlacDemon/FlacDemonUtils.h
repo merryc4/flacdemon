@@ -36,4 +36,6 @@ void waitfor0(bool * value);
 
 int isMainThread();
 
+std::string * fd_standardiseKey(std::string * key);
+
 #endif /* defined(__FlacDemon__FlacDemonUtils__) */
