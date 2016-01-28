@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <vector>
 #include <string>
-
+#include <thread>
 
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -23,9 +23,14 @@
 #include <netdb.h>
 #include "ncurses.h"
 
+using std::cout;
+using std::endl;
+
 class FlacDemonInterface{
 private:
     int socketFileDescriptor;
+    std::thread * readThread;
+//    std::mutex socketMutex;
     
     WINDOW *browser;
     
@@ -44,7 +49,9 @@ public:
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine(std::vector< std:: string > * values);
-    void sendCommand(char * command);
+    void sendCommand(const char * command);
+    void readResponse();
+    void parseResponse(std::string response);
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

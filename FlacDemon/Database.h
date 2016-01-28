@@ -71,6 +71,7 @@ public:
     std::string * getUUID();
     
     int setValue(unsigned long ID, std::string * key, std::string * value);
+
     std::string * getJSONForID(int uid);
     std::string * getAll();
     

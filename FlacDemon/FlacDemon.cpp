@@ -92,7 +92,8 @@ int FlacDemon::Demon::get(vector<string> * args){
     if (strcmp(args->back().c_str(), "all") == 0) {
         //get all
         std::string * results = this->database->getAll();
-        
+        sessionManager->getSession()->setString("get all", results);
+        return 0;
     }
     if(args->size() < 2){
         cout << "command error: incorrect arguments" << endl;

@@ -28,12 +28,14 @@ void FlacDemon::TCPHandler::initialize(){
         std::cout << "Error opening socket for tcp" << std::endl;
         return;
     }
+    int enable = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
     bzero((char*) &server_address, sizeof(server_address));
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(port);
     server_address.sin_addr.s_addr = INADDR_ANY;
     if(bind(sockfd, (const struct sockaddr * )&server_address, sizeof(server_address)) < 0){
-        std::cout << "Error binding socket" << std::endl;
+        std::cout << "Error binding socket:" << strerror(errno) << std::endl;
         //detail of error
         return;
     }
@@ -63,6 +65,7 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
     char buffer[256];
     
     sessionManager->newSession();
+    std::string response;
     
     do{ //check socket is still open
         bzero(buffer,256);
@@ -74,19 +77,23 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
         
         std::cout << "Command from socket: " << buffer << std::endl;
         this->addCommand(buffer);
-        
+        std::string * results = sessionManager->getSession()->getString(buffer);
+//        cout << *results << endl;
+        response.assign("{\n\"command\" : \"");
+        response.append(buffer);
+        response.append("\",\nresponse : {");
+        if(results)
+            response.append(*results);
+        response.append("\n}\n}--data-end--");
+        const char * cresponse = response.c_str();
+        if ((n = send(sockfd,cresponse,strlen(cresponse), 0)) < 0){
+            std::cout << "ERROR writing to socket" << std::endl;
+        }
         //write response?
     } while (n > 0);
     std::cout << "socket disconnected" << std::endl;
+    sessionManager->destroySession();
 }
 void FlacDemon::TCPHandler::addCommand(char * messageBuffer){
-    //synchronise reading from command parser thread?
-//    waitfor0(&(this->threadSync));
-//    this->threadSync = true;
-//    std::string command;
-//    command.assign(messageBuffer);
-//    this->commands->push_back(command);
-//    this->commandAvailable = true;
-//    this->threadSync = false;
     signalHandler->call("runCommand", messageBuffer);
 }

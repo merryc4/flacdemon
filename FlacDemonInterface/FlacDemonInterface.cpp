@@ -12,7 +12,7 @@ std::vector< std::string > * libraryTitles = new std::vector< std::string >{"Tra
 
 FlacDemonInterface::FlacDemonInterface(){
     //init
-    this->initialize();
+//    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
     //de-init
@@ -75,7 +75,7 @@ void FlacDemonInterface::connect(){
     std::cout << "Connected to server" << std::endl;
 
 }
-void FlacDemonInterface::sendCommand(char * command){
+void FlacDemonInterface::sendCommand(const char * command){
     if(this->socketFileDescriptor < 0){
         return;
     }
@@ -87,7 +87,38 @@ void FlacDemonInterface::sendCommand(char * command){
         this->socketFileDescriptor = -1;
     }
 }
+void FlacDemonInterface::readResponse(){
+    ssize_t n;
+    char buffer[256];
+    std::string response="";
+    std::string response2="";
+    size_t pos;
+    do{
+        bzero(buffer,256);
+        if ((n = recv(this->socketFileDescriptor, buffer, sizeof(buffer), 0)) < 0){
+            cout << "ERROR reading from socket" << std::endl;
+            continue;
+        }
+        response.append(buffer);
+        if((pos = response.find("--data-end--")) != std::string::npos){
+            cout << response.length() << ":" << (pos + 12) << endl;
+            if(response.length() > (pos + 12)){
+                response2 = response.substr((pos + 12));
+            } else
+                response2 = "";
+            
+            response.erase(pos);
+            this->parseResponse(response);
+            response = response2;
+        }
+    }while(n>0);
+}
+void FlacDemonInterface::parseResponse(std::string response){
+    cout << response << endl;
+}
+
 void FlacDemonInterface::run(){
+    this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
     this->sendCommand("get all");
     this->printLibrary(0);
     char c;

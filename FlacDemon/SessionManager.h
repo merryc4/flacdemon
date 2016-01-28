@@ -24,10 +24,10 @@ public:
     SessionManager();
     ~SessionManager();
     
+    FlacDemon::Session * getSession();
     FlacDemon::Session * getSession(std::thread::id threadid);
     void newSession();
-    void setString(std::string * key, std::string * value);
-    
+    void destroySession();
     
 };
 

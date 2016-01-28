@@ -17,6 +17,9 @@ void SessionManager::setSession(std::thread::id threadid, FlacDemon::Session * s
     std::lock_guard<std::mutex> lock(this->sessionMutex);
     this->sessions.insert(std::pair<std::thread::id, FlacDemon::Session * >(threadid, session));
 }
+FlacDemon::Session * SessionManager::getSession(){
+    return this->getSession(std::this_thread::get_id());
+}
 FlacDemon::Session * SessionManager::getSession(std::thread::id threadid){
     std::lock_guard<std::mutex> lock(this->sessionMutex);
     FlacDemon::Session * session = this->sessions.at(threadid);
@@ -27,9 +30,15 @@ void SessionManager::newSession(){
     std::thread::id threadid = std::this_thread::get_id();
     this->setSession(threadid, session);
 }
-void SessionManager::setString(std::string * key, std::string * value){
-    FlacDemon::Session * session = this->getSession(std::this_thread::get_id());
+void SessionManager::destroySession(){
+    FlacDemon::Session * session = this->getSession();
     if(session){
-        
+        for(std::map< std::thread::id, FlacDemon::Session * >::iterator it = this->sessions.begin(); it != this->sessions.end(); it++){
+            if (it->second == session) {
+                this->sessions.erase(it);
+                break;
+            }
+        }
     }
+    delete session;
 }
