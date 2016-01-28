@@ -10,7 +10,7 @@
 #define __FlacDemon__Album__
 
 #include <stdio.h>
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 
 class FlacDemon::Album {
     

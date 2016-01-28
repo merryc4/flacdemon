@@ -14,6 +14,7 @@ FlacDemon::TCPHandler::TCPHandler(){
     this->commands = new std::vector<std::string>;
     this->commandAvailable = false;
     this->threadSync = false;
+    
 }
 FlacDemon::TCPHandler::~TCPHandler(){
     //delete
@@ -60,6 +61,8 @@ void FlacDemon::TCPHandler::runAcceptLoop(int sockfd){
 void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
     ssize_t n;
     char buffer[256];
+    
+    sessionManager->newSession();
     
     do{ //check socket is still open
         bzero(buffer,256);

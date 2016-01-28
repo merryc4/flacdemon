@@ -10,7 +10,7 @@
 #define __FlacDemon__CommandParser__
 
 #include <iostream>
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 #include "FlacDemon.h"
 
 typedef enum {

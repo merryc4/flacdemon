@@ -26,7 +26,8 @@ FlacDemon::Demon::Demon() {
         {"add", &FlacDemon::Demon::add},
         {"play", &FlacDemon::Demon::play},
         {"stop", &FlacDemon::Demon::stop},
-        {"set", &FlacDemon::Demon::set}
+        {"set", &FlacDemon::Demon::set},
+        {"get", &FlacDemon::Demon::get}
     });
 }
 FlacDemon::Demon::~Demon() {
@@ -44,7 +45,6 @@ void FlacDemon::Demon::run() {
 		usleep(100); //revise sleep length
 	}
 }
-
 int FlacDemon::Demon::add(vector<string> * args){
     cout << "add some files" << endl;
     for(vector<string>::iterator it = args->begin(); it != args->end(); it++){
@@ -89,13 +89,14 @@ int FlacDemon::Demon::set(vector<string> * args){
     return 0;
 }
 int FlacDemon::Demon::get(vector<string> * args){
+    if (strcmp(args->back().c_str(), "all") == 0) {
+        //get all
+        std::string * results = this->database->getAll();
+        
+    }
     if(args->size() < 2){
         cout << "command error: incorrect arguments" << endl;
         return 1;
-    }
-    if (strcmp(args->back().c_str(), "all") == 0) {
-        //get all
-        return 0;
     }
     
     int id;

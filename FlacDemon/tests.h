@@ -10,7 +10,7 @@
 #define __FlacDemon__tests__
 
 #include "includes.h"
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 #include "FlacDemon.h"
 
 void run_tests();

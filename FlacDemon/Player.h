@@ -12,7 +12,7 @@
 #include "includes.h"
 #include "avincludes.h"
 #include <ao/ao.h>
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 #include "Database.h"
 
 class FlacDemon::Player {

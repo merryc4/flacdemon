@@ -9,13 +9,14 @@
 #ifndef __FlacDemon__FlacDemon__
 #define __FlacDemon__FlacDemon__
 
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 #include "CommandParser.h"
 #include "ncursesHandler.h"
 #include "FileImporter.h"
 #include "Database.h"
 #include "Player.h"
 #include "TCPHandler.h"
+#include "Session.h"
 
 #include "tests.h"
 
@@ -29,6 +30,8 @@ using namespace std;
 
 class FlacDemon::Demon {
     friend FlacDemon::CommandParser;
+private:
+
 protected:
     vector<string>* commands;
     FlacDemon::TCPHandler * tcpHandler;

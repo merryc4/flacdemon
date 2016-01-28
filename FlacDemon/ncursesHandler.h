@@ -13,7 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include "ncurses.h"
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 #include "FlacDemon.h"
 
 class FlacDemon::NCURSESHandler {

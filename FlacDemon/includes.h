@@ -22,5 +22,6 @@
 #include <thread>
 #include <uuid/uuid.h>
 #include <mba/diff.h>
+#include <thread>
 
 #endif

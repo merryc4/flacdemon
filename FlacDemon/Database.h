@@ -13,7 +13,7 @@
 #include <sqlite3.h>
 #include <boost/format.hpp>
 
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 //#include "Group.h"
 #include "File.h"
 #include "Track.h"

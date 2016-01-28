@@ -7,7 +7,7 @@
 //
 
 #include <iostream>
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 #include "FlacDemon.h"
 
 #define FDOPTIONS_USE_FLACS_DIR 1
@@ -15,6 +15,7 @@
 const SignalHandler * signalHandler = new SignalHandler();
 FlacDemon::Demon * demon = nullptr;
 std::thread::id mainThreadID;
+SessionManager * sessionManager = new SessionManager();
 
 int main(int argc, const char * argv[])
 {

@@ -25,6 +25,8 @@
 
 class FlacDemonInterface{
 private:
+    int socketFileDescriptor;
+    
     WINDOW *browser;
     
     
@@ -42,6 +44,7 @@ public:
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine(std::vector< std:: string > * values);
+    void sendCommand(char * command);
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

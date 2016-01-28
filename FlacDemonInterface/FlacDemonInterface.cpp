@@ -52,8 +52,6 @@ void FlacDemonInterface::connect(){
     struct sockaddr_in serv_addr;
     struct hostent *server;
     
-    char buffer[256];
-    
     port = 8995;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
@@ -73,20 +71,24 @@ void FlacDemonInterface::connect(){
         std::cout << "ERROR connecting" << std::endl;
         return;
     }
+    this->socketFileDescriptor = sockfd;
     std::cout << "Connected to server" << std::endl;
 
-//    while(1){
-//        bzero(buffer,256);
-//        fgets(buffer,255,stdin);
-//        ssize_t n = send(sockfd,buffer,strlen(buffer), 0);
-//        if (n < 0){
-//            std::cout << "ERROR writing to socket" << std::endl;
-//            break;
-//        }
-//    }
-//    close(sockfd);
+}
+void FlacDemonInterface::sendCommand(char * command){
+    if(this->socketFileDescriptor < 0){
+        return;
+    }
+    ssize_t n = send(this->socketFileDescriptor,command,strlen(command), 0);
+    if (n < 0){
+        std::cout << "ERROR writing to socket" << std::endl;
+        //end socket
+        close(this->socketFileDescriptor);
+        this->socketFileDescriptor = -1;
+    }
 }
 void FlacDemonInterface::run(){
+    this->sendCommand("get all");
     this->printLibrary(0);
     char c;
     do{

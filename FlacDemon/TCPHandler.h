@@ -9,7 +9,8 @@
 #ifndef __FlacDemon__TCPHandler__
 #define __FlacDemon__TCPHandler__
 
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
+
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>

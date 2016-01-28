@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <time.h>
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 #include "File.h"
 
 class FlacDemon::Track {

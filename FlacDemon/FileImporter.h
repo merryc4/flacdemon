@@ -10,7 +10,7 @@
 #define __FlacDemon__FileImporter__
 
 #include <iostream>
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 #include "File.h"
 #include "SignalHandler.h"
 

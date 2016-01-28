@@ -13,7 +13,7 @@
 #include <vector>
 #include "Track.h"
 
-#include "FlacDemonNameSpace.h"
+#include "FlacDemonAll.h"
 
 #define GroupTypeKeyArray ["Genre", "Composer", "Artist", "Album Artist", "Album", "Other"]
 #define GroupTypeUKeyArray ["GENRE", "COMPOSER", "ARTIST", "ALBUMARTIST", "ALBUM", "OTHER"]
