@@ -115,6 +115,8 @@ void FlacDemonInterface::readResponse(){
 }
 void FlacDemonInterface::parseResponse(std::string response){
     cout << response << endl;
+    fd_keymap_vector * results = fd_jsontokeymap_vector(&response);
+    
 }
 
 void FlacDemonInterface::run(){

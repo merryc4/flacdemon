@@ -18,6 +18,10 @@ void run_tests(){
 //    cout << *demon->database->getJSONForID(1) << endl;
 //    cout << *demon->database->getAll() << endl;
 //    cout << *demon->database->getValue(1, new std::string("title"));
+    
+//    std::string all = *demon->database->getAll();
+//    fd_keymap_vector * test = fd_jsontokeymap_vector(&all);
+    
 }
 void test_comparetags(){
     std::string tag1 = "compare test string";

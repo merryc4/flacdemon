@@ -120,6 +120,64 @@ std::string * fd_keymaptojson(fd_keymap * ikeymap){
     fd_keymap_vector kmv{ikeymap};
     return fd_keymap_vectortojson(&kmv);
 }
+fd_keymap_vector * fd_jsontokeymap_vector(std::string * json){
+    
+//    std::vector< std::string > objects{*json};
+//    std::vector< std::string > splitobjects;
+//    std::vector< std::string > temp;
+    fd_keymap_vector * rkeymap_vector = new fd_keymap_vector;
+    fd_keymap * tkeymap;
+//    for (std::vector< std::string >::iterator it = objects.begin(); it != objects.end(); it++) {
+//        temp = fd_splitjsondescriptor(&(*it));
+//        splitobjects.insert(splitobjects.end(), temp.begin(), temp.end());
+//    }
+    
+    std::vector < std::string > objects = fd_splitjsondescriptor(json);
+    std::istringstream inStream;
+    std::string line, key, value;
+    size_t pos, pos2, offset;
+    for(std::vector < std::string >::iterator it = objects.begin(); it != objects.end(); it++){
+        tkeymap = new fd_keymap;
+        rkeymap_vector->push_back(tkeymap);
+        inStream.str(*it);
+        do{
+            std::getline(inStream, line);
+            if((pos = line.find("\":\"")) != std::string::npos){
+                pos2 = line.find("\"");
+                if(pos2 == pos)
+                    pos2 = 0;
+                offset = pos2 ? 1 : 0;
+                key = line.substr(pos2+offset, (pos - pos2 - offset));
+                pos2 = line.find("\"", pos+3);
+                value = line.substr(pos+3, (pos2 - pos - 3));
+                tkeymap->insert(fd_keypair(key, new std::string(value)));
+            }
+        }while (!inStream.eof());
+    }
+    return rkeymap_vector;
+}
+std::vector< std::string > fd_splitjsondescriptor(std::string * json){
+    std::regex reg("[{}]");
+    std::match_results<std::string::iterator> regmatch;
+    std::string::iterator last = json->end();
+    std::string::iterator first = json->begin();
+    int openBracketCount = 0, closeBracketCount = 0, depth = 0;
+    std::vector< std::string > objects;
+    while(std::regex_search(first, last, regmatch, reg) && first != last){
+        first += (regmatch.position() + 1);
+        if(regmatch.str().compare("{") == 0){
+            openBracketCount++;
+        } else {
+            closeBracketCount++;
+        }
+        depth = openBracketCount - closeBracketCount;
+        if(depth == 0){
+            objects.push_back(std::string(json->begin(), first));
+        }
+    }
+    
+    return objects;
+}
 void waitfor0(int * value){
     while (*value == 0) {
         usleep(50);

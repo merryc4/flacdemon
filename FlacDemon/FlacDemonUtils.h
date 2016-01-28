@@ -29,7 +29,8 @@ std::string fd_sqlescape(std::string isql);
 
 std::string * fd_keymap_vectortojson(fd_keymap_vector* ikeymap_vector);
 std::string * fd_keymaptojson(fd_keymap * ikeymap);
-
+fd_keymap_vector * fd_jsontokeymap_vector(std::string * json);
+std::vector< std::string > fd_splitjsondescriptor(std::string * json);
 void waitfor0(int * value);
 void waitfor0(bool * value);
 

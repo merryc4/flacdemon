@@ -23,6 +23,8 @@
 #include <netdb.h>
 #include "ncurses.h"
 
+#include "FlacDemonUtils.h"
+
 using std::cout;
 using std::endl;
 
