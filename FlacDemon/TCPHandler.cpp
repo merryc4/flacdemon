@@ -88,7 +88,7 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
 
         const char * cresponse = response.c_str();
         
-        cout << cresponse << endl;
+//        cout << cresponse << endl;
         if ((n = send(sockfd,cresponse,strlen(cresponse), 0)) < 0){
             std::cout << "ERROR writing to socket" << std::endl;
         }

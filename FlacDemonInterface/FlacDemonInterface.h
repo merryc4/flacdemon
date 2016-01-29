@@ -33,6 +33,7 @@ class FlacDemonInterface{
 private:
     int socketFileDescriptor;
     std::thread * readThread;
+    std::thread * retryConnectThread;
 //    std::mutex socketMutex;
     
     WINDOW *browser;
@@ -42,6 +43,9 @@ private:
     int maxRows;
     int browserRows;
     
+    bool fetchedLibrary;
+    bool fPrintLibrary;
+    
     std::vector< FlacDemon::TrackListing * > tracks;
 protected:
     
@@ -50,6 +54,8 @@ public:
     ~FlacDemonInterface();
     void initialize();
     void connect();
+    void retryConnect();
+    void onConnect();
     void run();
     void printLibrary(int offset);
     void printLibraryHeaders();

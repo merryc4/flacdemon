@@ -8,11 +8,15 @@
 
 #include "FlacDemonInterface.h"
 
-std::vector< std::string > * libraryTitles = new std::vector< std::string >{"Track", "Title", "Album", "Artist", "AlbumArtist", "Playcount"};
+std::vector< std::string > * libraryTitles = new std::vector< std::string >{"id", "Track", "Title", "Album", "Artist", "AlbumArtist", "Playcount"};
 
 FlacDemonInterface::FlacDemonInterface(){
     //init
     this->socketFileDescriptor = -1;
+    this->readThread = nullptr;
+    this->retryConnectThread = nullptr;
+    this->fetchedLibrary = false;
+    this->fPrintLibrary = false;
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -54,6 +58,12 @@ void FlacDemonInterface::connect(){
     struct hostent *server;
     
     port = 8995;
+    
+    if(this->socketFileDescriptor > 2){
+        close(this->socketFileDescriptor);
+    }
+    this->socketFileDescriptor = -1;
+    
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
         std::cout << "ERROR opening socket" << std::endl;
@@ -69,13 +79,27 @@ void FlacDemonInterface::connect(){
           server->h_length);
     serv_addr.sin_port = htons(port);
     if (::connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0){
-        std::cout << "ERROR connecting" << std::endl;
-        close(sockfd);
+        if(!this->retryConnectThread){
+            std::cout << "Error: could not connect: " << strerror(errno) << ". Retrying..." << std::endl;
+            this->retryConnectThread = new std::thread(&FlacDemonInterface::retryConnect, this);
+        }
         return;
     }
     this->socketFileDescriptor = sockfd;
     std::cout << "Connected to server" << std::endl;
-
+    this->onConnect();
+}
+void FlacDemonInterface::retryConnect(){
+    while(this->socketFileDescriptor < 0){
+        sleep(3);
+        this->connect();
+    }
+}
+void FlacDemonInterface::onConnect(){
+    if(!this->fetchedLibrary){
+        this->sendCommand("get all");
+        this->fetchedLibrary = true;
+    }
 }
 void FlacDemonInterface::sendCommand(const char * command){
     if(this->socketFileDescriptor < STDERR_FILENO){
@@ -114,6 +138,7 @@ void FlacDemonInterface::readResponse(){
             response = response2;
         }
     }while(n>0);
+    this->connect();
 }
 void FlacDemonInterface::parseResponse(std::string response){
     cout << response << endl;
@@ -123,6 +148,7 @@ void FlacDemonInterface::parseResponse(std::string response){
         this->tracks.push_back(trackListing);
         cout << "added track to listings" << endl;
     }
+    this->fPrintLibrary = true;
 }
 
 void FlacDemonInterface::run(){
@@ -132,11 +158,14 @@ void FlacDemonInterface::run(){
     char buf[256];
     std::string* input = new std::string();
     do{
-        this->printLibrary(0);
-        std::cout << "Enter Command: ";
-        getline(std::cin >> std::ws, *input);
-        this->sendCommand(input->c_str());
-    }while(c != 'c');
+//        std::cout << "Enter Command: ";
+//        getline(std::cin >> std::ws, *input);
+//        this->sendCommand(input->c_str());
+        if(this->fPrintLibrary){
+            this->printLibrary(0);
+            this->fPrintLibrary = false;
+        }
+    }while(1);
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
     cout << "printing library" << endl;
