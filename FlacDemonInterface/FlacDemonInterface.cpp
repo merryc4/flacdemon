@@ -8,10 +8,11 @@
 
 #include "FlacDemonInterface.h"
 
-std::vector< std::string > * libraryTitles = new std::vector< std::string >{"Track", "Title", "Album", "Artist"};
+std::vector< std::string > * libraryTitles = new std::vector< std::string >{"Track", "Title", "Album", "Artist", "AlbumArtist", "Playcount"};
 
 FlacDemonInterface::FlacDemonInterface(){
     //init
+    this->socketFileDescriptor = -1;
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -69,6 +70,7 @@ void FlacDemonInterface::connect(){
     serv_addr.sin_port = htons(port);
     if (::connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0){
         std::cout << "ERROR connecting" << std::endl;
+        close(sockfd);
         return;
     }
     this->socketFileDescriptor = sockfd;
@@ -76,7 +78,7 @@ void FlacDemonInterface::connect(){
 
 }
 void FlacDemonInterface::sendCommand(const char * command){
-    if(this->socketFileDescriptor < 0){
+    if(this->socketFileDescriptor < STDERR_FILENO){
         return;
     }
     ssize_t n = send(this->socketFileDescriptor,command,strlen(command), 0);
@@ -128,9 +130,12 @@ void FlacDemonInterface::run(){
     this->sendCommand("get all");
     char c;
     char buf[256];
+    std::string* input = new std::string();
     do{
         this->printLibrary(0);
-        c = getchar();
+        std::cout << "Enter Command: ";
+        getline(std::cin >> std::ws, *input);
+        this->sendCommand(input->c_str());
     }while(c != 'c');
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
