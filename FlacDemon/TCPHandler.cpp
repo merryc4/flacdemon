@@ -79,7 +79,7 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
         this->addCommand(buffer);
         std::string * results = sessionManager->getSession()->getString(buffer);
 //        cout << *results << endl;
-        response.assign("\"command\" : \"");
+        response.assign("\"command\":\"");
         response.append(buffer);
         response.append("\"\n");
         if(results)
@@ -88,7 +88,7 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
 
         const char * cresponse = response.c_str();
         
-//        cout << cresponse << endl;
+        cout << cresponse << endl;
         if ((n = send(sockfd,cresponse,strlen(cresponse), 0)) < 0){
             std::cout << "ERROR writing to socket" << std::endl;
         }

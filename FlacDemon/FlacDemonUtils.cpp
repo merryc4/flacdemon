@@ -121,25 +121,16 @@ std::string * fd_keymaptojson(fd_keymap * ikeymap){
     return fd_keymap_vectortojson(&kmv);
 }
 fd_keymap_vector * fd_jsontokeymap_vector(std::string * json){
-    
-//    std::vector< std::string > objects{*json};
-//    std::vector< std::string > splitobjects;
-//    std::vector< std::string > temp;
+
     fd_keymap_vector * rkeymap_vector = new fd_keymap_vector;
     fd_keymap * tkeymap = nullptr;
-//    for (std::vector< std::string >::iterator it = objects.begin(); it != objects.end(); it++) {
-//        temp = fd_splitjsondescriptor(&(*it));
-//        splitobjects.insert(splitobjects.end(), temp.begin(), temp.end());
-//    }
     
     std::vector < std::string > objects{*json};
     std::istringstream inStream;
     std::string line, key, value;
     size_t pos, pos2, offset;
     int depth = 0;
-//    std::regex reg("^\{");
-//    std::regex reg2("^\}");
-//    std::smatch regmatch;
+
     for(std::vector < std::string >::iterator it = objects.begin(); it != objects.end(); it++){
         inStream.str(*it);
         depth = 0;

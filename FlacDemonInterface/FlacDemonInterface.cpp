@@ -9,6 +9,9 @@
 #include "FlacDemonInterface.h"
 
 std::vector< std::string > * libraryTitles = new std::vector< std::string >{"id", "Track", "Title", "Album", "Artist", "AlbumArtist", "Playcount"};
+std::map< std::string , unsigned long > * commandFlags = new std::map < std::string , unsigned long >{
+    { "get all" , fd_interface_libraryupdate }
+};
 
 FlacDemonInterface::FlacDemonInterface(){
     //init
@@ -16,7 +19,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->readThread = nullptr;
     this->retryConnectThread = nullptr;
     this->fetchedLibrary = false;
-    this->fPrintLibrary = false;
+    this->flags = 0;
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -141,43 +144,61 @@ void FlacDemonInterface::readResponse(){
     this->connect();
 }
 void FlacDemonInterface::parseResponse(std::string response){
-    cout << response << endl;
-    fd_keymap_vector * results = fd_jsontokeymap_vector(&response);
-    for(fd_keymap_vector::iterator it = results->begin(); it != results->end(); it++){
-        FlacDemon::TrackListing * trackListing = new FlacDemon::TrackListing(*it);
-        this->tracks.push_back(trackListing);
-        cout << "added track to listings" << endl;
+//    cout << response << endl;
+    std::string command = this->parseCommandFromResponse(&response);
+    std::cout << "Got response for command \"" << command << "\"" << std::endl;
+    if(commandFlags->count(command)){
+        switch (commandFlags->at(command)) {
+            case fd_interface_libraryupdate:
+                this->parseLibraryUpdate(&response);
+                break;
+                
+            default:
+                break;
+        }
     }
-    this->fPrintLibrary = true;
 }
-
+std::string FlacDemonInterface::parseCommandFromResponse(std::string *response){
+    std::istringstream inStream;
+    std::string line;
+    inStream.str(*response);
+    std::getline(inStream, line);
+    std::regex reg("\"command\":\"([^\"]+)\"");
+    std::smatch regmatch;
+    if(std::regex_search(line, regmatch, reg) && regmatch.size()){
+        std::ssub_match submatch = regmatch[1];
+        return submatch.str();
+    }
+    return nullptr;
+}
 void FlacDemonInterface::run(){
     this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
-    this->sendCommand("get all");
-    char c;
-    char buf[256];
     std::string* input = new std::string();
     do{
+        this->eventMutex.lock();
 //        std::cout << "Enter Command: ";
 //        getline(std::cin >> std::ws, *input);
 //        this->sendCommand(input->c_str());
-        if(this->fPrintLibrary){
+        if(has_flag fd_interface_printlibrary){
             this->printLibrary(0);
-            this->fPrintLibrary = false;
         }
     }while(1);
+}
+void FlacDemonInterface::setRunLoopFlags(unsigned long rlflags){
+    set_flag rlflags;
+    this->eventMutex.unlock();
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
     cout << "printing library" << endl;
     this->browserRows=1; //title always first row
     this->printLibraryHeaders();
     std::string key;
-    for(std::vector< FlacDemon::TrackListing * >::iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
+    for(std::map < std::string , FlacDemon::TrackListing * >::iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
         std::vector < std::string > values;
         for(std::vector< std::string >::iterator it2 = libraryTitles->begin(); it2 != libraryTitles->end(); it2++){
             key = (*it2);
             fd_standardiseKey(&key);
-            values.push_back(*(*it)->valueForKey(&key));
+            values.push_back(*it->second->valueForKey(&key));
         }
         this->printLibraryLine(&values);
     }
@@ -210,4 +231,28 @@ const char * FlacDemonInterface::formatValue(std::string value, int max){
         value.append("..");
     }
     return value.c_str();
+}
+void FlacDemonInterface::parseLibraryUpdate(std::string *response){
+    fd_keymap_vector * results = fd_jsontokeymap_vector(response);
+    this->libraryUpdate(results);
+}
+void FlacDemonInterface::libraryUpdate(fd_keymap_vector * values){
+    for(fd_keymap_vector::iterator it = values->begin(); it != values->end(); it++){
+        this->updateTrackListing(*it);
+    }
+    this->setRunLoopFlags(fd_interface_printlibrary);
+}
+void FlacDemonInterface::updateTrackListing(fd_keymap *ikeymap){
+    std::string idKey("id");
+    if(!ikeymap->count(idKey)){
+        std::cout << "Error: Malformed keymap, has no ID" << std::endl;
+        return;
+    }
+    std::string * id = ikeymap->at(idKey);
+    if(this->tracks.count(*id)){
+        //update
+    } else {
+        FlacDemon::TrackListing * trackListing = new FlacDemon::TrackListing(ikeymap);
+        this->tracks.insert(std::pair<std::string, FlacDemon::TrackListing * >(*id, trackListing));
+    }
 }
