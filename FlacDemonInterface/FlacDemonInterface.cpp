@@ -45,13 +45,13 @@ void FlacDemonInterface::initialize(){
     getmaxyx(stdscr, this->maxRows, this->maxColumns);
     
     WINDOW * titleWindow = newwin(1, this->maxColumns, 0, 0);
-    WINDOW * searchWindow = newwin(1, this->maxColumns, 1, 0);
+    this->search = newwin(1, this->maxColumns, 1, 0);
     
     mvwprintw(titleWindow, 0, (this->maxColumns - strlen(msg)) / 2, "%s", msg);
     wrefresh(titleWindow);
     
-    mvwprintw(searchWindow, 0, 0, "Search:");
-    wrefresh(searchWindow);
+    mvwprintw(this->search, 0, 0, "Search:");
+    wrefresh(this->search);
     
     this->browser = newwin(this->maxRows - 2, this->maxColumns, 2, 0);
 }
@@ -173,6 +173,7 @@ std::string FlacDemonInterface::parseCommandFromResponse(std::string *response){
 }
 void FlacDemonInterface::run(){
     this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
+    new std::thread(&FlacDemonInterface::userInputLoop, this);
     std::string* input = new std::string();
     do{
         this->eventMutex.lock();
@@ -182,14 +183,37 @@ void FlacDemonInterface::run(){
         if(has_flag fd_interface_printlibrary){
             this->printLibrary(0);
         }
+        if(has_flag fd_interface_printcommand){
+            this->printCommand();
+        }
     }while(1);
 }
-void FlacDemonInterface::setRunLoopFlags(unsigned long rlflags){
+void FlacDemonInterface::event(unsigned long rlflags){
     set_flag rlflags;
     this->eventMutex.unlock();
 }
+void FlacDemonInterface::setRunLoopFlags(unsigned long rlflags){
+    set_flag rlflags;
+}
+void FlacDemonInterface::userInputLoop(){
+    cout << "user input thread running " << endl;
+    while(true){
+        char c = getch();
+        cout << "got char " << c << ". numeric: " << (int)c << endl;
+        switch (c) {
+            case 127: //backspace
+                this->command.pop_back();
+                break;
+                
+            default:
+                this->command.append(&c, 1);
+                break;
+        }
+        this->event(fd_interface_printcommand);
+    }
+}
 void FlacDemonInterface::printLibrary(int offset = 0){
-    cout << "printing library" << endl;
+//    cout << "printing library" << endl;
     this->browserRows=1; //title always first row
     this->printLibraryHeaders();
     std::string key;
@@ -240,7 +264,7 @@ void FlacDemonInterface::libraryUpdate(fd_keymap_vector * values){
     for(fd_keymap_vector::iterator it = values->begin(); it != values->end(); it++){
         this->updateTrackListing(*it);
     }
-    this->setRunLoopFlags(fd_interface_printlibrary);
+    this->event(fd_interface_printlibrary);
 }
 void FlacDemonInterface::updateTrackListing(fd_keymap *ikeymap){
     std::string idKey("id");
@@ -255,4 +279,9 @@ void FlacDemonInterface::updateTrackListing(fd_keymap *ikeymap){
         FlacDemon::TrackListing * trackListing = new FlacDemon::TrackListing(ikeymap);
         this->tracks.insert(std::pair<std::string, FlacDemon::TrackListing * >(*id, trackListing));
     }
+}
+void FlacDemonInterface::printCommand(){
+    cout << "printing command " << this->command << endl;
+    mvwprintw(this->search, 0, 0, "Search:%s", this->command.c_str());
+    wrefresh(this->search);
 }

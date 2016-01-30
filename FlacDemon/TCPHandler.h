@@ -19,6 +19,7 @@
 class FlacDemon::TCPHandler{
 private:
     std::thread * acceptThread;
+    bool socketClosedByRead;
 protected:
 public:
     //variables:

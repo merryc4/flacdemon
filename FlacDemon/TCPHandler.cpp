@@ -14,6 +14,7 @@ FlacDemon::TCPHandler::TCPHandler(){
     this->commands = new std::vector<std::string>;
     this->commandAvailable = false;
     this->threadSync = false;
+    this->socketClosedByRead = false;
     
 }
 FlacDemon::TCPHandler::~TCPHandler(){
@@ -70,8 +71,9 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
     do{ //check socket is still open
         bzero(buffer,256);
         
-        if ((n = recv(sockfd, buffer, sizeof(buffer), 0)) < 0){
+        if ((n = recv(sockfd, buffer, sizeof(buffer), 0)) <= 0){
             std::cout << "ERROR reading from socket" << std::endl;
+            this->socketClosedByRead = true;
             continue;
         }
         

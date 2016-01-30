@@ -28,6 +28,7 @@
 
 #define fd_interface_printlibrary 1 << 0
 #define fd_interface_libraryupdate 1 << 1
+#define fd_interface_printcommand 1 << 2
 
 using std::cout;
 using std::endl;
@@ -41,6 +42,7 @@ private:
     std::mutex eventMutex;
     
     WINDOW *browser;
+    WINDOW *search;
     
     unsigned long flags;
     
@@ -51,6 +53,7 @@ private:
     bool fetchedLibrary;
     
     std::map< std::string, FlacDemon::TrackListing * > tracks;
+    std::string command;
 protected:
     
 public:
@@ -61,7 +64,9 @@ public:
     void retryConnect();
     void onConnect();
     void run();
+    void event(unsigned long rlflags = 0);
     void setRunLoopFlags(unsigned long flags);
+    void userInputLoop();
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine(std::vector< std:: string > * values);
@@ -73,6 +78,7 @@ public:
     void parseLibraryUpdate(std::string * response);
     void libraryUpdate(fd_keymap_vector * values);
     void updateTrackListing(fd_keymap * ikeymap);
+    void printCommand();
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */
