@@ -16,6 +16,7 @@ FlacDemon::TCPHandler::TCPHandler(){
     this->threadSync = false;
     this->socketClosedByRead = false;
     
+    this->setSignals();
 }
 FlacDemon::TCPHandler::~TCPHandler(){
     //delete
@@ -45,6 +46,17 @@ void FlacDemon::TCPHandler::initialize(){
     
     // some kind of accept thread loop?
 }
+void FlacDemon::TCPHandler::setSignals(){
+    auto f = boost::bind(&FlacDemon::TCPHandler::trackPlayingHandler, this, _1, _2);
+    signalHandler->signals("playingTrack")->connect(f);
+}
+void FlacDemon::TCPHandler::trackPlayingHandler(const char * signal, void * arg){
+    FlacDemon::Track * track = (FlacDemon::Track * )arg;
+    std::string id = *track->valueForKey("id");
+    for(std::map < int , bool >::iterator it = this->openSockets.begin(); it != this->openSockets.end(); it++){
+        this->writeResponseForCommand(it->first, "playing", &id);
+    }
+}
 void FlacDemon::TCPHandler::runAcceptLoop(int sockfd){
     struct sockaddr_in client_address;
     socklen_t client_length;
@@ -58,6 +70,7 @@ void FlacDemon::TCPHandler::runAcceptLoop(int sockfd){
             return;
         }
         std::cout << "Socket connection accepted" << std::endl;
+        this->openSockets.insert(std::pair < int , bool > (newsockfd, true));
         new std::thread(&TCPHandler::messageReceiverLoop, this, newsockfd);
     } while(1); //check server socket is still open
 }
@@ -66,7 +79,6 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
     char buffer[256];
     
     sessionManager->newSession();
-    std::string response;
     
     do{ //check socket is still open
         bzero(buffer,256);
@@ -81,23 +93,40 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
         this->addCommand(buffer);
         std::string * results = sessionManager->getSession()->getString(buffer);
 //        cout << *results << endl;
-        response.assign("\"command\":\"");
-        response.append(buffer);
-        response.append("\"\n");
-        if(results)
-            response.append(*results);
-        response.append("\n--data-end--");
 
-        const char * cresponse = response.c_str();
-        
-        cout << cresponse << endl;
-        if ((n = send(sockfd,cresponse,strlen(cresponse), 0)) < 0){
-            std::cout << "ERROR writing to socket" << std::endl;
+        if((n = this->writeResponseForCommand(sockfd, buffer, results)) < 0){
+            continue;
         }
         //write response?
     } while (n > 0);
     std::cout << "socket disconnected" << std::endl;
+    this->openSockets.erase(sockfd);
     sessionManager->destroySession();
+}
+int FlacDemon::TCPHandler::writeResponseForCommand(int sockfd, const char * command, std::string * results){
+    std::string response;
+    int n;
+    response.assign("\"command\":\"");
+    response.append(command);
+    response.append("\"\n");
+    if(results)
+        response.append(*results);
+    
+    response.append("--data-end--");
+    
+    const char * cresponse = response.c_str();
+    cout << cresponse << endl;
+    if((n = this->write(sockfd, cresponse)) < 0){
+        cout << "Error writing response" << endl;
+    }
+    return n;
+}
+int FlacDemon::TCPHandler::write(int sockfd, const char * message){
+    int n;
+    if ((n = send(sockfd,message,strlen(message), 0)) < 0){
+        std::cout << "ERROR writing to socket" << std::endl;
+    }
+    return n;
 }
 void FlacDemon::TCPHandler::addCommand(char * messageBuffer){
     signalHandler->call("runCommand", messageBuffer);

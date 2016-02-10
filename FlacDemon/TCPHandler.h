@@ -10,6 +10,7 @@
 #define __FlacDemon__TCPHandler__
 
 #include "FlacDemonAll.h"
+#include "Track.h"
 
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -20,6 +21,7 @@ class FlacDemon::TCPHandler{
 private:
     std::thread * acceptThread;
     bool socketClosedByRead;
+    std::map < int , bool > openSockets;
 protected:
 public:
     //variables:
@@ -30,9 +32,13 @@ public:
     TCPHandler();
     ~TCPHandler();
     void initialize();
+    void setSignals();
     void runAcceptLoop(int sockfd);
     void messageReceiverLoop(int sockfd);
+    int writeResponseForCommand(int sockfd, const char * command, std::string * results);
+    int write(int sockfd, const char * message);
     void addCommand(char * messageBuffer);
+    void trackPlayingHandler(const char * signal, void * arg);
 };
 
 #endif /* defined(__FlacDemon__TCPHandler__) */

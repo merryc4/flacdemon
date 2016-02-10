@@ -22,10 +22,13 @@ private:
     std::thread * playerThread = nullptr;
     std::mutex playTrackMutex;
     std::mutex playAudioMutex;
+    FlacDemon::Track * currentTrack;
     
     int killPlaybackFlag = 0;
     bool audioPlaying = 0;
     int defaultDriverID = -1;
+    float playbackProgress;
+    float playbackDuration;
     ao_device * device = nullptr;
     ao_sample_format sampleFormat = {
         16,
@@ -48,7 +51,7 @@ public:
     void playTrack(FlacDemon::Track * track);
     void playAudio(FlacDemon::Track * track, AVCodecContext * codecContext, AVPacket * packet, AVFrame * frame, int planar);
     void stopAudio();
-    
+    float getProgress();
     uint8_t * interleave(AVFrame * frame, uint * size);
 };
 

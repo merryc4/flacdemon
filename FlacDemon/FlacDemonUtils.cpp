@@ -26,6 +26,9 @@ int fd_stringtoint(std::string * str, int * value){
     }
     std::string * numberStr = new std::string(*str);
     transform(numberStr->begin(), numberStr->end(), numberStr->begin(), ::tolower);
+    
+//    std::regex reg("^\s+");
+//    std::regex_replace(numberStr, reg, "");
 
     int i = 0;
     for(std::vector<std::string>::iterator it = fd_numbers->begin(); it != fd_numbers->end(); it++){

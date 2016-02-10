@@ -26,9 +26,10 @@
 #include "FlacDemonUtils.h"
 #include "TrackListing.h"
 
-#define fd_interface_printlibrary 1 << 0
-#define fd_interface_libraryupdate 1 << 1
-#define fd_interface_printcommand 1 << 2
+#define fd_interface_printlibrary   1 << 0
+#define fd_interface_libraryupdate  1 << 1
+#define fd_interface_printcommand   1 << 2
+#define fd_interface_playing        1 << 3
 
 using std::cout;
 using std::endl;
@@ -42,13 +43,19 @@ private:
     std::mutex eventMutex;
     
     WINDOW *browser;
-    WINDOW *search;
+    WINDOW *commandWindow;
+    WINDOW* playbackWindow;
     
     unsigned long flags;
     
     int maxColumns;
     int maxRows;
     int browserRows;
+
+    size_t commandCursorPosition;
+    size_t commandCursorDefault;
+    
+    std::string commandPrompt;
     
     bool fetchedLibrary;
     bool killResponseThread;
@@ -71,15 +78,21 @@ public:
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine(std::vector< std:: string > * values);
+    void parseCommand(std::string * iCommand);
     void sendCommand(const char * command);
     void readResponse();
     void parseResponse(std::string response);
     std::string parseCommandFromResponse(std::string * response);
+    std::string removeCommandFromResponse(std::string * response);
     const char * formatValue(std::string value, int max);
     void parseLibraryUpdate(std::string * response);
     void libraryUpdate(fd_keymap_vector * values);
     void updateTrackListing(fd_keymap * ikeymap);
+    void setNowPlaying(std::string ID);
     void printCommand();
+    void setCommandCursor();
+    
+    FlacDemon::TrackListing * trackListingForID(std::string ID);
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */
