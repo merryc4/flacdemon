@@ -19,6 +19,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->readThread = nullptr;
     this->retryConnectThread = nullptr;
     this->fetchedLibrary = false;
+    this->killResponseThread=false;
     this->flags = 0;
 //    this->initialize();
 }
@@ -103,6 +104,13 @@ void FlacDemonInterface::onConnect(){
         this->sendCommand("get all");
         this->fetchedLibrary = true;
     }
+    if(this->readThread){
+        this->killResponseThread = true;
+        this->readThread->join();
+        this->killResponseThread = false;
+    }
+    this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
+
 }
 void FlacDemonInterface::sendCommand(const char * command){
     if(this->socketFileDescriptor < STDERR_FILENO){
@@ -140,7 +148,7 @@ void FlacDemonInterface::readResponse(){
             this->parseResponse(response);
             response = response2;
         }
-    }while(n>0);
+    }while(n>0 && !this->killResponseThread);
     this->connect();
 }
 void FlacDemonInterface::parseResponse(std::string response){
@@ -172,7 +180,6 @@ std::string FlacDemonInterface::parseCommandFromResponse(std::string *response){
     return nullptr;
 }
 void FlacDemonInterface::run(){
-    this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
     new std::thread(&FlacDemonInterface::userInputLoop, this);
     std::string* input = new std::string();
     do{

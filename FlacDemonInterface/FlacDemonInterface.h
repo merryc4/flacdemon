@@ -51,6 +51,7 @@ private:
     int browserRows;
     
     bool fetchedLibrary;
+    bool killResponseThread;
     
     std::map< std::string, FlacDemon::TrackListing * > tracks;
     std::string command;
