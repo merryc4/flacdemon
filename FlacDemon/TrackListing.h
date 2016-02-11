@@ -26,8 +26,11 @@ protected:
     std::map<std::string, long> * trackinfo = nullptr;
     fd_keymap * keymap = nullptr;
     
+    
 public:
     std::string * uuid = nullptr;
+    bool matchesSearch;
+
     TrackListing();
     TrackListing (fd_keymap * keymap);
     ~TrackListing();
@@ -43,6 +46,8 @@ public:
     
     void setTrackInfoForKey(const char * key, long value);
     void setTrackInfoForKey(std::string * key, long value);
+    
+    bool compareSearchStrings(std::vector < std::string > * sstrings, bool setMatch = false);
 };
 
 #endif /* defined(__FlacDemon__TrackListing__) */

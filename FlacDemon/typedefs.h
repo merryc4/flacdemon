@@ -17,4 +17,5 @@ typedef std::pair<std::string, std::string *> fd_keypair;
 typedef std::map<std::string, std::string *> fd_keymap;
 typedef std::vector< fd_keymap * > fd_keymap_vector;
 
+typedef std::vector < std::string > fd_stringvector;
 #endif

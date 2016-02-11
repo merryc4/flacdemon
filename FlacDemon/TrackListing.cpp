@@ -26,6 +26,8 @@ void FlacDemon::TrackListing::init(){
     this->dateAdded = 0;
     this->trackTime = 0;
     
+    this->matchesSearch = false;
+    
     this->trackinfo = new std::map<std::string, long>{
         {"playcount", 0},
         {"dateadded", 0},
@@ -92,4 +94,28 @@ void FlacDemon::TrackListing::setTrackInfoForKey(const char * key, long value){
 void FlacDemon::TrackListing::setTrackInfoForKey(std::string * key, long value){
     std::cout << this->trackinfo->at(*key) << std::endl;
     this->trackinfo->at(*key) = value;
+}
+bool FlacDemon::TrackListing::compareSearchStrings(std::vector < std::string > * sstrings, bool setMatch){
+    std::string * value;
+    bool match = false;
+    int matchCount = 0;
+//    bool partMatch = false;
+//    std::string::iterator strit;
+
+    for ( std::vector < std::string > :: iterator it2 = sstrings->begin(); it2 != sstrings->end(); it2++){
+//        partMatch = false;
+        for ( fd_keymap::iterator it = this->keymap->begin(); it != this->keymap->end(); it++ ){
+            value = it->second;
+            if ( std::search(value->begin(), value->end(), (*it2).begin(), (*it2).end(), searchPredicate ) != value->end() ) {
+                matchCount++;
+                break;
+            }
+        }
+    }
+    if (matchCount >= sstrings->size()) {
+        match = true;
+    }
+    if(setMatch)
+        this->matchesSearch = match;
+    return match;
 }

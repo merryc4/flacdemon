@@ -163,6 +163,7 @@ void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * cod
     ao_close(this->device);
     av_frame_free(&frame);
     this->audioPlaying = false;
+    signalHandler->call("playingTrack", nullptr);
     this->playAudioMutex.unlock();
 }
 void FlacDemon::Player::stopAudio(){

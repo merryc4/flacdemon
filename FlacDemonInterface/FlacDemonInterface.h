@@ -62,6 +62,7 @@ private:
     
     bool fetchedLibrary;
     bool killResponseThread;
+    bool isSearch;
     
     FlacDemon::TrackListing * nowPlaying;
     float progress;
@@ -101,6 +102,8 @@ public:
     void printProgress();
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);
+    
+    void search(std::string searchString);
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

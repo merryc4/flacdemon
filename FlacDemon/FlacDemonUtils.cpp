@@ -226,3 +226,22 @@ std::string fd_secondstoformattime(int seconds){
     formatTime.append(time);
     return formatTime;
 }
+std::vector < std::string > fd_splitstring(std::string * str, const char * delim){
+    return fd_splitstring(str, std::string(delim));
+}
+std::vector < std::string > fd_splitstring(std::string * str, std::string delim){
+    std::vector < std::string > components;
+    size_t pos = 0, pos2 = 0;
+    std::string sub;
+    while ( ( pos2 = str->find( delim , pos ) ) != std::string::npos ){
+        sub = str->substr(pos, ( pos2 - pos ) );
+        pos = pos2 + 1;
+        components.push_back(sub);
+    }
+    sub = str->substr(pos);
+    components.push_back(sub);
+    return components;
+}
+bool searchPredicate(char a, char b){
+    return std::tolower(a) == std::tolower(b);
+}

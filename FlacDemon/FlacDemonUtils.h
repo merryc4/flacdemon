@@ -39,4 +39,9 @@ int isMainThread();
 std::string * fd_standardiseKey(std::string * key);
 std::string fd_secondstoformattime(int seconds);
 
+std::vector < std::string > fd_splitstring(std::string * str, const char * delim);
+std::vector < std::string > fd_splitstring(std::string * str, std::string delim);
+
+bool searchPredicate(char a, char b);
+
 #endif /* defined(__FlacDemon__FlacDemonUtils__) */

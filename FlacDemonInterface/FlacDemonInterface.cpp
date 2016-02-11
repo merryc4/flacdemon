@@ -25,6 +25,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->flags = 0;
     this->commandCursorPosition = 0;
     this->progress = 0;
+    this->isSearch = false;
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -45,7 +46,6 @@ void FlacDemonInterface::initialize(){
     refresh(); //clears screen and sets scroll to correct position
     
     char msg[] = "FlacDemon NCURSES Interface";
-    char msg2[] = "Nothing Playing";
     
     getmaxyx(stdscr, this->maxRows, this->maxColumns);
     
@@ -55,9 +55,7 @@ void FlacDemonInterface::initialize(){
     
     mvwprintw(titleWindow, 0, (this->maxColumns - strlen(msg)) / 2, "%s", msg);
     wrefresh(titleWindow);
-    
-    mvwprintw(this->playbackWindow, 0, (this->maxColumns - strlen(msg2)) / 2, msg2);
-    wrefresh(this->playbackWindow);
+
     
     this->commandPrompt.assign("Command / Search:");
     this->commandCursorDefault = this->commandPrompt.length();
@@ -126,6 +124,16 @@ void FlacDemonInterface::onConnect(){
 }
 void FlacDemonInterface::parseCommand(std::string *iCommand){
     //check some stuff
+    std::istringstream iss(*iCommand);
+    std::string commandword;
+    iss >> commandword;
+//    cout << "command word is " << commandword << endl;
+    if(commandword.compare("search") == 0 || commandword.compare("s") == 0){
+        std::string search;
+        iss.ignore(INT_MAX, ' ');
+        std::getline(iss, search);
+        this->search(search);
+    }
     this->sendCommand(iCommand->c_str());
 }
 void FlacDemonInterface::sendCommand(const char * command){
@@ -237,6 +245,7 @@ void FlacDemonInterface::run(){
         if(has_flag fd_interface_printprogress){
             this->printProgress();
         }
+        this->flags = 0;
         this->setCommandCursor();
     }while(1);
 }
@@ -273,7 +282,10 @@ void FlacDemonInterface::printLibrary(int offset = 0){
     this->browserRows=1; //title always first row
     this->printLibraryHeaders();
     std::string key;
+    wclear(this->browser);
     for(std::map < std::string , FlacDemon::TrackListing * >::iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
+        if(this->isSearch && !it->second->matchesSearch)
+            continue;
         std::vector < std::string > values;
         for(std::vector< std::string >::iterator it2 = libraryTitles->begin(); it2 != libraryTitles->end(); it2++){
             key = (*it2);
@@ -282,7 +294,6 @@ void FlacDemonInterface::printLibrary(int offset = 0){
         }
         this->printLibraryLine(&values);
     }
-    
     wrefresh(this->browser);
 }
 void FlacDemonInterface::printLibraryHeaders(){
@@ -336,9 +347,12 @@ void FlacDemonInterface::printNowPlaying(){
         std::string * title = this->nowPlaying->valueForKey("title");
         cout << "setting title to " << *title << endl;
         mvwprintw(this->playbackWindow, 0, (this->maxColumns - title->length()) / 2, title->c_str());
-        
-        wrefresh(this->playbackWindow);
+    } else {
+        char msg2[] = "Nothing Playing";
+        mvwprintw(this->playbackWindow, 0, (this->maxColumns - strlen(msg2)) / 2, msg2);
+        wclrtobot(this->playbackWindow);
     }
+    wrefresh(this->playbackWindow);
 }
 void FlacDemonInterface::updateTrackListing(fd_keymap *ikeymap){
     std::string idKey("id");
@@ -373,6 +387,8 @@ FlacDemon::TrackListing * FlacDemonInterface::trackListingForID(std::string ID){
     return this->tracks.at(ID);
 }
 void FlacDemonInterface::printProgress(){
+    if(!this->nowPlaying)
+        return;
     std::string * tracktime = this->nowPlaying->valueForKey("tracktime");
     cout << "printing progress " << this->progress << " tracktime " << *tracktime << endl;
     int itime;
@@ -386,4 +402,12 @@ void FlacDemonInterface::printProgress(){
     totalTime.append(formatTime);
     mvwprintw(this->playbackWindow, 1, (this->maxColumns - totalTime.length()) / 2, totalTime.c_str());
     wrefresh(this->playbackWindow);
+}
+void FlacDemonInterface::search(std::string searchString){
+    fd_stringvector components = fd_splitstring(&searchString, " ");
+    for(std::map < std::string , FlacDemon::TrackListing * >::iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
+        it->second->compareSearchStrings(&components, true);
+    }
+    this->isSearch = true;
+    this->event(fd_interface_printlibrary);
 }

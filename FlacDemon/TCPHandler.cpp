@@ -54,8 +54,13 @@ void FlacDemon::TCPHandler::setSignals(){
     signalHandler->signals("playbackUpdate")->connect(f);
 }
 void FlacDemon::TCPHandler::trackPlayingHandler(const char * signal, void * arg){
-    FlacDemon::Track * track = (FlacDemon::Track * )arg;
-    std::string id = *track->valueForKey("id");
+    std::string id;
+    if(arg == nullptr){
+        id = "0";
+    } else {
+        FlacDemon::Track * track = (FlacDemon::Track * )arg;
+        id = *track->valueForKey("id");
+    }
     this->writeResponseForCommand(FD_ALL_SOCKETS, "playing", &id);
 }
 void FlacDemon::TCPHandler::playbackUpdateHandler(const char *signal, void *arg){
