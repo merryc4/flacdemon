@@ -38,6 +38,8 @@ public:
     std::string * valueForKey (const char * key);
     std::string * valueForKey (std::string * key);
     
+    virtual std::string * keymapFileValue(std::string * key);
+    
     void setValueForKey(std::string * value, std::string* key);    
     std::string * standardiseMetaValue(std::string * value, std::string * key);
     

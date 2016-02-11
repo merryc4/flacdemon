@@ -8,7 +8,8 @@
 
 #include "TrackFile.h"
 
-FlacDemon::Track::Track(FlacDemon::File* file) : FlacDemon::TrackListing(){
+FlacDemon::Track::Track(FlacDemon::File* file){
+    this->init();
     if(file)
         this->setFile(file);
 }
@@ -39,4 +40,13 @@ int FlacDemon::Track::openFilePath(){
     }
     
     return this->file==nullptr ? 0 : 1;
+}
+std::string * FlacDemon::Track::keymapFileValue( std::string * key ){
+    std::string * value = nullptr;
+    if(this->keymap && this->keymap->count(*key))
+        value = this->keymap->at(*key);
+    else if(this->file){
+        value = this->file->getMetaDataEntry(key);
+    }
+    return value;
 }

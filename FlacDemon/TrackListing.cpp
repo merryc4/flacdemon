@@ -56,13 +56,17 @@ std::string * FlacDemon::TrackListing::valueForKey(std::string* key){
     if(key->compare("filepath")==0){
         return this->filepath;
     }
-    
-    if(this->keymap && this->keymap->count(*key))
-        value = this->keymap->at(*key);
+    value = this->keymapFileValue(key);
     
     if(value == nullptr){
         value = new std::string(std::to_string(this->getTrackInfoForKey(key)));
     }
+    return value;
+}
+std::string * FlacDemon::TrackListing::keymapFileValue(std::string *key){
+    std::string * value = nullptr;
+    if(this->keymap && this->keymap->count(*key))
+        value = this->keymap->at(*key);
     return value;
 }
 std::string * FlacDemon::TrackListing::standardiseMetaValue(std::string *value, std::string *key){

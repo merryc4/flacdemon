@@ -226,7 +226,10 @@ fd_keymap_vector * FlacDemon::Database::sqlSelect(std::string *isql){
 }
 fd_keymap * FlacDemon::Database::sqlSelectRow(std::string *sql){
     fd_keymap_vector * results = sqlSelect(sql);
-    return results->back();
+    if(results->size())
+        return results->back();
+    else
+        return nullptr;
 }
 std::string * FlacDemon::Database::sqlSelectOne(std::string * isql){
     fd_keymap * results = this->sqlSelectRow(isql);

@@ -38,6 +38,8 @@ public:
     void initInfo();
     int openFilePath();
     
+    virtual std::string * keymapFileValue( std::string * key );
+    
 };
 
 #endif /* defined(__FlacDemon__Track__) */

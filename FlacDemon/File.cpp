@@ -122,7 +122,7 @@ void FlacDemon::File::parse(){
         while ((ent = readdir (dir)) != nullptr) {
             if(ent->d_name[0] == '.'){
                 //hidden file
-                cout << "skipping hidden file " << ent->d_name << endl;
+//                cout << "skipping hidden file " << ent->d_name << endl;
                 continue;
             }
             subpath = *this->filepath + ent->d_name;
@@ -145,7 +145,7 @@ void FlacDemon::File::parse(){
         return;
     }
     this->checkFileStructure();
-    this->printMetaDataDict(this->metadata);
+//    this->printMetaDataDict(this->metadata);
 }
 void FlacDemon::File::addFile(FlacDemon::File * file){
     this->files->push_back(file);
@@ -177,7 +177,7 @@ void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
     while ((copyFrom = av_dict_get(file->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX))){
         if((copyTo = av_dict_get(this->metadata, copyFrom->key, copyTo, 0))
            && strcmp(copyTo->value, copyFrom->value) !=0 ){
-            cout << "values for key '" << copyFrom->key << "' '" << copyTo->value << "' and '" << copyFrom->value << "' do not match" << endl;
+//            cout << "values for key '" << copyFrom->key << "' '" << copyTo->value << "' and '" << copyFrom->value << "' do not match" << endl;
             value = FlacDemonMetaDataMultipleValues;
         } else {
             value = copyFrom->value;
@@ -201,16 +201,16 @@ void FlacDemon::File::checkFileStructure(){
     
     while ((t = av_dict_get(this->metadata, "", t, AV_DICT_IGNORE_SUFFIX))){
         if(strcmp(t->value, FlacDemonMetaDataMultipleValues) == 0){
-            this->inconsistentMetadata->push_back(new string(t->key));
+            this->inconsistentMetadata->push_back(std::string(t->key));
         } else {
-            std::string * skey = new string(t->key);
+            std::string skey = t->key;
             this->consistentMetadata->push_back(skey);
             
             if(!albumConsistency || !artistConsistency){
 
-                if((skey->compare("album"))==0 ) {
+                if((skey.compare("album"))==0 ) {
                     albumConsistency = true;
-                } else if (skey->compare("albumartist") == 0 || skey->compare("artist") == 0) {
+                } else if (skey.compare("albumartist") == 0 || skey.compare("artist") == 0) {
                     artistConsistency = true;
                 }
             }
@@ -236,10 +236,11 @@ void FlacDemon::File::checkFileStructure(){
                 this->checkDiscs(FLACDEMON_CHECK_DISC_METHOD_ARTST);
                 std::string * albumTag = this->getMetaDataEntry("album");
                 if(albumTag->compare(FlacDemonMetaDataMultipleValues) != 0){
-                    this->consistentMetadata->push_back(new string("album"));
-                    for(std::vector<std::string*>::iterator it = this->inconsistentMetadata->begin(); it != this->inconsistentMetadata->end(); it++){
-                        if((*it)->compare("album") == 0){
+                    this->consistentMetadata->push_back(std::string("album"));
+                    for(fd_stringvector::iterator it = this->inconsistentMetadata->begin(); it != this->inconsistentMetadata->end(); it++){
+                        if( it->compare("album") == 0 ){
                             this->inconsistentMetadata->erase(it);
+                            it--; // resets to prevent iterator pointing to erased item
                         }
                     }
                     set_flag FLACDEMON_DIRECTORY_IS_ALBUM;
@@ -258,7 +259,7 @@ void FlacDemon::File::checkFileStructure(){
 }
 void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistency){
     FlacDemon::File * tFile;
-    std::string * value, * key;
+    std::string *value, key;
     int count;
     float filenameSimilarity;
     std::map< std::string, int > * valueCounts;
@@ -266,25 +267,25 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
     
     bool keyIsArtist, keyIsAlbum, keyIsAlbumArtist;
     
-    for(std::vector< std::string * >::iterator metaIterator = this->inconsistentMetadata->begin(); metaIterator != this->inconsistentMetadata->end(); metaIterator++){
-        if((*metaIterator)->compare("track") == 0) //track numbers checked in checkTrackNumbers()
+    for(fd_stringvector::iterator metaIterator = this->inconsistentMetadata->begin(); metaIterator != this->inconsistentMetadata->end(); metaIterator++){
+        if(metaIterator->compare("track") == 0) //track numbers checked in checkTrackNumbers()
             continue;
         key = (*metaIterator);
         keyIsAlbum = false; keyIsArtist = false, keyIsAlbumArtist = false;
         
-        if(key->compare("album") == 0)
+        if(key.compare("album") == 0)
             keyIsAlbum = true;
-        else if(key->compare("artist") == 0)
+        else if(key.compare("artist") == 0)
             keyIsArtist = true;
-        else if(key->compare("albumartist"))
+        else if(key.compare("albumartist"))
             keyIsAlbumArtist = true;
         
         valueCounts = new std::map< std::string , int >;
-        values.insert(std::pair<std::string, std::map< std::string , int> * >{(*key), valueCounts});
+        values.insert(std::pair<std::string, std::map< std::string , int> * >{(key), valueCounts});
         flacdemon_loop_all_files(this->files){
             count = 1;
             tFile = (*it);
-            if((value = tFile->getMetaDataEntry((*metaIterator))) == nullptr){
+            if((value = tFile->getMetaDataEntry(&(*metaIterator))) == nullptr){
                 //potentially use filename with internet scraper lookup, or filename with other such use
                 continue;
             }
@@ -309,12 +310,14 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
             }
         }
         std::string * previous = nullptr;
+        if( value == nullptr )
+            value = new std::string;
         for(std::map< std::string , int >::iterator valueIterator = valueCounts->begin(); valueIterator != valueCounts->end(); valueIterator++){
             value->assign((*valueIterator).first);
             if(previous && fd_comparetags(value, previous) > FLACDEMON_TAG_SIMILARITY_THRESHOLD){
                 cout << "Found high tag similarity for " << *previous << " and " << *value << endl;
                 if(this->similarMetadata == nullptr)
-                    this->similarMetadata = new std::vector< std:: string * >;
+                    this->similarMetadata = new fd_stringvector;
                 this->similarMetadata->push_back(key);
                 set_eflag FLACDEMON_METADATA_HAS_SIMILARITY;
                 if(keyIsAlbum)
@@ -493,8 +496,8 @@ void FlacDemon::File::setToDirectory(){
     
     set_flag FLACDEMON_FILE_IS_DIRECTORY;
     this->files = new std::vector<FlacDemon::File*>;
-    this->consistentMetadata = new std::vector<string*>;
-    this->inconsistentMetadata = new std::vector<string*>;
+    this->consistentMetadata = new fd_stringvector;
+    this->inconsistentMetadata = new fd_stringvector;
 }
 bool FlacDemon::File::isDirectory(){
     return has_flag FLACDEMON_FILE_IS_DIRECTORY;
@@ -668,6 +671,8 @@ int FlacDemon::File::checkTrackNumbers(){
     }
     for(std::vector<std::vector<int> *>::iterator it = availableTracksPerDisc.begin(); it != availableTracksPerDisc.end(); it++){
         int count = 0; //not currently used
+        if((*it)->size() == 0)
+            continue;
         for(std::vector<int>::iterator it2 = (*it)->begin()+1; it2 != (*it)->end(); it2++) {
             if(!(*it2)){
                 cout << "Track Missing!" << endl;
@@ -718,9 +723,9 @@ int FlacDemon::File::readMediaInfo(){
     
     this->standardiseMetaTags();
     
-    this->printMetaDataDict(this->metadata);
+//    this->printMetaDataDict(this->metadata);
     
-    cout << "Found decoder " << inputCodec->name << endl;
+//    cout << "Found decoder " << inputCodec->name << endl;
     
     return inputCodec->id;
 }

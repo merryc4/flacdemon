@@ -80,9 +80,9 @@ enum setChildMetadata {
 
 class FlacDemon::File {
 private:
-    std::vector<string*>* consistentMetadata;
-    std::vector<string*>* inconsistentMetadata;
-    std::vector<string*>* similarMetadata;
+    fd_stringvector * consistentMetadata;
+    fd_stringvector * inconsistentMetadata;
+    fd_stringvector * similarMetadata;
     AVDictionary * metadata;
 public:
     

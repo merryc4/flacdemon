@@ -49,7 +49,6 @@ float fd_comparetags(std::string * tag1, std::string * tag2){
     struct varray * ses = varray_new(sizeof(struct diff_edit), NULL);
     int numElements;
     int editDistance = diff(tag1, 0, (int)tag1->length(), tag2, 0, (int)tag2->length(), characterAtIndex, compareCharacters, NULL, 0, ses, &numElements, NULL);
-    std::cout << "edit distance " << editDistance << std::endl;
     int match_count = 0;
     int nonmatch_count = 0;
     int diff_delete = 0;
