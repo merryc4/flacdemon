@@ -15,13 +15,19 @@
 #include "File.h"
 #include "TrackListing.h"
 
-class FlacDemon::Track: public TrackListing {
+class FlacDemon::Track: public FlacDemon::TrackListing {
+protected:
+    
 public:
     friend FlacDemon::File;
+//    using FlacDemon::TrackListing::valueForKey;
+    
     FlacDemon::File* file = nullptr;
     struct MediaStreamInfo * mediaStreamInfo = nullptr;
 
     Track (FlacDemon::File* file = nullptr);
+    Track (fd_keymap * keymap);
+    ~Track();
     
     void incrementPlaycount ();
     void decrementPlaycount ();

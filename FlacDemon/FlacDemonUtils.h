@@ -37,5 +37,6 @@ void waitfor0(bool * value);
 int isMainThread();
 
 std::string * fd_standardiseKey(std::string * key);
+std::string fd_secondstoformattime(int seconds);
 
 #endif /* defined(__FlacDemon__FlacDemonUtils__) */

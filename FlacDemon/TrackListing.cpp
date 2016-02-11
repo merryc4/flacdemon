@@ -12,10 +12,11 @@ FlacDemon::TrackListing::TrackListing(){
     this->init();
 }
 FlacDemon::TrackListing::TrackListing(fd_keymap * ikeymap){
-    TrackListing();
     this->keymap = ikeymap;
     if(this->keymap->count("filepath"))
         this->filepath = this->keymap->at("filepath");
+    this->init();
+
 }
 FlacDemon::TrackListing::~TrackListing(){
     
@@ -31,6 +32,17 @@ void FlacDemon::TrackListing::init(){
         {"tracktime", 0},
         {"verified", 0}
     };
+    if(this->keymap){
+        for(std::map<std::string, long>::iterator it = this->trackinfo->begin(); it != this->trackinfo->end(); it++){
+            std::string key = it->first;
+            if (this->keymap->count(key)) {
+                std::string * value = this->keymap->at(key);
+                int ivalue;
+                fd_stringtoint(value, &ivalue);
+                this->trackinfo->at(key) = ivalue;
+            }
+        }
+    }
 }
 
 std::string * FlacDemon::TrackListing::valueForKey (const char * key){
@@ -45,10 +57,7 @@ std::string * FlacDemon::TrackListing::valueForKey(std::string* key){
     
     if(this->keymap && this->keymap->count(*key))
         value = this->keymap->at(*key);
-//    if(key->compare("track")==0){
-//        
-//    }
-    //query db if no file?
+    
     if(value == nullptr){
         value = new std::string(std::to_string(this->getTrackInfoForKey(key)));
     }
@@ -62,19 +71,16 @@ std::string * FlacDemon::TrackListing::standardiseMetaValue(std::string *value, 
     
     return value;
 }
-//template <class KValue>
 void FlacDemon::TrackListing::setValueForKey(std::string * value, std::string *key){
     
 }
-//void FlacDemon::TrackListing::setValueForKey(const unsigned char * value, const std::string *key){
-//
-//}
+
 long FlacDemon::TrackListing::getTrackInfoForKey(const char * key){
     std::string tkey = key;
     return this->getTrackInfoForKey(&tkey);
 }
 long FlacDemon::TrackListing::getTrackInfoForKey(std::string * key){
-    if(this->trackinfo->count(*key)){
+    if(this->trackinfo && this->trackinfo->count(*key)){
         return this->trackinfo->at(*key);
     }
     return -1;

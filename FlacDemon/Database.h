@@ -16,6 +16,7 @@
 #include "FlacDemonAll.h"
 //#include "Group.h"
 #include "File.h"
+#include "TrackListing.h"
 #include "Track.h"
 
 typedef std::map<std::string, const unsigned char *> fd_sqlresults;

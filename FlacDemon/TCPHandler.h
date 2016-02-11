@@ -16,6 +16,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#define FD_ALL_SOCKETS 0
+
 
 class FlacDemon::TCPHandler{
 private:
@@ -39,6 +41,7 @@ public:
     int write(int sockfd, const char * message);
     void addCommand(char * messageBuffer);
     void trackPlayingHandler(const char * signal, void * arg);
+    void playbackUpdateHandler(const char  * signal, void * arg);
 };
 
 #endif /* defined(__FlacDemon__TCPHandler__) */

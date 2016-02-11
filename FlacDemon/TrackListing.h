@@ -12,6 +12,7 @@
 #include "includes.h"
 #include "FlacDemonNameSpace.h"
 #include "typedefs.h"
+#include "FlacDemonUtils.h"
 
 class FlacDemon::TrackListing {
 private:
@@ -33,9 +34,8 @@ public:
     
     std::string * valueForKey (const char * key);
     std::string * valueForKey (std::string * key);
-    void setValueForKey(std::string * value, std::string* key);
-    //    void setValueForKey(const unsigned char * value, const std::string *key);
     
+    void setValueForKey(std::string * value, std::string* key);    
     std::string * standardiseMetaValue(std::string * value, std::string * key);
     
     long getTrackInfoForKey(const char * key);

@@ -14,6 +14,7 @@ FlacDemon::Player::Player(){
     this->defaultDriverID = ao_default_driver_id();
     this->playbackProgress = 0;
     this->playbackDuration = 1;
+    this->playbackUpdateThread = nullptr;
     cout << "default driver: " << defaultDriverID << endl;
 }
 FlacDemon::Player::~Player(){
@@ -98,7 +99,7 @@ void FlacDemon::Player::playTrack(FlacDemon::Track * track){
     packet->size = 0;
     
     this->playbackProgress = 0;
-    this->playbackDuration = track->file->formatContext->duration / AV_TIME_BASE;
+    this->playbackDuration = track->getTrackInfoForKey("tracktime");
     this->currentTrack = track;
 
     this->playerThread = new std::thread(&FlacDemon::Player::playAudio, this, track, codecContext, packet, frame, planar);
@@ -115,7 +116,10 @@ void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * cod
     
     this->device = ao_open_live(this->defaultDriverID, &this->sampleFormat, nullptr);
     
-
+    this->audioPlaying = true;
+    this->playbackUpdateThread = new std::thread(&FlacDemon::Player::runPlaybackUpdateThread, this);
+    
+    
     while(endoffile == 0 && error >=0 && this->killPlaybackFlag == 0){
         if((error = av_read_frame(track->file->formatContext, packet)) < 0){
             if(error == AVERROR_EOF){
@@ -201,6 +205,20 @@ uint8_t * FlacDemon::Player::interleave(AVFrame * frame, uint * size){
     
     return output;
 }
+void FlacDemon::Player::runPlaybackUpdateThread(){
+    if(!this->updateMutex.try_lock()){
+        return;
+    }
+    float progress = 0;
+    while(this->audioPlaying){
+        progress = this->getProgress();
+        signalHandler->call("playbackUpdate", &progress);
+        sleep(1);
+    }
+    
+    this->updateMutex.unlock();
+    
+}
 float FlacDemon::Player::getProgress(){
-    return this->playbackProgress / this->playbackDuration;
+    return 1000 * this->playbackProgress / this->playbackDuration;
 }

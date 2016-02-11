@@ -210,3 +210,19 @@ std::string * fd_standardiseKey(std::string * key){
     }
     return key;
 }
+std::string fd_secondstoformattime(int seconds){
+    std::string formatTime="";
+    int mins = (int)(seconds / 60);
+    int hours = (int)(mins / 60);
+    seconds = seconds % 60;
+    mins = mins % 60;
+    char time[100];
+    bzero(time, sizeof(time));
+    if (hours) {
+        sprintf(time, "%02d:%02d:%02d", hours, mins, seconds);
+    } else {
+        sprintf(time, "%02d:%02d", mins, seconds);
+    }
+    formatTime.append(time);
+    return formatTime;
+}

@@ -30,6 +30,9 @@
 #define fd_interface_libraryupdate  1 << 1
 #define fd_interface_printcommand   1 << 2
 #define fd_interface_playing        1 << 3
+#define fd_interface_printplaying   1 << 4
+#define fd_interface_playbackprogress 1 << 5
+#define fd_interface_printprogress  1 << 6
 
 using std::cout;
 using std::endl;
@@ -60,6 +63,9 @@ private:
     bool fetchedLibrary;
     bool killResponseThread;
     
+    FlacDemon::TrackListing * nowPlaying;
+    float progress;
+    
     std::map< std::string, FlacDemon::TrackListing * > tracks;
     std::string command;
 protected:
@@ -89,8 +95,10 @@ public:
     void libraryUpdate(fd_keymap_vector * values);
     void updateTrackListing(fd_keymap * ikeymap);
     void setNowPlaying(std::string ID);
+    void printNowPlaying();
     void printCommand();
     void setCommandCursor();
+    void printProgress();
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);
 };

@@ -49,13 +49,19 @@ void FlacDemon::TCPHandler::initialize(){
 void FlacDemon::TCPHandler::setSignals(){
     auto f = boost::bind(&FlacDemon::TCPHandler::trackPlayingHandler, this, _1, _2);
     signalHandler->signals("playingTrack")->connect(f);
+    
+    f = boost::bind(&FlacDemon::TCPHandler::playbackUpdateHandler, this, _1, _2);
+    signalHandler->signals("playbackUpdate")->connect(f);
 }
 void FlacDemon::TCPHandler::trackPlayingHandler(const char * signal, void * arg){
     FlacDemon::Track * track = (FlacDemon::Track * )arg;
     std::string id = *track->valueForKey("id");
-    for(std::map < int , bool >::iterator it = this->openSockets.begin(); it != this->openSockets.end(); it++){
-        this->writeResponseForCommand(it->first, "playing", &id);
-    }
+    this->writeResponseForCommand(FD_ALL_SOCKETS, "playing", &id);
+}
+void FlacDemon::TCPHandler::playbackUpdateHandler(const char *signal, void *arg){
+    float * progress = (float * )arg;
+    std::string strprogress = std::to_string(*progress);
+    this->writeResponseForCommand(FD_ALL_SOCKETS, "playbackProgress", &strprogress);
 }
 void FlacDemon::TCPHandler::runAcceptLoop(int sockfd){
     struct sockaddr_in client_address;
@@ -116,8 +122,17 @@ int FlacDemon::TCPHandler::writeResponseForCommand(int sockfd, const char * comm
     
     const char * cresponse = response.c_str();
     cout << cresponse << endl;
-    if((n = this->write(sockfd, cresponse)) < 0){
-        cout << "Error writing response" << endl;
+    if(sockfd == FD_ALL_SOCKETS){
+        for(std::map < int , bool >::iterator it = this->openSockets.begin(); it != this->openSockets.end(); it++){
+            sockfd = it->first;
+            if((n = this->write(sockfd, cresponse)) < 0){
+                cout << "Error writing response" << endl;
+            }
+        }
+    } else {
+        if((n = this->write(sockfd, cresponse)) < 0){
+            cout << "Error writing response" << endl;
+        }
     }
     return n;
 }

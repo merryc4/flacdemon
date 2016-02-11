@@ -11,7 +11,8 @@
 std::vector< std::string > * libraryTitles = new std::vector< std::string >{"id", "Track", "Title", "Album", "Artist", "AlbumArtist", "Playcount"};
 std::map< std::string , unsigned long > * commandFlags = new std::map < std::string , unsigned long >{
     { "get all" , fd_interface_libraryupdate },
-    { "playing" , fd_interface_playing }
+    { "playing" , fd_interface_playing },
+    { "playbackProgress", fd_interface_playbackprogress }
 };
 
 FlacDemonInterface::FlacDemonInterface(){
@@ -23,6 +24,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->killResponseThread=false;
     this->flags = 0;
     this->commandCursorPosition = 0;
+    this->progress = 0;
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -184,9 +186,14 @@ void FlacDemonInterface::parseResponse(std::string response){
             case fd_interface_playing:
                 this->setNowPlaying(this->removeCommandFromResponse(&response));
                 break;
+            case fd_interface_playbackprogress:
+                this->progress = atof(this->removeCommandFromResponse(&response).c_str());
+                this->event(fd_interface_printprogress);
+                break;
             default:
                 break;
         }
+        this->setCommandCursor();
     }
 }
 std::string FlacDemonInterface::parseCommandFromResponse(std::string *response){
@@ -223,6 +230,12 @@ void FlacDemonInterface::run(){
         }
         if(has_flag fd_interface_printcommand){
             this->printCommand();
+        }
+        if(has_flag fd_interface_printplaying){
+            this->printNowPlaying();
+        }
+        if(has_flag fd_interface_printprogress){
+            this->printProgress();
         }
         this->setCommandCursor();
     }while(1);
@@ -310,13 +323,17 @@ void FlacDemonInterface::libraryUpdate(fd_keymap_vector * values){
     this->event(fd_interface_printlibrary);
 }
 void FlacDemonInterface::setNowPlaying(std::string ID){
-    int iid;
+//    int iid;
 //    fd_stringtoint(&ID, &iid);
     cout << "setting now playing to " << ID << endl;
-    FlacDemon::TrackListing * track = this->trackListingForID(ID);
-    if(track){
+    this->nowPlaying = this->trackListingForID(ID);
+    this->progress = 0;
+    this->event(fd_interface_printplaying);
+}
+void FlacDemonInterface::printNowPlaying(){
+    if(this->nowPlaying){
         wclear(this->playbackWindow);
-        std::string * title = track->valueForKey("title");
+        std::string * title = this->nowPlaying->valueForKey("title");
         cout << "setting title to " << *title << endl;
         mvwprintw(this->playbackWindow, 0, (this->maxColumns - title->length()) / 2, title->c_str());
         
@@ -354,4 +371,19 @@ FlacDemon::TrackListing * FlacDemonInterface::trackListingForID(std::string ID){
         return nullptr;
     }
     return this->tracks.at(ID);
+}
+void FlacDemonInterface::printProgress(){
+    std::string * tracktime = this->nowPlaying->valueForKey("tracktime");
+    cout << "printing progress " << this->progress << " tracktime " << *tracktime << endl;
+    int itime;
+    fd_stringtoint(tracktime, &itime);
+    itime = itime / 1000;
+    int progressTime = (int)(itime * this->progress);
+    std::string formatTime = fd_secondstoformattime(itime);
+    std::string formatProgressTime = fd_secondstoformattime(progressTime);
+    std::string totalTime = formatProgressTime;
+    totalTime.append("/");
+    totalTime.append(formatTime);
+    mvwprintw(this->playbackWindow, 1, (this->maxColumns - totalTime.length()) / 2, totalTime.c_str());
+    wrefresh(this->playbackWindow);
 }

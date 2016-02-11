@@ -20,8 +20,10 @@ private:
     FlacDemon::Database * database;
     SwrContext * audioResampleContext = nullptr;
     std::thread * playerThread = nullptr;
+    std::thread * playbackUpdateThread;
     std::mutex playTrackMutex;
     std::mutex playAudioMutex;
+    std::mutex updateMutex;
     FlacDemon::Track * currentTrack;
     
     int killPlaybackFlag = 0;
@@ -51,8 +53,10 @@ public:
     void playTrack(FlacDemon::Track * track);
     void playAudio(FlacDemon::Track * track, AVCodecContext * codecContext, AVPacket * packet, AVFrame * frame, int planar);
     void stopAudio();
-    float getProgress();
     uint8_t * interleave(AVFrame * frame, uint * size);
+    void runPlaybackUpdateThread();
+    float getProgress();
+
 };
 
 #endif /* defined(__FlacDemon__Player__) */
