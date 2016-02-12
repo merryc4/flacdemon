@@ -81,7 +81,7 @@ void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
     
     std::string * uuid = this->albumDirectoryUUIDForPath(albumDirectory->filepath);
     albumDirectory->setAlbumDirectoryUUID(uuid);
-    free(uuid);
+    delete uuid;
     
     albumDirectory->verifyAlbum();
     
@@ -226,7 +226,7 @@ fd_keymap_vector * FlacDemon::Database::sqlSelect(std::string *isql){
 }
 fd_keymap * FlacDemon::Database::sqlSelectRow(std::string *sql){
     fd_keymap_vector * results = sqlSelect(sql);
-    if(results->size())
+    if(results && results->size())
         return results->back();
     else
         return nullptr;

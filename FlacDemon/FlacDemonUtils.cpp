@@ -77,8 +77,8 @@ float fd_comparetags(std::string * tag1, std::string * tag2){
     }
     
     float percent = 1.0 * (match_count - nonmatch_count) / tag1->length();
-    free(tag1);
-    free(tag2);
+    delete tag1;
+    delete tag2;
     return percent;
 }
 

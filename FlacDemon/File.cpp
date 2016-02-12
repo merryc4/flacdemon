@@ -19,6 +19,13 @@ FlacDemon::File::File(string* iPath, bool readTags){
     this->discNumber = 0;
     this->discCount = 0;
     
+    this->immediateChildDirectoryCount = 0;
+    this->immediateChildFileCount = 0;
+    this->immediateChildCount = 0;
+    this->totalChildDirectoryCount = 0;
+    this->totalChildFileCount = 0;
+    this->totalChildCount = 0;
+    
     this->error = 0;
     this->verified = 0;
     
@@ -35,7 +42,6 @@ FlacDemon::File::File(string* iPath, bool readTags){
     
     this->filepath = nullptr;
     this->name = nullptr;
-    this->type = nullptr;
     this->albumuuid = nullptr;
     
     this->metadata = nullptr;
@@ -53,17 +59,31 @@ FlacDemon::File::File(string* iPath, bool readTags){
 }
 FlacDemon::File::~File(){
     if(this->files){
-        this->files->clear();
+        flacdemon_loop_all_files(this->files){
+            delete (*it);
+        }
         delete this->files;
     }
     if(this->consistentMetadata){
-        this->consistentMetadata->clear();
         delete this->consistentMetadata;
     }
     if(this->inconsistentMetadata){
-        this->inconsistentMetadata->clear();
         delete this->inconsistentMetadata;
     }
+    if(this->similarMetadata){
+        delete this->similarMetadata;
+    }
+    if(this->metadata){
+        av_dict_free(&this->metadata);
+    }
+    delete this->filepath;
+    delete this->name;
+    delete this->albumuuid;
+    
+    if(this->track) //could cause issues if track is used elsewhere
+        delete this->track;
+    
+    
 }
 string* FlacDemon::File::getPath(){
     return this->filepath;
@@ -76,11 +96,7 @@ void FlacDemon::File::setPath(std::string* iPath){
     
     this->setNameFromPath();
     
-    if(this->checkDirectory()){
-        this->parse();
-    } else {
-        this->readMediaInfo();
-    }
+    this->countChildren();
 }
 void FlacDemon::File::setNameFromPath(){
     if(this->filepath == nullptr)
@@ -109,43 +125,77 @@ void FlacDemon::File::unsetFlag(int flag){
 int FlacDemon::File::hasFlag(int flag){
     return has_flag flag;
 }
-void FlacDemon::File::parse(){
-    cout << "Checking directory " << *this->filepath << endl;
+void FlacDemon::File::countChildren(){
+    if(!this->checkDirectory()){
+        return;
+    }
     struct dirent *ent;
     DIR* dir;
     string subpath;
-    if(this->filepath->back() != '/'){
-        this->filepath->append("/");
-    }
+    
+    this->unparsedFiles = new std::vector < FlacDemon::File * >;
     
     if ((dir = opendir (this->filepath->c_str())) != nullptr) {
         while ((ent = readdir (dir)) != nullptr) {
             if(ent->d_name[0] == '.'){
-                //hidden file
-//                cout << "skipping hidden file " << ent->d_name << endl;
                 continue;
             }
             subpath = *this->filepath + ent->d_name;
-            cout << subpath << endl;
             
             FlacDemon::File* tFile = new FlacDemon::File(&subpath);
-            if(tFile->error) //handle separate error codes
-                continue;
-            
-            this->addFile(tFile);
-
+            if( tFile->isDirectory() ){
+                this->immediateChildDirectoryCount++;
+                this->totalChildDirectoryCount += tFile->totalChildDirectoryCount;
+                this->totalChildFileCount += tFile->totalChildFileCount;
+            } else {
+                this->immediateChildFileCount++;
+            }
+            this->unparsedFiles->push_back(tFile);
         }
         closedir (dir);
     } else {
         /* could not open directory */
-        perror ("");
+        perror ("Error: File::countChildren: ");
     }
+    this->totalChildFileCount += this->immediateChildFileCount;
+    this->totalChildDirectoryCount += this->immediateChildDirectoryCount;
+    this->immediateChildCount = this->immediateChildDirectoryCount + this->immediateChildFileCount;
+    this->totalChildCount = this->totalChildDirectoryCount + this->totalChildFileCount;
+    
+    if(this->totalChildDirectoryCount > FLACDEMON_FILECOUNT_THRESHOLD){
+        set_flag FLACDEMON_FILECOUNT_IS_ABOVE_THRESHOLD;
+    }
+}
+FlacDemon::File * FlacDemon::File::parse(){
+    if(!this->checkDirectory()){
+        this->readMediaInfo();
+        return this;
+    }
+    cout << "Checking directory " << *this->filepath << endl;
+    FlacDemon::File * tFile;
+    for( std::vector < FlacDemon::File * >::iterator it = this->unparsedFiles->begin(); it != this->unparsedFiles->end(); it++){
+        tFile = (*it);
+        tFile->parse();
+        if(!tFile->error){
+            if(has_flag FLACDEMON_FILECOUNT_IS_ABOVE_THRESHOLD && !( tFile->flags & FLACDEMON_FILECOUNT_IS_ABOVE_THRESHOLD ) ){
+                signalHandler->call("addFile", tFile);
+                delete tFile;
+            } else {
+                this->addFile(tFile);
+            }
+        }
+    }
+    delete this->unparsedFiles;
+    this->unparsedFiles = nullptr;
     if(!this->files->size()){
         cout << "No files in directory " << *this->filepath << endl;
-        return;
+        return nullptr;
     }
     this->checkFileStructure();
-//    this->printMetaDataDict(this->metadata);
+    if(has_flag FLACDEMON_FILECOUNT_IS_ABOVE_THRESHOLD){
+        return nullptr;
+    }
+    return this;
 }
 void FlacDemon::File::addFile(FlacDemon::File * file){
     this->files->push_back(file);
@@ -336,7 +386,7 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
     
     //free maps
     for(std::map< std::string,  std::map<std::string, int> * >::iterator valuesIterator = values.begin(); valuesIterator != values.end(); valuesIterator++){
-        free((*valuesIterator).second);
+        delete  (*valuesIterator).second;
     }
 }
 void FlacDemon::File::checkDiscs(int method){
@@ -468,10 +518,7 @@ bool FlacDemon::File::checkExists(struct stat * buffer){
     }
     this->exists = false;
     if(stat(this->filepath->c_str(), buffer) == -1){
-        cout << "error stat-ing file " << this->filepath << " errno: " << errno << endl;
-        if(errno == ENOENT){
-            cout << "File does not exist" << endl;
-        }
+        cout << "error stat-ing file " << *this->filepath << " errno: " << errno << " " << strerror(errno) << endl;
         return false;
     }
     this->exists = true;
@@ -493,7 +540,9 @@ bool FlacDemon::File::checkDirectory(){
 void FlacDemon::File::setToDirectory(){
     if (this->isDirectory())     //once set can not be unset
         return;
-    
+    if(this->filepath->back() != '/'){
+        this->filepath->append("/");
+    }
     set_flag FLACDEMON_FILE_IS_DIRECTORY;
     this->files = new std::vector<FlacDemon::File*>;
     this->consistentMetadata = new fd_stringvector;
@@ -584,7 +633,6 @@ void FlacDemon::File::parseTrackNumber(){
             else if(nonDigitFound){
                 std::string tempStr(it, trackNumStr->end());
                 trackCnt = std::stoi(tempStr);
-                cout << trackCnt << endl;
                 break;
             }
         }
@@ -723,6 +771,8 @@ int FlacDemon::File::readMediaInfo(){
     
     this->standardiseMetaTags();
     
+    avformat_close_input(&this->formatContext);
+    
 //    this->printMetaDataDict(this->metadata);
     
 //    cout << "Found decoder " << inputCodec->name << endl;
@@ -787,7 +837,7 @@ void FlacDemon::File::standardiseMetaTags(){
     while ((copyFrom = av_dict_get(this->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX))){
         key = new string(copyFrom->key);
         newKey = fd_standardiseKey(new std::string(*key));
-        free(key);
+        delete key;
         if(key != newKey)
             toAdd.push_back(*new std::pair<string *, const char*>{newKey, copyFrom->value});
     }
@@ -854,7 +904,7 @@ std::vector<FlacDemon::File*> * FlacDemon::File::getAlbumDirectories(int max){
             } else if((*it)->flags & FLACDEMON_FILE_IS_MEDIA_DIRECTORY){
                 subdirectoryAlbumDirectories = (*it)->getAlbumDirectories(max - 1);
                 albumDirectories->insert(albumDirectories->end(), subdirectoryAlbumDirectories->begin(), subdirectoryAlbumDirectories->end());
-                free(subdirectoryAlbumDirectories);
+                delete subdirectoryAlbumDirectories;
             }
         }
     }
@@ -873,7 +923,7 @@ std::vector<FlacDemon::File*> * FlacDemon::File::getAllFiles(int max){
             } else {
                 subdirectoryFiles = (*it)->getAllFiles(max - 1);
                 allFiles->insert(allFiles->end(), subdirectoryFiles->begin(), subdirectoryFiles->end());
-                free(subdirectoryFiles);
+                delete subdirectoryFiles;
             }
         }
     }
@@ -892,7 +942,7 @@ std::vector<FlacDemon::File*> * FlacDemon::File::getMediaFiles(int max){
             } else if((*it)->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
                 subdirectoryMediaFiles = (*it)->getMediaFiles(max - 1);
                 mediaFiles->insert(mediaFiles->end(), subdirectoryMediaFiles->begin(), subdirectoryMediaFiles->end());
-                free(subdirectoryMediaFiles);
+                delete subdirectoryMediaFiles;
             }
         }
     }
@@ -918,7 +968,7 @@ std::vector<FlacDemon::File*> * FlacDemon::File::getNoneAlbumFiles(int max){
                 } else if((*it)->flags & FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA){
                     subdirectoryNoneAlbumFiles = (*it)->getNoneAlbumFiles(max - 1);
                     noneAlbumFiles->insert(noneAlbumFiles->end(), subdirectoryNoneAlbumFiles->begin(), subdirectoryNoneAlbumFiles->end());
-                    free(subdirectoryNoneAlbumFiles);
+                    delete subdirectoryNoneAlbumFiles;
                 }
             } else if((*it)->flags && FLACDEMON_FILE_IS_MEDIA) {
                 noneAlbumFiles->push_back((*it));

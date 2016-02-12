@@ -44,5 +44,5 @@ void SessionManager::destroySession(){
             }
         }
     }
-    free(session);
+    delete session;
 }

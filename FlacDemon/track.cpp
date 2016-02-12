@@ -26,7 +26,6 @@ void FlacDemon::Track::setFile(FlacDemon::File * file){
     this->filepath = new std::string(*file->filepath);
 }
 void FlacDemon::Track::initInfo(){
-    cout << time(nullptr) << endl;
     this->trackinfo->at("dateadded") = time(nullptr);
 }
 int FlacDemon::Track::openFilePath(){
@@ -46,7 +45,10 @@ std::string * FlacDemon::Track::keymapFileValue( std::string * key ){
     if(this->keymap && this->keymap->count(*key))
         value = this->keymap->at(*key);
     else if(this->file){
-        value = this->file->getMetaDataEntry(key);
+        if(key->compare("albumuuid") == 0)
+            value = this->file->albumuuid;
+        else
+            value = this->file->getMetaDataEntry(key);
     }
     return value;
 }

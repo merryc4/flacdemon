@@ -23,32 +23,35 @@ extern const char * FlacDemonMetaDataMultipleValues;
 
 //#define FLACDEMON_METADATA_MULTIPLE_VALUES "FlacDemonMetaDataMultipleValues"
 
-#define FLACDEMON_FILE_IS_MEDIA         1
-#define FLACDEMON_DIRECTORY_IS_ALBUM    2
-#define FLACDEMON_FILE_IS_DIRECTORY     4
-#define FLACDEMON_DIRECTORY_HAS_SUBDIRECTORIES 8
-#define FLACDEMON_FILE_IS_NON_MEDIA     16
-#define FLACDEMON_DIRECTORY_HAS_MULTIPLE_CODECS 32
-#define FLACDEMON_SUBDIRECTORY_HAS_MEDIA 64
-#define FLACDEMON_FILE_IS_MEDIA_DIRECTORY 128
-#define FLACDEMON_DIRECTORY_IS_DISC 256
+#define FLACDEMON_FILE_IS_MEDIA                     1
+#define FLACDEMON_DIRECTORY_IS_ALBUM                2
+#define FLACDEMON_FILE_IS_DIRECTORY                 4
+#define FLACDEMON_DIRECTORY_HAS_SUBDIRECTORIES      8
+#define FLACDEMON_FILE_IS_NON_MEDIA                 16
+#define FLACDEMON_DIRECTORY_HAS_MULTIPLE_CODECS     32
+#define FLACDEMON_SUBDIRECTORY_HAS_MEDIA            64
+#define FLACDEMON_FILE_IS_MEDIA_DIRECTORY           128
+#define FLACDEMON_DIRECTORY_IS_DISC                 256
 #define FLACDEMON_IS_TAG_SIMILARITY_ALBUM_DIRECTORY 512
+#define FLACDEMON_FILECOUNT_IS_ABOVE_THRESHOLD      1024
 
 /* Error Flags */
-#define FLACDEMON_TRACKNUMBER_MISMATCH 1
-#define FLACDEMON_NO_TRACKNUMBER 2
-#define FLACDEMON_TRACKNUMBER_MISSING 4
-#define FLACDEMON_TRACKCOUNT_INCONSISTENT 8
+#define FLACDEMON_TRACKNUMBER_MISMATCH          1
+#define FLACDEMON_NO_TRACKNUMBER                2
+#define FLACDEMON_TRACKNUMBER_MISSING           4
+#define FLACDEMON_TRACKCOUNT_INCONSISTENT       8
 
-#define FLACDEMON_DISCNUMBER_MISMATCH 16
-#define FLACDEMON_NO_DISCNUMBER 32
-#define FLACDEMON_DISCNUMBER_MISSING 64
-#define FLACDEMON_DISCCOUNT_INCONSISTENT 128
+#define FLACDEMON_DISCNUMBER_MISMATCH           16
+#define FLACDEMON_NO_DISCNUMBER                 32
+#define FLACDEMON_DISCNUMBER_MISSING            64
+#define FLACDEMON_DISCCOUNT_INCONSISTENT        128
 
-#define FLACDEMON_METADATA_HAS_SIMILARITY 256
-#define FLACDEMON_FILENAME_MATCHES_ALBUM 512
-#define FLACDEMON_FILENAME_MATCHES_ARTIST (1 << 10)
-#define FLACDEMON_FILENAME_MATCHES_ALBUMARTIST 2048
+#define FLACDEMON_METADATA_HAS_SIMILARITY       256
+#define FLACDEMON_FILENAME_MATCHES_ALBUM        512
+#define FLACDEMON_FILENAME_MATCHES_ARTIST       1024
+#define FLACDEMON_FILENAME_MATCHES_ALBUMARTIST  2048
+
+#define FLACDEMON_FILECOUNT_THRESHOLD   100
 
 // flag accessors
 #define set_flag this->flags = this->flags |
@@ -93,6 +96,13 @@ public:
     int discNumber;
     int discCount;
     
+    int immediateChildDirectoryCount;
+    int immediateChildFileCount;
+    int immediateChildCount;
+    int totalChildDirectoryCount;
+    int totalChildFileCount;
+    int totalChildCount;
+    
     int error;
     int verified;
     
@@ -106,11 +116,10 @@ public:
     
     std::string * filepath;
     std::string * name;
-    std::string * type;
     std::string * albumuuid;
     
     std::vector<FlacDemon::File*> *files;
-
+    std::vector<FlacDemon::File*> *unparsedFiles;
     
     AVCodecID codecID;
     
@@ -131,7 +140,9 @@ public:
     void unsetFlag(int flag);
     int hasFlag(int flag);
     
-    void parse();
+    void countChildren();
+    
+    FlacDemon::File * parse();
     void addFile(FlacDemon::File *);
     void addMetaDataFromFile(FlacDemon::File*);
     void checkFileStructure();

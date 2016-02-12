@@ -96,7 +96,6 @@ void FlacDemon::TrackListing::setTrackInfoForKey(const char * key, long value){
     this->setTrackInfoForKey(&tkey, value);
 }
 void FlacDemon::TrackListing::setTrackInfoForKey(std::string * key, long value){
-    std::cout << this->trackinfo->at(*key) << std::endl;
     this->trackinfo->at(*key) = value;
 }
 bool FlacDemon::TrackListing::compareSearchStrings(std::vector < std::string > * sstrings, bool setMatch){

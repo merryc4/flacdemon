@@ -21,11 +21,11 @@ FlacDemon::Group::Group(string * iTitle, string * iFilepath, string * iTypeKey) 
 FlacDemon::Group::~Group() {
     //remove all tracks groups
     
-    free(title);
-    free(typeKey);
-    free(filepath);
-    free(tracks);
-    free(groups);
+    delete title;
+    delete typeKey;
+    delete filepath;
+    delete tracks;
+    delete groups;
 }
 
 void FlacDemon::Group::add (FlacDemon::Track* track){

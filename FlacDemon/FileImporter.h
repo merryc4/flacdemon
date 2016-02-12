@@ -22,7 +22,8 @@ public:
     FileImporter();
     ~FileImporter();
     void importFilesFromPath(string*);
-    void sigtest(const char * signalName);
+    void addFileHandler(const char * signal, void * arg);
+    void addFile( FlacDemon::File * file );
 };
 
 

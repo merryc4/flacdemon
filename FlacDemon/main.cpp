@@ -10,7 +10,7 @@
 #include "FlacDemonAll.h"
 #include "FlacDemon.h"
 
-#define FDOPTIONS_USE_FLACS_DIR 1
+#define FDOPTIONS_USE_FLACS_DIR 0
 
 const SignalHandler * signalHandler = new SignalHandler();
 FlacDemon::Demon * demon = nullptr;

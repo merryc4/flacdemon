@@ -9,29 +9,46 @@
 #include "FileImporter.h"
 
 FlacDemon::FileImporter::FileImporter(){
-//    signalHandler->signals("sig1")->connect(boost::bind(&FlacDemon::FileImporter::sigtest, this, _1));
-//    signalHandler->call("sig1");
+    auto f = boost::bind(&FlacDemon::FileImporter::addFileHandler, this, _1, _2);
+    signalHandler->signals("addFile")->connect(f);
 }
 FlacDemon::FileImporter::~FileImporter(){
     
 }
-void FlacDemon::FileImporter::sigtest(const char * signalName){
-    cout << "hello world\n";
-}
 void FlacDemon::FileImporter::importFilesFromPath(string *path){
-	cout << "Importing files from " << path << endl;
+	cout << "Importing files from " << *path << endl;
+    cout << "Searching..." << endl;
     FlacDemon::File * file = new FlacDemon::File(path);
-    std::vector<FlacDemon::File*> * albumDirectories = file->getAlbumDirectories(-1);
     
+    cout << "counts for path " << file->filepath << endl;
+    cout << "immediate regular files: " << file->immediateChildFileCount << endl;
+    cout << "immediate directories: " << file->immediateChildDirectoryCount << endl;
+    cout << "immediate all files: " << file->immediateChildCount << endl;
+    cout << "total regular files: " << file->totalChildFileCount << endl;
+    cout << "total directories: " << file->totalChildDirectoryCount << endl;
+    cout << "total all files: " << file->totalChildCount << endl;
+    
+    if( ( file = file->parse() )){ //could maybe just return a boolean to indicate whether it should be added
+        this->addFile(file);
+        delete file;
+    }
+}
+void FlacDemon::FileImporter::addFileHandler(const char * signal, void * arg){
+    this->addFile(( FlacDemon::File * )arg);
+}
+void FlacDemon::FileImporter::addFile(FlacDemon::File *file){
+    fd_filevector * files = file->getAlbumDirectories(-1);
     cout << "------------------ ALBUM DIRECTORIES ------------------" << endl;
-    flacdemon_loop_all_files(albumDirectories){
+    flacdemon_loop_all_files(files){
         cout << *(*it)->filepath << endl;
     }
     cout << "-------------------------------------------------------" << endl;
     
-    flacdemon_loop_all_files(albumDirectories){
+    flacdemon_loop_all_files(files){
         signalHandler->call("addAlbumDirectory", (*it));
     }
+    
+    delete files;
     
     std::vector<FlacDemon::File*> * noneAlbumFiles = file->getNoneAlbumFiles(-1);
     
@@ -40,12 +57,9 @@ void FlacDemon::FileImporter::importFilesFromPath(string *path){
         cout << *(*it)->filepath << endl;
     }
     cout << "-------------------------------------------------------" << endl;
-
     
-    //need to free memory allocated in getAlbumDirectories
-    
+    delete noneAlbumFiles;
 }
-
 
 
 

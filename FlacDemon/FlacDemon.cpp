@@ -50,7 +50,7 @@ int FlacDemon::Demon::add(vector<string> * args){
     for(vector<string>::iterator it = (args->begin() + 1); it != args->end(); it++){
         std::string * path = new std::string(*it);
         this->fileImporter->importFilesFromPath(path);
-        free(path);
+        delete path;
     }
     return 0;
 }
