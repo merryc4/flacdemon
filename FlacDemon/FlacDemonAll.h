@@ -24,7 +24,6 @@ using std::string;
 using std::endl;
 
 typedef int (FlacDemon::Demon::*demonCommandFunction) (std::vector<string>*);
-typedef std::vector< FlacDemon::File * > fd_filevector;
 
 struct MediaStreamInfo {
     unsigned long bitRate;

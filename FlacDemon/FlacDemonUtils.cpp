@@ -99,6 +99,17 @@ void fd_strreplace(std::string * str, const char * search, const char * replace)
     str->erase(pos, strlen(search));
     str->insert(pos, replace);
 }
+int fd_strnumbercompare(std::string * str1, std::string * str2){
+    int value1, value2, rvalue = 0;
+    if(fd_stringtoint(str1, &value1) == 0 && fd_stringtoint(str2, &value2) == 0){
+        if( !( rvalue = -1 * (int)( value1 < value2 )) ){
+            ( rvalue = 1 * (int)( value1 > value2 ));
+        }
+    } else {
+        rvalue = str1->compare(*str2);
+    }
+    return rvalue;
+}
 std::string fd_sqlescape(std::string isql) { //pointer version might save memory
     return regex_replace(isql, std::regex("'"), "''");
 }

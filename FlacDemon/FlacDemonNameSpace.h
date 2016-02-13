@@ -21,6 +21,7 @@ namespace FlacDemon {
     class Track;
     class Group;
     class Album;
+    class Library;
     
     class Database;
     class Player;

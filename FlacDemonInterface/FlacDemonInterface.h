@@ -25,6 +25,7 @@
 
 #include "FlacDemonUtils.h"
 #include "TrackListing.h"
+#include "Library.h"
 
 #define fd_interface_printlibrary   1 << 0
 #define fd_interface_libraryupdate  1 << 1
@@ -49,6 +50,8 @@ private:
     WINDOW *commandWindow;
     WINDOW* playbackWindow;
     
+    FlacDemon::Library library;
+    
     unsigned long flags;
     
     int maxColumns;
@@ -67,7 +70,6 @@ private:
     FlacDemon::TrackListing * nowPlaying;
     float progress;
     
-    std::map< std::string, FlacDemon::TrackListing * > tracks;
     std::string command;
 protected:
     
@@ -93,17 +95,12 @@ public:
     std::string removeCommandFromResponse(std::string * response);
     const char * formatValue(std::string value, int max);
     void parseLibraryUpdate(std::string * response);
-    void libraryUpdate(fd_keymap_vector * values);
-    void updateTrackListing(fd_keymap * ikeymap);
     void setNowPlaying(std::string ID);
     void printNowPlaying();
     void printCommand();
     void setCommandCursor();
     void printProgress();
-    
-    FlacDemon::TrackListing * trackListingForID(std::string ID);
-    
-    void search(std::string searchString);
+        
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

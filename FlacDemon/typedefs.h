@@ -13,9 +13,14 @@
 #define unset_flag this->flags = this->flags & ~
 #define has_flag this->flags &
 
-typedef std::pair<std::string, std::string *> fd_keypair;
-typedef std::map<std::string, std::string *> fd_keymap;
-typedef std::vector< fd_keymap * > fd_keymap_vector;
+#include "FlacDemonNameSpace.h"
+
+typedef std::pair < std::string, std::string * > fd_keypair;
+typedef std::map < std::string, std::string * > fd_keymap;
+typedef std::vector < fd_keymap * > fd_keymap_vector;
 
 typedef std::vector < std::string > fd_stringvector;
+typedef std::vector < FlacDemon::File * > fd_filevector;
+typedef std::vector < FlacDemon::Track * > fd_trackvector;
+typedef std::vector < FlacDemon::TrackListing * > fd_tracklistingvector;
 #endif

@@ -32,7 +32,9 @@ void FlacDemon::TrackListing::init(){
         {"playcount", 0},
         {"dateadded", 0},
         {"tracktime", 0},
-        {"verified", 0}
+        {"verified", 0},
+        {"track", 0},
+        {"disc", 0}
     };
     if(this->keymap){
         for(std::map<std::string, long>::iterator it = this->trackinfo->begin(); it != this->trackinfo->end(); it++){
@@ -41,7 +43,8 @@ void FlacDemon::TrackListing::init(){
                 std::string * value = this->keymap->at(key);
                 int ivalue;
                 fd_stringtoint(value, &ivalue);
-                this->trackinfo->at(key) = ivalue;
+                if(ivalue >= 0)
+                    this->trackinfo->at(key) = ivalue;
             }
         }
     }
@@ -65,8 +68,12 @@ std::string * FlacDemon::TrackListing::valueForKey(std::string* key){
 }
 std::string * FlacDemon::TrackListing::keymapFileValue(std::string *key){
     std::string * value = nullptr;
-    if(this->keymap && this->keymap->count(*key))
+    if(this->trackinfo && this->trackinfo->count(*key)){
+        value = new std::string{std::to_string(this->trackinfo->at(*key))};
+    }
+    else if(this->keymap && this->keymap->count(*key)){
         value = this->keymap->at(*key);
+    }
     return value;
 }
 std::string * FlacDemon::TrackListing::standardiseMetaValue(std::string *value, std::string *key){

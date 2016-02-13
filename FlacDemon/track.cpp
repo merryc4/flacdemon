@@ -33,6 +33,7 @@ int FlacDemon::Track::openFilePath(){
     if(this->filepath){
         if(!this->file){
             this->file = new FlacDemon::File(this->filepath, false);
+            this->file->parse();
         } else {
             this->file->openFormatContext(true); //reset
         }
@@ -42,7 +43,10 @@ int FlacDemon::Track::openFilePath(){
 }
 std::string * FlacDemon::Track::keymapFileValue( std::string * key ){
     std::string * value = nullptr;
-    if(this->keymap && this->keymap->count(*key))
+    if(this->trackinfo && this->trackinfo->count(*key)){
+        value = new std::string{std::to_string(this->trackinfo->at(*key))};
+    }
+    else if(this->keymap && this->keymap->count(*key))
         value = this->keymap->at(*key);
     else if(this->file){
         if(key->compare("albumuuid") == 0)
