@@ -509,6 +509,8 @@ void FlacDemon::File::setDiscNumber(int discNumber){
     }
     std::string s = std::to_string(discNumber);
     this->setMetaDataEntry("disc", &s);
+    if(this->track)
+        this->track->setTrackInfoForKey("disc", discNumber);
 }
 bool FlacDemon::File::checkExists(struct stat * buffer){
     bool makeBuffer = false;
@@ -668,7 +670,9 @@ void FlacDemon::File::parseTrackNumber(){
     this->trackNumber = trackNum;
     this->trackCount = trackCnt;
     std::string track = std::to_string(trackNum);
-    this->setMetaDataEntry("track", &track);
+//    this->setMetaDataEntry("track", &track);
+    if(this->track)
+        this->track->setTrackInfoForKey("track", trackNum);
 }
 int FlacDemon::File::checkTrackNumbers(){
     
