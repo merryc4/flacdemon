@@ -16,8 +16,11 @@
 #include "FlacDemonUtils.h"
 #include "TrackListing.h"
 #include "Group.h"
+#include "TrackSorter.h"
 
 #include <algorithm>
+
+#define FLACDEMON_LIBRARY_SEARCH_DELAY 3000
 
 class FlacDemon::Library{
 private:
@@ -25,8 +28,22 @@ private:
     fd_tracklistingvector sortedTracks;
     fd_stringvector sortKeys;
     std::string currentSortKey;
+    
+    std::mutex searchMutex;
+    
+    std::thread * searchThread;
+    int searchDelayTime;
+    std::string searchString;
+    
+    void startSearchThread();
+    void runSearchThread();
+    void setSearchDelayTime(int time);
+    void setSearchString(std::string search);
+    
 protected:
 public:
+    bool searching;
+
     Library();
     ~Library();
 
@@ -34,36 +51,13 @@ public:
     void addTrackListing( FlacDemon::TrackListing * tracklisting );
     void addTrackListing( fd_keymap * keymap );
     void sort( std::string sortKey );
-    void search(std::string searchString);
+    void search(std::string search);
 
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);
     fd_tracklistingvector * allTracks();
 
 };
-class TrackSorter {
-public:
-    std::string currentSortKey;
-    fd_stringvector * sortKeys;
-    std::string sortKey;
-    
-    TrackSorter() {};
-    bool operator() ( FlacDemon::TrackListing * track1, FlacDemon::TrackListing * track2 ) {
-        std::string value1, value2;
-        bool isDiff = false, nextKey = true;
-        int diff;
-        
-        for( fd_stringvector::iterator it = std::find(this->sortKeys->begin(), this->sortKeys->end(), this->currentSortKey); it != this->sortKeys->end() && !isDiff && nextKey; it++){
-            sortKey = (*it);
-            value1 = *track1->valueForKey(&sortKey);
-            value2 = *track2->valueForKey(&sortKey);
-            if( ! (isDiff = ( ( diff = fd_strnumbercompare(&value1, &value2) ) < 0 )) ){
-                nextKey = (diff == 0);
-            }
-//          isDiff = ( *track1->valueForKey(&sortKey) < *track2->valueForKey(&sortKey));
-        }
-        return isDiff;
-    };
-};
+
 
 #endif /* defined(__FlacDemon__Library__) */

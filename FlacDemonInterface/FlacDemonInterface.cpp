@@ -8,7 +8,8 @@
 
 #include "FlacDemonInterface.h"
 
-std::vector< std::string > * libraryTitles = new std::vector< std::string >{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount"};
+fd_stringvector * libraryTitles = new fd_stringvector{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount"};
+fd_stringvector * commands = new fd_stringvector{"add", "play", "stop", "get"};
 std::map< std::string , unsigned long > * commandFlags = new std::map < std::string , unsigned long >{
     { "get all" , fd_interface_libraryupdate },
     { "playing" , fd_interface_playing },
@@ -26,6 +27,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->commandCursorPosition = 0;
     this->progress = 0;
     this->isSearch = false;
+    this->typeSearch = false;
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -122,20 +124,22 @@ void FlacDemonInterface::onConnect(){
     this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
 
 }
-void FlacDemonInterface::parseCommand(std::string *iCommand){
-    //check some stuff
-    std::istringstream iss(*iCommand);
+bool FlacDemonInterface::checkCommand(std::string *command){
+    std::istringstream iss(*command);
     std::string commandword;
     iss >> commandword;
-//    cout << "command word is " << commandword << endl;
-    if(commandword.compare("search") == 0 || commandword.compare("s") == 0){
-        std::string search;
-        iss.ignore(INT_MAX, ' ');
-        std::getline(iss, search);
-        this->library.search(search);
-        this->isSearch = true;
-        this->event(fd_interface_printlibrary);
+    if(commandword == "s" || commandword == "search"){
+        return false;
     }
+    for(fd_stringvector::iterator it = commands->begin(); it != commands->end(); it++){
+        if ( it->find(commandword) != std::string::npos ) {
+            return true;
+        }
+    }
+    return false;
+}
+void FlacDemonInterface::parseCommand(std::string *iCommand){
+    //check some stuff
     this->sendCommand(iCommand->c_str());
 }
 void FlacDemonInterface::sendCommand(const char * command){
@@ -232,9 +236,6 @@ void FlacDemonInterface::run(){
     std::string* input = new std::string();
     do{
         this->eventMutex.lock();
-//        std::cout << "Enter Command: ";
-//        getline(std::cin >> std::ws, *input);
-//        this->sendCommand(input->c_str());
         if(has_flag fd_interface_printlibrary){
             this->printLibrary(0);
         }
@@ -277,6 +278,21 @@ void FlacDemonInterface::userInputLoop(){
                 break;
         }
         this->event(fd_interface_printcommand);
+        if(this->command.length() > 1 ){
+            if( !( this->checkCommand(&this->command) )){
+                this->typeSearch = true;
+                std::string search = this->command;
+                if(!fd_strreplace(&search, "search ", ""))
+                    fd_strreplace(&search, "s ", "");
+                this->library.search(search);
+                this->isSearch = true;
+                new std::thread(&FlacDemonInterface::waitForSearch, this);
+            }
+        } else if ( this->typeSearch ){
+            this->isSearch = false;
+            this->typeSearch = false;
+            this->event(fd_interface_printlibrary);
+        }
     }
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
@@ -286,7 +302,7 @@ void FlacDemonInterface::printLibrary(int offset = 0){
     std::string key;
     wclear(this->browser);
     fd_tracklistingvector * tracks = this->library.allTracks();
-    for(fd_tracklistingvector::iterator it = tracks->begin(); it != tracks->end(); it++){
+    for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
         if(this->isSearch && !(*it)->matchesSearch)
             continue;
         std::vector < std::string > values;
@@ -382,4 +398,10 @@ void FlacDemonInterface::printProgress(){
     totalTime.append(formatTime);
     mvwprintw(this->playbackWindow, 1, (this->maxColumns - totalTime.length()) / 2, totalTime.c_str());
     wrefresh(this->playbackWindow);
+}
+void FlacDemonInterface::waitForSearch(){
+    while (this->library.searching) {
+        usleep(100);
+    }
+    this->event(fd_interface_printlibrary);
 }

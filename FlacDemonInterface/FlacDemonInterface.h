@@ -66,6 +66,7 @@ private:
     bool fetchedLibrary;
     bool killResponseThread;
     bool isSearch;
+    bool typeSearch;
     
     FlacDemon::TrackListing * nowPlaying;
     float progress;
@@ -87,6 +88,7 @@ public:
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine(std::vector< std:: string > * values);
+    bool checkCommand(std::string * command);
     void parseCommand(std::string * iCommand);
     void sendCommand(const char * command);
     void readResponse();
@@ -100,7 +102,7 @@ public:
     void printCommand();
     void setCommandCursor();
     void printProgress();
-        
+    void waitForSearch();
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

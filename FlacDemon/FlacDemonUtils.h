@@ -22,8 +22,8 @@ const void * characterAtIndex(const void * str, int index, void * context);
 int compareCharacters(const void * c1, const void * c2, void * context);
 
 void fd_tolowercase(std::string * str);
-void fd_strreplace(std::string * str, std::string * search, std::string * replace);
-void fd_strreplace(std::string * str, const char * search, const char * replace);
+int fd_strreplace(std::string * str, std::string * search, std::string * replace);
+int fd_strreplace(std::string * str, const char * search, const char * replace);
 int fd_strnumbercompare(std::string * str1, std::string * str2);
 
 std::string fd_sqlescape(std::string isql);

@@ -10,6 +10,8 @@
 
 FlacDemon::Library::Library(){
     this->sortKeys = fd_stringvector {"genre", "composer", "artist", "albumartist", "album", "disc", "track"};
+    this->searchDelayTime = 1;
+    this->searching = false;
 }
 FlacDemon::Library::~Library(){
     
@@ -47,11 +49,42 @@ void FlacDemon::Library::sort( std::string sortKey ){
     tracksorter.sortKeys = &this->sortKeys;
     std::sort(this->sortedTracks.begin(), this->sortedTracks.end(), tracksorter);
 }
-void FlacDemon::Library::search(std::string searchString){
+void FlacDemon::Library::search(std::string search){
+    this->setSearchString(search);
+    this->searching = true;
+    if(this->searchDelayTime < 0){
+        this->setSearchDelayTime(FLACDEMON_LIBRARY_SEARCH_DELAY);
+    } else {
+        this->searchThread = new std::thread(&FlacDemon::Library::startSearchThread, this);
+    }
+}
+void FlacDemon::Library::startSearchThread(){
+    this->searchDelayTime = 300;
+    int sleepTime = 10;
+    while (this->searchDelayTime > 0) {
+        usleep(sleepTime * 100);
+        this->setSearchDelayTime(this->searchDelayTime - 10);
+    }
+    this->runSearchThread();
+}
+void FlacDemon::Library::runSearchThread(){
+    this->searchMutex.lock();
     fd_stringvector components = fd_splitstring(&searchString, " ");
     for(std::map < std::string , FlacDemon::TrackListing * >::iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
         it->second->compareSearchStrings(&components, true);
     }
+    this->searching = false;
+    this->searchMutex.unlock();
+}
+void FlacDemon::Library::setSearchDelayTime(int time){
+    this->searchMutex.lock();
+    this->searchDelayTime = time;
+    this->searchMutex.unlock();
+}
+void FlacDemon::Library::setSearchString(std::string search){
+    this->searchMutex.lock();
+    this->searchString = search;
+    this->searchMutex.unlock();
 }
 FlacDemon::TrackListing * FlacDemon::Library::trackListingForID(std::string ID){
     if(this->tracks.count(ID) == 0){
