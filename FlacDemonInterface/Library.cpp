@@ -10,7 +10,7 @@
 
 FlacDemon::Library::Library(){
     this->sortKeys = fd_stringvector {"genre", "composer", "artist", "albumartist", "album", "disc", "track"};
-    this->searchDelayTime = 1;
+    this->searchDelayTime = -1;
     this->searching = false;
 }
 FlacDemon::Library::~Library(){
@@ -52,14 +52,13 @@ void FlacDemon::Library::sort( std::string sortKey ){
 void FlacDemon::Library::search(std::string search){
     this->setSearchString(search);
     this->searching = true;
-    if(this->searchDelayTime < 0){
-        this->setSearchDelayTime(FLACDEMON_LIBRARY_SEARCH_DELAY);
-    } else {
+    bool newSearch = ( this->searchDelayTime <= 0 );
+    this->setSearchDelayTime(FLACDEMON_LIBRARY_SEARCH_DELAY);
+    if( newSearch ){
         this->searchThread = new std::thread(&FlacDemon::Library::startSearchThread, this);
     }
 }
 void FlacDemon::Library::startSearchThread(){
-    this->searchDelayTime = 300;
     int sleepTime = 10;
     while (this->searchDelayTime > 0) {
         usleep(sleepTime * 100);
