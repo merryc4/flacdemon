@@ -9,7 +9,6 @@
 #include "Library.h"
 
 FlacDemon::Library::Library(){
-    this->sortKeys = fd_stringvector {"genre", "composer", "artist", "albumartist", "album", "disc", "track"};
     this->searchDelayTime = -1;
     this->searching = false;
 }
@@ -44,9 +43,7 @@ void FlacDemon::Library::sort( std::string sortKey ){
     for( std::map < std::string, FlacDemon::TrackListing * > :: iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
         this->sortedTracks.push_back(it->second);
     }
-    TrackSorter tracksorter;
-    tracksorter.currentSortKey = sortKey;
-    tracksorter.sortKeys = &this->sortKeys;
+    TrackSorter tracksorter( sortKey );
     std::sort(this->sortedTracks.begin(), this->sortedTracks.end(), tracksorter);
 }
 void FlacDemon::Library::search(std::string search){
@@ -93,4 +90,7 @@ FlacDemon::TrackListing * FlacDemon::Library::trackListingForID(std::string ID){
 }
 fd_tracklistingvector * FlacDemon::Library::allTracks(){
     return &this->sortedTracks;
+}
+size_t FlacDemon::Library::count(){
+    return this->tracks.size();
 }

@@ -47,9 +47,7 @@ private:
     std::thread * readThread;
     std::thread * retryConnectThread;
 //    std::mutex socketMutex;
-    std::mutex eventMutex;
-    std::promise < unsigned long  > * eventPromise;
-    
+    std::mutex eventMutex;    
     std::condition_variable eventCV;
     
     WINDOW *browser;
@@ -63,6 +61,8 @@ private:
     int maxColumns;
     int maxRows;
     int browserRows;
+    int currentBrowserRow;
+    uint browserOffset;
 
     size_t commandCursorPosition;
     size_t commandCursorDefault;
@@ -104,6 +104,7 @@ public:
     std::string removeCommandFromResponse(std::string * response);
     const char * formatValue(std::string value, int max);
     void parseLibraryUpdate(std::string * response);
+    void changeOffset(int diff);
     void setNowPlaying(std::string ID);
     void printNowPlaying();
     void printCommand();

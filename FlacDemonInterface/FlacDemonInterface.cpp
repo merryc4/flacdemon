@@ -28,8 +28,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->progress = 0;
     this->isSearch = false;
     this->typeSearch = false;
-    this->eventPromise = new std::promise < unsigned long >();
-
+    this->browserOffset = 0;
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -68,7 +67,8 @@ void FlacDemonInterface::initialize(){
     wrefresh(this->commandWindow);
     
     int browserRow = 5;
-    this->browser = newwin(this->maxRows - browserRow, this->maxColumns, browserRow, 0);
+    this->browserRows = this->maxRows - browserRow;
+    this->browser = newwin(this->browserRows, this->maxColumns, browserRow, 0);
 }
 void FlacDemonInterface::connect(){
     int sockfd, port;
@@ -245,7 +245,7 @@ void FlacDemonInterface::printFlags(){
     this->eventCV.wait( lock );
     if(ihas_flag(this->flags, fd_interface_printlibrary)){
         cout << "printing library" << endl;
-        this->printLibrary(0);
+        this->printLibrary(this->browserOffset);
     }
     if(ihas_flag(this->flags, fd_interface_printcommand)){
         cout << "printing command" << endl;
@@ -275,8 +275,20 @@ void FlacDemonInterface::userInputLoop(){
     cout << "user input thread running " << endl;
     while(true){
         char c = getch();
-//        cout << "got char " << c << ". numeric: " << (int)c << endl;
+        cout << "got char " << c << ". numeric: " << (int)c << endl;
         switch (c) {
+            case 2: //down
+                this->changeOffset(1);
+                break;
+            case 3: //up
+                this->changeOffset(-1);
+                break;
+            case 82: //page down
+                this->changeOffset(this->browserRows);
+                break;
+            case 83: //page down
+                this->changeOffset(( 0 - this->browserRows ));
+                break;
             case 10: //Enter
                 this->parseCommand(&this->command);
                 this->command.clear();
@@ -309,10 +321,9 @@ void FlacDemonInterface::userInputLoop(){
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
 //    cout << "printing library" << endl;
-    this->browserRows=1; //title always first row
+    wclear(this->browser);
     this->printLibraryHeaders();
     std::string key;
-    wclear(this->browser);
     fd_tracklistingvector * tracks = this->library.allTracks();
     for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
         if(this->isSearch && !(*it)->matchesSearch)
@@ -324,28 +335,32 @@ void FlacDemonInterface::printLibrary(int offset = 0){
             values.push_back(*(*it)->valueForKey(&key));
         }
         this->printLibraryLine(&values);
+        if( this->currentBrowserRow > this->browserRows )
+            break;
     }
     wrefresh(this->browser);
 }
 void FlacDemonInterface::printLibraryHeaders(){
     char title[] = "Library";
     mvwprintw(this->browser, 0, (this->maxColumns - strlen(title)) / 2, title);
+    this->currentBrowserRow = 1;
     this->printLibraryLine(libraryTitles);
 }
 void FlacDemonInterface::printLibraryLine(std::vector<std::string> *values){
     int width = (this->maxColumns / values->size());
     int position = 0;
-    this->browserRows++;
-    
 //    cout << "printing line " << this->browserRows << endl;
     
     for(std::vector< std::string >::iterator it = values->begin(); it != values->end(); it++){
         const char * val = this->formatValue(*it, width);
-        mvwprintw(this->browser, this->browserRows, position, val);
+        mvwprintw(this->browser, this->currentBrowserRow, position, val);
         position+=width;
-        mvwprintw(this->browser, this->browserRows, position, "|");
+        mvwprintw(this->browser, this->currentBrowserRow, position, "|");
         position++;
     }
+    this->currentBrowserRow++;
+    wrefresh(this->browser);
+
 }
 const char * FlacDemonInterface::formatValue(std::string value, int max){
     if(value.length() > max){
@@ -360,7 +375,17 @@ void FlacDemonInterface::parseLibraryUpdate(std::string *response){
     this->library.sort("artist");
     this->event(fd_interface_printlibrary);
 }
-
+void FlacDemonInterface::changeOffset(int diff){
+    if( diff != 0 ){
+        if( ( (long)this->browserOffset + diff ) < 0 )
+            this->browserOffset = 0;
+        else if ( ( this->browserOffset + diff + this->browserRows ) > this->library.count() )
+            this->browserOffset = ( this->library.count() - this->browserRows );
+        else
+            this->browserOffset += diff;
+        this->event(fd_interface_printlibrary);
+    }
+}
 void FlacDemonInterface::setNowPlaying(std::string ID){
 //    int iid;
 //    fd_stringtoint(&ID, &iid);
@@ -370,8 +395,8 @@ void FlacDemonInterface::setNowPlaying(std::string ID){
     this->event(fd_interface_printplaying);
 }
 void FlacDemonInterface::printNowPlaying(){
+    wclear(this->playbackWindow);
     if(this->nowPlaying){
-        wclear(this->playbackWindow);
         std::string * title = this->nowPlaying->valueForKey("title");
         cout << "setting title to " << *title << endl;
         mvwprintw(this->playbackWindow, 0, (this->maxColumns - title->length()) / 2, title->c_str());

@@ -26,7 +26,6 @@ class FlacDemon::Library{
 private:
     std::map < std::string, FlacDemon::TrackListing * > tracks;
     fd_tracklistingvector sortedTracks;
-    fd_stringvector sortKeys;
     std::string currentSortKey;
     
     std::mutex searchMutex;
@@ -52,10 +51,10 @@ public:
     void addTrackListing( fd_keymap * keymap );
     void sort( std::string sortKey );
     void search(std::string search);
-
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);
     fd_tracklistingvector * allTracks();
+    size_t count();
 
 };
 
