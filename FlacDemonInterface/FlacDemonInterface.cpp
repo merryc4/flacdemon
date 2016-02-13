@@ -57,9 +57,9 @@ void FlacDemonInterface::initialize(){
     
     getmaxyx(stdscr, this->maxRows, this->maxColumns);
     
-    WINDOW * titleWindow = newwin(1, this->maxColumns, 0, 0);
-    this->playbackWindow = newwin(3, this->maxColumns, 1, 0);
-    this->commandWindow = newwin(1, this->maxColumns, 4, 0);
+    WINDOW * titleWindow = this->nextwin( 1 );
+    this->playbackWindow = this->nextwin( 3 );
+    this->commandWindow = this->nextwin( 1 );
     
     mvwprintw(titleWindow, 0, (this->maxColumns - strlen(msg)) / 2, "%s", msg);
     wrefresh(titleWindow);
@@ -71,9 +71,18 @@ void FlacDemonInterface::initialize(){
     mvwprintw(this->commandWindow, 0, 0, this->commandPrompt.c_str());
     wrefresh(this->commandWindow);
     
-    int browserRow = 5;
-    this->browserRows = this->maxRows - browserRow;
-    this->browser = newwin(this->browserRows, this->maxColumns, browserRow, 0);
+    size_t row;
+    this->browserHeaderWindow = this->nextwin( 2 , &row );
+    this->browserRows = this->maxRows - row;
+    this->browserWindow = nextwin( this->browserRows );
+}
+WINDOW * FlacDemonInterface::nextwin( size_t rowSize , size_t * row ){
+    static size_t currentWindowRow = 0;
+    WINDOW * window = newwin( rowSize, this->maxColumns, currentWindowRow, 0 );
+    currentWindowRow += rowSize;
+    if( row != nullptr )
+        *row = currentWindowRow;
+    return window;
 }
 void FlacDemonInterface::connect(){
     int sockfd, port;
@@ -309,7 +318,7 @@ void FlacDemonInterface::userInputLoop(){
     int c;
     while(true){
         c = getch();
-        cout << "got char " << c << ". numeric: " << (int)c << endl;
+        cout << "got char, numeric: " << c << " keyname: " << keyname(c) << endl;
         switch (c) {
             case KEY_DOWN: //down
                 this->changeOffset(1);
@@ -317,11 +326,17 @@ void FlacDemonInterface::userInputLoop(){
             case KEY_UP: //up
                 this->changeOffset(-1);
                 break;
-            case KEY_PPAGE: //page down
-                this->changeOffset(this->browserRows);
+            case KEY_PPAGE: //page up
+                this->changeOffset( 0 - this->browserRows);
                 break;
             case KEY_NPAGE: //page down
-                this->changeOffset(( 0 - this->browserRows ));
+                this->changeOffset(( this->browserRows ));
+                break;
+            case KEY_HOME:
+                this->changeOffset( 0 , true );
+                break;
+            case KEY_END:
+                this->changeOffset((int)this->library.count(), true);
                 break;
             case 27: //esc
                 this->escapeHandler();
@@ -379,8 +394,10 @@ void FlacDemonInterface::escapeHandler(){
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
 //    cout << "printing library" << endl;
-    wclear(this->browser);
+    wclear(this->browserWindow);
+    wclear(this->browserHeaderWindow);
     this->printLibraryHeaders();
+    this->currentBrowserRow = 0;
     std::string key;
     fd_tracklistingvector * tracks = this->library.allTracks();
     for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
@@ -392,33 +409,32 @@ void FlacDemonInterface::printLibrary(int offset = 0){
             fd_standardiseKey(&key);
             values.push_back(*(*it)->valueForKey(&key));
         }
-        this->printLibraryLine(&values);
+        this->printLibraryLine( this->browserWindow , &values );
         if( this->currentBrowserRow > this->browserRows )
             break;
     }
-    wrefresh(this->browser);
+    wrefresh(this->browserWindow);
+    wrefresh(this->browserHeaderWindow);
 }
 void FlacDemonInterface::printLibraryHeaders(){
     char title[] = "Library";
-    mvwprintw(this->browser, 0, (this->maxColumns - strlen(title)) / 2, title);
+    mvwprintw(this->browserWindow, 0, (this->maxColumns - strlen(title)) / 2, title);
     this->currentBrowserRow = 1;
-    this->printLibraryLine(libraryTitles);
+    this->printLibraryLine( this->browserHeaderWindow , libraryTitles );
 }
-void FlacDemonInterface::printLibraryLine(std::vector<std::string> *values){
+void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::string> *values ){
     int width = (this->maxColumns / values->size());
     int position = 0;
 //    cout << "printing line " << this->browserRows << endl;
     
     for(std::vector< std::string >::iterator it = values->begin(); it != values->end(); it++){
         const char * val = this->formatValue(*it, width);
-        mvwprintw(this->browser, this->currentBrowserRow, position, val);
+        mvwprintw(window, this->currentBrowserRow, position, val);
         position+=width;
-        mvwprintw(this->browser, this->currentBrowserRow, position, "|");
+        mvwprintw(window, this->currentBrowserRow, position, "|");
         position++;
     }
     this->currentBrowserRow++;
-    wrefresh(this->browser);
-
 }
 const char * FlacDemonInterface::formatValue(std::string value, int max){
     if(value.length() > max){
@@ -433,8 +449,12 @@ void FlacDemonInterface::parseLibraryUpdate(std::string *response){
     this->library.sort("artist");
     this->event(fd_interface_printlibrary);
 }
-void FlacDemonInterface::changeOffset(int diff){
-    if( diff != 0 ){
+void FlacDemonInterface::changeOffset(int diff, bool absolute){
+    if(absolute){
+        this->browserOffset = diff;
+        diff = 0;
+    }
+    if( diff != 0 || absolute ){
         if( ( (long)this->browserOffset + diff ) < 0 )
             this->browserOffset = 0;
         else if ( ( this->browserOffset + diff + this->browserRows ) > this->library.count() )

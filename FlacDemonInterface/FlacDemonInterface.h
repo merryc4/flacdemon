@@ -58,9 +58,10 @@ private:
     std::mutex eventMutex;    
     std::condition_variable eventCV;
     
-    WINDOW *browser;
-    WINDOW *commandWindow;
-    WINDOW* playbackWindow;
+    WINDOW * browserWindow;
+    WINDOW * browserHeaderWindow;
+    WINDOW * commandWindow;
+    WINDOW * playbackWindow;
     
     FlacDemon::Library library;
     
@@ -97,6 +98,7 @@ public:
     FlacDemonInterface();
     ~FlacDemonInterface();
     void initialize();
+    WINDOW * nextwin( size_t rowSize , size_t * row = nullptr);
     void connect();
     void retryConnect();
     void onConnect();
@@ -110,7 +112,7 @@ public:
     void escapeHandler();
     void printLibrary(int offset);
     void printLibraryHeaders();
-    void printLibraryLine(std::vector< std:: string > * values);
+    void printLibraryLine( WINDOW * window , std::vector< std:: string > * values);
     CommandType checkCommand(std::string * icommand);
     void parseCommand(std::string * iCommand);
     void sendCommand(const char * command);
@@ -120,7 +122,7 @@ public:
     std::string removeCommandFromResponse(std::string * response);
     const char * formatValue(std::string value, int max);
     void parseLibraryUpdate(std::string * response);
-    void changeOffset(int diff);
+    void changeOffset(int diff, bool absolute = false);
     void setNowPlaying(std::string ID);
     void printNowPlaying();
     void printCommand();
