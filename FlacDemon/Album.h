@@ -18,7 +18,7 @@ private:
     
 public:
     string* path;
-    vector<FlacDemon::Track*> * tracks;
+    std::vector<FlacDemon::Track*> * tracks;
     unsigned long trackCount;
     
     bool multipleArtists;

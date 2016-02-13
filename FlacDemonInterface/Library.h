@@ -17,6 +17,7 @@
 #include "TrackListing.h"
 #include "Group.h"
 #include "TrackSorter.h"
+#include "Album.h"
 
 #include <algorithm>
 
@@ -25,6 +26,7 @@
 class FlacDemon::Library{
 private:
     std::map < std::string, FlacDemon::TrackListing * > tracks;
+    std::map < std::string, FlacDemon::Album * > albums;
     fd_tracklistingvector sortedTracks;
     std::string currentSortKey;
     
@@ -37,7 +39,7 @@ private:
     void startSearchThread();
     void runSearchThread();
     void setSearchDelayTime(int time);
-    void setSearchString(std::string search);
+    bool setSearchString(std::string searchStr);
     
 protected:
 public:
@@ -50,7 +52,7 @@ public:
     void addTrackListing( FlacDemon::TrackListing * tracklisting );
     void addTrackListing( fd_keymap * keymap );
     void sort( std::string sortKey );
-    void search(std::string search);
+    void search(std::string searchStr);
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);
     fd_tracklistingvector * allTracks();

@@ -9,7 +9,7 @@
 #include "Album.h"
 
 FlacDemon::Album::Album(){
-    this->tracks = new vector<FlacDemon::Track*>;
+    this->tracks = new std::vector<FlacDemon::Track*>;
     this->trackCount = 0;
     this->multipleArtists = false;
     this->metadataInconsistency = false;

@@ -25,6 +25,7 @@
 #include <future>
 #include <queue>
 #include <condition_variable>
+#include <iostream>
 
 #include "FlacDemonUtils.h"
 #include "TrackListing.h"
@@ -37,6 +38,13 @@
 #define fd_interface_printplaying   1 << 4
 #define fd_interface_playbackprogress 1 << 5
 #define fd_interface_printprogress  1 << 6
+
+enum CommandType {
+    no_command,
+    remote_command,
+    local_command,
+    search_command
+};
 
 using std::cout;
 using std::endl;
@@ -67,17 +75,22 @@ private:
     size_t commandCursorPosition;
     size_t commandCursorDefault;
     
+    CommandType commandType;
     std::string commandPrompt;
+    std::string searchPrompt;
+    std::string userCommand;
+    std::string commandWord;
+    std::string commandArgs;
     
     bool fetchedLibrary;
     bool killResponseThread;
     bool isSearch;
     bool typeSearch;
     
+    
     FlacDemon::TrackListing * nowPlaying;
     float progress;
     
-    std::string command;
 protected:
     
 public:
@@ -92,10 +105,13 @@ public:
     void event(unsigned long rlflags = 0);
     void setRunLoopFlags(unsigned long flags);
     void userInputLoop();
+    void trySearch();
+    void clearSearch();
+    void escapeHandler();
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine(std::vector< std:: string > * values);
-    bool checkCommand(std::string * command);
+    CommandType checkCommand(std::string * icommand);
     void parseCommand(std::string * iCommand);
     void sendCommand(const char * command);
     void readResponse();

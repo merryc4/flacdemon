@@ -8,8 +8,9 @@
 
 #include "FlacDemonInterface.h"
 
-fd_stringvector * libraryTitles = new fd_stringvector{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount"};
-fd_stringvector * commands = new fd_stringvector{"add", "play", "stop", "get"};
+fd_stringvector * libraryTitles = new fd_stringvector{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount", "Verified"};
+fd_stringvector * remoteCommands = new fd_stringvector{"add", "play", "stop", "get"};
+fd_stringvector * localCommands = new fd_stringvector{"search, sort"};
 std::map< std::string , unsigned long > * commandFlags = new std::map < std::string , unsigned long >{
     { "get all" , fd_interface_libraryupdate },
     { "playing" , fd_interface_playing },
@@ -29,6 +30,10 @@ FlacDemonInterface::FlacDemonInterface(){
     this->isSearch = false;
     this->typeSearch = false;
     this->browserOffset = 0;
+    this->userCommand = "";
+    this->commandWord = "";
+    this->commandArgs = "";
+    this->commandType = no_command;
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -126,29 +131,56 @@ void FlacDemonInterface::onConnect(){
     this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
 
 }
-bool FlacDemonInterface::checkCommand(std::string *command){
-    std::istringstream iss(*command);
-    std::string commandword;
-    iss >> commandword;
-    if(commandword == "s" || commandword == "search"){
-        return false;
+CommandType FlacDemonInterface::checkCommand(std::string * icommand){
+    std::istringstream iss(*icommand);
+    iss >> this->commandWord;
+    std::getline(iss, this->commandArgs);
+    if( iss.fail() || iss.bad() ){
+        this->commandArgs = "";
     }
-    for(fd_stringvector::iterator it = commands->begin(); it != commands->end(); it++){
-        if ( it->find(commandword) != std::string::npos ) {
-            return true;
+//    std::basic_ios<char>::iostate state = iss.rdstate();
+//    cout << "iss state: " << state << endl;
+//    if(iss.eof()){
+//        cout << "iss eof" << endl;
+//    }
+//    if(iss.bad()){
+//        cout << "iss bad" << endl;
+//    }
+//    if(iss.fail()){
+//        cout << "iss fail" << endl;
+//    }
+    if(this->commandWord == "s" || this->commandWord == "search"){
+        return search_command;
+    }
+    for(fd_stringvector::iterator it = remoteCommands->begin(); it != remoteCommands->end(); it++){
+        if ( it->find(this->commandWord) != std::string::npos ) {
+            return remote_command;
         }
     }
-    return false;
+    for(fd_stringvector::iterator it = localCommands->begin(); it != localCommands->end(); it++){
+        if ( it->find(this->commandWord) != std::string::npos ) {
+            return local_command;
+        }
+    }
+    return no_command;
 }
 void FlacDemonInterface::parseCommand(std::string *iCommand){
     //check some stuff
-    this->sendCommand(iCommand->c_str());
+    if(this->typeSearch){
+        this->typeSearch = false;
+        return;
+    }
+    if(this->commandType == local_command){
+        
+    } else if( this->commandType == remote_command){
+        this->sendCommand(iCommand->c_str());
+    }
 }
-void FlacDemonInterface::sendCommand(const char * command){
+void FlacDemonInterface::sendCommand(const char * icommand){
     if(this->socketFileDescriptor < STDERR_FILENO){
         return;
     }
-    ssize_t n = send(this->socketFileDescriptor,command,strlen(command), 0);
+    ssize_t n = send(this->socketFileDescriptor,icommand,strlen(icommand), 0);
     if (n < 0){
         std::cout << "ERROR writing to socket" << std::endl;
         //end socket
@@ -192,10 +224,10 @@ void FlacDemonInterface::readResponse(){
 }
 void FlacDemonInterface::parseResponse(std::string response){
 //    cout << response << endl;
-    std::string command = this->parseCommandFromResponse(&response);
-    std::cout << "Got response for command \"" << command << "\"" << std::endl;
-    if(commandFlags->count(command)){
-        switch (commandFlags->at(command)) {
+    std::string tcommand = this->parseCommandFromResponse(&response);
+    std::cout << "Got response for command \"" << tcommand << "\"" << std::endl;
+    if(commandFlags->count(tcommand)){
+        switch (commandFlags->at(tcommand)) {
             case fd_interface_libraryupdate:
                 this->parseLibraryUpdate(&response);
                 break;
@@ -273,51 +305,77 @@ void FlacDemonInterface::setRunLoopFlags(unsigned long rlflags){
 }
 void FlacDemonInterface::userInputLoop(){
     cout << "user input thread running " << endl;
+    char ch;
+    int c;
     while(true){
-        char c = getch();
+        c = getch();
         cout << "got char " << c << ". numeric: " << (int)c << endl;
         switch (c) {
-            case 2: //down
+            case KEY_DOWN: //down
                 this->changeOffset(1);
                 break;
-            case 3: //up
+            case KEY_UP: //up
                 this->changeOffset(-1);
                 break;
-            case 82: //page down
+            case KEY_PPAGE: //page down
                 this->changeOffset(this->browserRows);
                 break;
-            case 83: //page down
+            case KEY_NPAGE: //page down
                 this->changeOffset(( 0 - this->browserRows ));
                 break;
+            case 27: //esc
+                this->escapeHandler();
+                break;
+            case 5: //^E
+                this->escapeHandler();
+                break;
             case 10: //Enter
-                this->parseCommand(&this->command);
-                this->command.clear();
+                this->parseCommand(&this->userCommand);
+                this->userCommand.clear();
                 break;
             case 127: //backspace
-                this->command.pop_back();
+                this->userCommand.pop_back();
                 break;
             
             default:
-                this->command.append(&c, 1);
+                ch = (char)c;
+                this->userCommand.append(&ch, 1);
                 break;
         }
+        this->commandCursorPosition = this->commandCursorDefault + this->userCommand.length();
         this->event(fd_interface_printcommand);
-        if(this->command.length() > 2 ){
-            if( !( this->checkCommand(&this->command) )){
-                this->typeSearch = true;
-                std::string search = this->command;
-                if(!fd_strreplace(&search, "search ", ""))
-                    fd_strreplace(&search, "s ", "");
-                this->library.search(search);
-                this->isSearch = true;
-                new std::thread(&FlacDemonInterface::waitForSearch, this);
-            }
-        } else if ( this->typeSearch ){
-            this->isSearch = false;
-            this->typeSearch = false;
-            this->event(fd_interface_printlibrary);
-        }
+        this->commandType = this->checkCommand(&this->userCommand);
+        this->trySearch();
+
     }
+}
+void FlacDemonInterface::trySearch(){
+    std::string search = "";
+    if(this->commandType == search_command){
+        search = this->commandArgs;
+    } else if( this->commandType == no_command ){
+        search = this->userCommand;
+    }
+    if(search.length() > 2 ){
+        this->typeSearch = true;
+        this->library.search(search);
+        this->isSearch = true;
+        new std::thread(&FlacDemonInterface::waitForSearch, this);
+    } else if ( this->typeSearch ){
+        this->clearSearch();
+    }
+}
+void FlacDemonInterface::clearSearch(){
+    this->isSearch = false;
+    this->typeSearch = false;
+    this->event(fd_interface_printlibrary);
+}
+void FlacDemonInterface::escapeHandler(){
+    if(this->isSearch && !this->typeSearch){
+        this->clearSearch();
+        return;
+    }
+    this->userCommand.clear();
 }
 void FlacDemonInterface::printLibrary(int offset = 0){
 //    cout << "printing library" << endl;
@@ -409,14 +467,19 @@ void FlacDemonInterface::printNowPlaying(){
 }
 void FlacDemonInterface::printCommand(){
 //    cout << "printing command " << this->command << endl;
-    mvwprintw(this->commandWindow, 0, 0, "%s%s", this->commandPrompt.c_str(), this->command.c_str());
+    if(this->isSearch && !this->typeSearch)
+        this->searchPrompt = "(^E to cancel current search)";
+    else
+        this->searchPrompt = "";
+    mvwprintw(this->commandWindow, 0, 0, "%s%s", this->commandPrompt.c_str(), this->userCommand.c_str());
     wclrtoeol(this->commandWindow);
+    mvwprintw(this->commandWindow, 0, this->maxColumns - this->searchPrompt.length(), "%s", this->searchPrompt.c_str());
     wrefresh(this->commandWindow);
 
 //    this->setCommandCursor();
 }
 void FlacDemonInterface::setCommandCursor(){
-    wmove(this->commandWindow, (int)this->commandCursorPosition, 0);
+    wmove(this->commandWindow, 0, (int)this->commandCursorPosition);
     wrefresh(this->commandWindow);
 }
 void FlacDemonInterface::printProgress(){
@@ -442,5 +505,6 @@ void FlacDemonInterface::waitForSearch(){
         usleep(100);
     }
     cout << "search wait over" << endl;
+
     this->event(fd_interface_printlibrary);
 }

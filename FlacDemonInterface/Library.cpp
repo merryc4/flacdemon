@@ -46,8 +46,9 @@ void FlacDemon::Library::sort( std::string sortKey ){
     TrackSorter tracksorter( sortKey );
     std::sort(this->sortedTracks.begin(), this->sortedTracks.end(), tracksorter);
 }
-void FlacDemon::Library::search(std::string search){
-    this->setSearchString(search);
+void FlacDemon::Library::search(std::string searchStr){
+    if( ! this->setSearchString(searchStr) )
+        return;
     this->searching = true;
     bool newSearch = ( this->searchDelayTime <= 0 );
     this->setSearchDelayTime(FLACDEMON_LIBRARY_SEARCH_DELAY);
@@ -70,6 +71,7 @@ void FlacDemon::Library::runSearchThread(){
         it->second->compareSearchStrings(&components, true);
     }
     this->searching = false;
+    this->searchString = "";
     this->searchMutex.unlock();
 }
 void FlacDemon::Library::setSearchDelayTime(int time){
@@ -77,10 +79,12 @@ void FlacDemon::Library::setSearchDelayTime(int time){
     this->searchDelayTime = time;
     this->searchMutex.unlock();
 }
-void FlacDemon::Library::setSearchString(std::string search){
+bool FlacDemon::Library::setSearchString(std::string searchStr){
     this->searchMutex.lock();
-    this->searchString = search;
+    bool diff = (this->searchString != searchStr);
+    this->searchString = searchStr;
     this->searchMutex.unlock();
+    return diff;
 }
 FlacDemon::TrackListing * FlacDemon::Library::trackListingForID(std::string ID){
     if(this->tracks.count(ID) == 0){
