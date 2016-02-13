@@ -13,6 +13,10 @@
 #define unset_flag this->flags = this->flags & ~
 #define has_flag this->flags &
 
+#define iset_flag(_flags, _flag) _flags = _flags | _flag
+#define iunset_flag(_flags, _flag) _flags = _flags & ~ _flag
+#define ihas_flag(_flags, _flag) _flags & _flag
+
 #include "FlacDemonNameSpace.h"
 
 typedef std::pair < std::string, std::string * > fd_keypair;

@@ -22,6 +22,9 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "ncurses.h"
+#include <future>
+#include <queue>
+#include <condition_variable>
 
 #include "FlacDemonUtils.h"
 #include "TrackListing.h"
@@ -45,6 +48,9 @@ private:
     std::thread * retryConnectThread;
 //    std::mutex socketMutex;
     std::mutex eventMutex;
+    std::promise < unsigned long  > * eventPromise;
+    
+    std::condition_variable eventCV;
     
     WINDOW *browser;
     WINDOW *commandWindow;
@@ -82,6 +88,7 @@ public:
     void retryConnect();
     void onConnect();
     void run();
+    void printFlags();
     void event(unsigned long rlflags = 0);
     void setRunLoopFlags(unsigned long flags);
     void userInputLoop();

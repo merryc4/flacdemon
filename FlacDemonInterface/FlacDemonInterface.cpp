@@ -28,6 +28,8 @@ FlacDemonInterface::FlacDemonInterface(){
     this->progress = 0;
     this->isSearch = false;
     this->typeSearch = false;
+    this->eventPromise = new std::promise < unsigned long >();
+
 //    this->initialize();
 }
 FlacDemonInterface::~FlacDemonInterface(){
@@ -233,28 +235,38 @@ std::string FlacDemonInterface::removeCommandFromResponse(std::string * response
 }
 void FlacDemonInterface::run(){
     new std::thread(&FlacDemonInterface::userInputLoop, this);
-    std::string* input = new std::string();
+
     do{
-        this->eventMutex.lock();
-        if(has_flag fd_interface_printlibrary){
-            this->printLibrary(0);
-        }
-        if(has_flag fd_interface_printcommand){
-            this->printCommand();
-        }
-        if(has_flag fd_interface_printplaying){
-            this->printNowPlaying();
-        }
-        if(has_flag fd_interface_printprogress){
-            this->printProgress();
-        }
-        this->flags = 0;
-        this->setCommandCursor();
+        this->printFlags();
     }while(1);
 }
+void FlacDemonInterface::printFlags(){
+    std::unique_lock < std::mutex > lock ( this->eventMutex );
+    this->eventCV.wait( lock );
+    if(ihas_flag(this->flags, fd_interface_printlibrary)){
+        cout << "printing library" << endl;
+        this->printLibrary(0);
+    }
+    if(ihas_flag(this->flags, fd_interface_printcommand)){
+        cout << "printing command" << endl;
+        this->printCommand();
+    }
+    if(ihas_flag(this->flags, fd_interface_printplaying)){
+        cout << "printing now playing" << endl;
+        this->printNowPlaying();
+    }
+    if(ihas_flag(this->flags, fd_interface_printprogress)){
+        cout << "printing progress" << endl;
+        this->printProgress();
+    }
+    this->flags = 0;
+    this->setCommandCursor();
+}
 void FlacDemonInterface::event(unsigned long rlflags){
+    std::lock_guard<std::mutex> lock( this->eventMutex );
+    cout << "event: " << rlflags << endl;
     set_flag rlflags;
-    this->eventMutex.unlock();
+    this->eventCV.notify_one();
 }
 void FlacDemonInterface::setRunLoopFlags(unsigned long rlflags){
     set_flag rlflags;
@@ -278,7 +290,7 @@ void FlacDemonInterface::userInputLoop(){
                 break;
         }
         this->event(fd_interface_printcommand);
-        if(this->command.length() > 1 ){
+        if(this->command.length() > 2 ){
             if( !( this->checkCommand(&this->command) )){
                 this->typeSearch = true;
                 std::string search = this->command;
@@ -400,8 +412,10 @@ void FlacDemonInterface::printProgress(){
     wrefresh(this->playbackWindow);
 }
 void FlacDemonInterface::waitForSearch(){
+    cout << "waiting for library search" << endl;
     while (this->library.searching) {
         usleep(100);
     }
+    cout << "search wait over" << endl;
     this->event(fd_interface_printlibrary);
 }
