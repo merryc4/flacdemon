@@ -14,6 +14,7 @@
 #include <sstream>
 #include <regex>
 #include <iostream>
+#include <fstream>
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
@@ -23,5 +24,9 @@
 #include <uuid/uuid.h>
 #include <mba/diff.h>
 #include <thread>
+
+using std::cout;
+using std::cin;
+using std::endl;
 
 #endif

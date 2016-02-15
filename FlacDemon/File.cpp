@@ -266,7 +266,9 @@ void FlacDemon::File::checkFileStructure(){
             }
         }
     }
-//    cout << endl;
+    if(std::find( this->inconsistentMetadata->begin(), this->inconsistentMetadata->end(), std::string("artist") ) != this->inconsistentMetadata->end() ){
+        set_flag FLACDEMON_ALBUM_HAS_MULTIPLE_ARTISTS;
+    }
     
     if(artistConsistency){
         if(albumConsistency){

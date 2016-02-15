@@ -46,8 +46,8 @@ void FlacDemon::Library::sort( std::string sortKey ){
     TrackSorter tracksorter( sortKey );
     std::sort(this->sortedTracks.begin(), this->sortedTracks.end(), tracksorter);
 }
-void FlacDemon::Library::search(std::string searchStr){
-    if( ! this->setSearchString(searchStr) )
+void FlacDemon::Library::search( fd_stringvector terms ){
+    if( ! this->setSearchTerms( terms ) )
         return;
     this->searching = true;
     bool newSearch = ( this->searchDelayTime <= 0 );
@@ -66,12 +66,11 @@ void FlacDemon::Library::startSearchThread(){
 }
 void FlacDemon::Library::runSearchThread(){
     this->searchMutex.lock();
-    fd_stringvector components = fd_splitstring(&searchString, " ");
     for(std::map < std::string , FlacDemon::TrackListing * >::iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
-        it->second->compareSearchStrings(&components, true);
+        it->second->compareSearchStrings(&this->searchTerms, true);
     }
     this->searching = false;
-    this->searchString = "";
+    this->searchTerms.clear();
     this->searchMutex.unlock();
 }
 void FlacDemon::Library::setSearchDelayTime(int time){
@@ -79,10 +78,10 @@ void FlacDemon::Library::setSearchDelayTime(int time){
     this->searchDelayTime = time;
     this->searchMutex.unlock();
 }
-bool FlacDemon::Library::setSearchString(std::string searchStr){
+bool FlacDemon::Library::setSearchTerms( fd_stringvector terms ){
     this->searchMutex.lock();
-    bool diff = (this->searchString != searchStr);
-    this->searchString = searchStr;
+    bool diff = (this->searchTerms != terms);
+    this->searchTerms = terms;
     this->searchMutex.unlock();
     return diff;
 }

@@ -91,16 +91,21 @@ int compareCharacters(const void * c1, const void * c2, void * context){
 void fd_tolowercase(std::string * str){
     transform(str->begin(), str->end(), str->begin(), ::tolower);
 }
-int fd_strreplace(std::string * str, std::string * search, std::string * replace){
-    return fd_strreplace(str, search->c_str(), replace->c_str());
+int fd_strreplace(std::string * str, std::string * search, std::string * replace, bool global ){
+    return fd_strreplace(str, search->c_str(), replace->c_str() , global );
 }
-int fd_strreplace(std::string * str, const char * search, const char * replace){
-    size_t pos = str->find(search);
-    if(pos == std::string::npos)
-        return 0;
-    str->erase(pos, strlen(search));
-    str->insert(pos, replace);
-    return 1;
+int fd_strreplace(std::string * str, const char * search, const char * replace, bool global ){
+    size_t pos = 0;
+    int matches = 0;
+    do {
+        pos = str->find(search);
+        if(pos == std::string::npos)
+            break;
+        str->erase(pos, strlen(search));
+        str->insert(pos, replace);
+        matches++;
+    } while ( global );
+    return matches;
 }
 int fd_strnumbercompare(std::string * str1, std::string * str2){
     int value1, value2, rvalue = 0;

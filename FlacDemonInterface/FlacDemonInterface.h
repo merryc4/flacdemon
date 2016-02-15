@@ -9,27 +9,19 @@
 #ifndef __FlacDemon__FlacDemonInterface__
 #define __FlacDemon__FlacDemonInterface__
 
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <vector>
-#include <string>
-#include <thread>
+#include "includes.h"
 
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include "ncurses.h"
-#include <future>
-#include <queue>
 #include <condition_variable>
-#include <iostream>
 
 #include "FlacDemonUtils.h"
 #include "TrackListing.h"
 #include "Library.h"
+#include "CommandParser.h"
 
 #define fd_interface_printlibrary   1 << 0
 #define fd_interface_libraryupdate  1 << 1
@@ -38,13 +30,6 @@
 #define fd_interface_printplaying   1 << 4
 #define fd_interface_playbackprogress 1 << 5
 #define fd_interface_printprogress  1 << 6
-
-enum CommandType {
-    no_command,
-    remote_command,
-    local_command,
-    search_command
-};
 
 using std::cout;
 using std::endl;
@@ -71,17 +56,15 @@ private:
     int maxRows;
     int browserRows;
     int currentBrowserRow;
-    uint browserOffset;
+    size_t browserOffset;
 
     size_t commandCursorPosition;
     size_t commandCursorDefault;
     
-    CommandType commandType;
+    FlacDemon::CommandParser commandParser;
     std::string commandPrompt;
     std::string searchPrompt;
     std::string userCommand;
-    std::string commandWord;
-    std::string commandArgs;
     
     bool fetchedLibrary;
     bool killResponseThread;
@@ -113,8 +96,7 @@ public:
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine( WINDOW * window , std::vector< std:: string > * values);
-    CommandType checkCommand(std::string * icommand);
-    void parseCommand(std::string * iCommand);
+    void callCommand( const char * signal, void * args );
     void sendCommand(const char * command);
     void readResponse();
     void parseResponse(std::string response);

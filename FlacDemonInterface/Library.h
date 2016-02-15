@@ -34,12 +34,12 @@ private:
     
     std::thread * searchThread;
     int searchDelayTime;
-    std::string searchString;
+    fd_stringvector searchTerms;
     
     void startSearchThread();
     void runSearchThread();
     void setSearchDelayTime(int time);
-    bool setSearchString(std::string searchStr);
+    bool setSearchTerms( fd_stringvector terms );
     
 protected:
 public:
@@ -52,7 +52,7 @@ public:
     void addTrackListing( FlacDemon::TrackListing * tracklisting );
     void addTrackListing( fd_keymap * keymap );
     void sort( std::string sortKey );
-    void search(std::string searchStr);
+    void search( fd_stringvector terms );
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);
     fd_tracklistingvector * allTracks();

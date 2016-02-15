@@ -11,35 +11,43 @@
 
 #include <iostream>
 #include "FlacDemonAll.h"
-#include "FlacDemon.h"
 
-typedef enum {
+enum FDInterfaceMethods {
     FDInterfaceStartIterate = 1,
     FDInterfaceCommandLine = 1,
     FDInterfaceSocket = 2,
     FDInterfaceMaxIterate = 4
-} FDInterfaceMethods;
+};
+
+enum CommandType {
+    no_command,
+    remote_command,
+    local_command,
+    search_command
+};
 
 class FlacDemon::CommandParser {
 protected:
     int availableInterfaces;
-    
-    std::vector<string>*commands;
-    std::map<string, demonCommandFunction>* commandMap;
-    FlacDemon::Demon *demon;
-
+    size_t historySize;
+    fd_stringvector history;
 public:
+    
+    CommandType commandType;
+    std::string commandWord;
+    std::string commandArgs;
+    fd_stringvector currentArgs;
+    
     CommandParser();
     ~CommandParser();
 
     void signalReceiver(const char * signalName, void * arg);
 
-    void startCommandThreads();
     void getCommand();
-    string* getInput();
-    void checkSocketsLoop();
-    void parseCommand(string* command);
-    void setMapForDemon(FlacDemon::Demon*, std::map<string, demonCommandFunction>*);
+    std::string * getInput();
+    void parseCommand( std::string* icommand , bool run = true );
+    CommandType checkCommand();
+    void historyPush ( std::string * icommand );
 };
 
 #endif /* defined(__FlacDemon__CommandParser__) */

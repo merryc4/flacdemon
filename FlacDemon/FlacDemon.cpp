@@ -22,13 +22,15 @@ FlacDemon::Demon::Demon() {
     
     this->player->setDatabase(this->database);
     
-    this->commandParser->setMapForDemon(this, new std::map<string, demonCommandFunction>{
+    this->commandMap = new std::map< std::string, demonCommandFunction >{
         {"add", &FlacDemon::Demon::add},
         {"play", &FlacDemon::Demon::play},
         {"stop", &FlacDemon::Demon::stop},
         {"set", &FlacDemon::Demon::set},
         {"get", &FlacDemon::Demon::get}
-    });
+    };
+    auto f = boost::bind( &FlacDemon::Demon::callCommandHandler, this, _1, _2);
+    signalHandler->signals("callCommand")->connect(f);
 }
 FlacDemon::Demon::~Demon() {
 	cout << "Deleting FlacDemon\n";
@@ -45,12 +47,21 @@ void FlacDemon::Demon::run() {
 		usleep(100); //revise sleep length
 	}
 }
-int FlacDemon::Demon::add(vector<string> * args){
+void FlacDemon::Demon::callCommandHandler( const char * signal , void * arg ){
+    fd_stringvector * args = ( fd_stringvector * )arg;
+    std::string command = args->at(1);
+    if( this->commandMap->count( command ) ){
+        demonCommandFunction f = this->commandMap->at( command );
+        (this->*f)(args);
+    }
+}
+int FlacDemon::Demon::add( fd_stringvector * args ){
     cout << "add some files" << endl;
-    for(vector<string>::iterator it = (args->begin() + 1); it != args->end(); it++){
-        std::string * path = new std::string(*it);
-        this->fileImporter->importFilesFromPath(path);
-        delete path;
+    if( args->size() < 3 ) return -1;
+    std::string path;
+    for(vector<string>::iterator it = (args->begin() + 2); it != args->end(); it++){
+        path = *it;
+        this->fileImporter->importFilesFromPath(&path);
     }
     return 0;
 }
@@ -58,8 +69,8 @@ int FlacDemon::Demon::play(vector<string> * args){
     
     cout << "play some tunes" << endl;
     long ID = 1;
-    if(args && args->size() > 1){
-        ID = std::strtol((*args)[1].c_str(), nullptr, 0);
+    if(args && args->size() > 2){
+        ID = std::strtol((*args)[2].c_str(), nullptr, 0);
     }
     this->player->playTrackWithID(ID);
     return 0;
@@ -70,18 +81,18 @@ int FlacDemon::Demon::stop(vector<string> * args){
     return 0;
 }
 int FlacDemon::Demon::set(vector<string> * args){
-    if(args->size() < 4){
+    if(args->size() < 5){
         cout << "command error: incorrect arguments" << endl;
         return 1;
     }
 
     int id;
-    if(fd_stringtoint(&(*args)[1], &id)){
+    if(fd_stringtoint(&(*args)[2], &id)){
         cout << "command error : unknown id: " << (*args)[0] << endl;
         return 1;
     }
-    std::string metaTagName = (*args)[2];
-    std::string metaTagValue = (*args)[3];
+    std::string metaTagName = (*args)[3];
+    std::string metaTagValue = (*args)[4];
     
     this->database->setValue(id, &metaTagName, &metaTagValue);
     

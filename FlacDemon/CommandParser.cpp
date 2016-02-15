@@ -8,8 +8,10 @@
 
 #include "CommandParser.h"
 
+fd_stringvector * remoteCommands = new fd_stringvector{"add", "play", "stop", "get"};
+fd_stringvector * localCommands = new fd_stringvector{"search, sort"};
+
 FlacDemon::CommandParser::CommandParser(){
-    this->commands = new std::vector<std::string>;
     this->availableInterfaces = FDInterfaceCommandLine;
     
     auto f = boost::bind(&FlacDemon::CommandParser::signalReceiver, this, _1, _2);
@@ -29,119 +31,103 @@ void FlacDemon::CommandParser::signalReceiver(const char * signalName, void * ar
         this->parseCommand(&command);
     }
 }
-void FlacDemon::CommandParser::startCommandThreads(){
-//    for(int i = FDInterfaceStartIterate; i < FDInterfaceMaxIterate; i = (i << 1)){
-//        if(i & this->availableInterfaces){
-//            
-//        }
-//    }
-    if(this->availableInterfaces & FDInterfaceCommandLine){
-        //happens on main thread
-    }
-    if(this->availableInterfaces & FDInterfaceSocket){
-        
-    }
-}
 void FlacDemon::CommandParser::getCommand() {
     std::string * cmd = this->getInput();
     this->parseCommand(cmd);
-    std::string * results = sessionManager->getSession()->getString(cmd);
-    if(results)
-        cout << *results << endl;
 }
 string* FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";
     std::string* input = new std::string();
-    getline(cin >> ws, *input);
+    getline(std::cin >> std::ws, *input);
 	return input;
 }
-void FlacDemon::CommandParser::checkSocketsLoop(){
-    
-}
-void FlacDemon::CommandParser::parseCommand(string* command) {
-	if (!command->length())
+void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) {
+	if (!icommand->length())
 		return;
-    command = new std::string(*command);
-    while(command->back() == '\n'){
-        command->pop_back();
+    std::string * tcommand = new std::string( *icommand );
+    while(tcommand->back() == '\n'){
+        tcommand->pop_back();
     }
+    fd_strreplace(tcommand, "\t", " ");
+    fd_strreplace(tcommand, "\n", " ");
+    fd_strreplace(tcommand, "\r", " ");
+    while(fd_strreplace(tcommand, "  ", " ")){};
     
-	unsigned long pos = 0, skip;
-	string word, *commandWord = nullptr;
-    vector<string> args;
-    std::map<string, demonCommandFunction>::iterator it;
+    if( run )
+        this->history.push_back(*tcommand);
+
     
-    std::regex reg("[\\s\\'\\\"]");
+	unsigned long pos = 0, skip = 0;
+    std::string word;
+    fd_stringvector args;
+    
+    std::regex reg("([\\'\\\"]).*?\\1(?=\\s|$)");
     std::regex reg2 = reg;
-    std::match_results<std::string::iterator> regmatch;
+    std::smatch regmatch;
+//    std::match_results<std::string::iterator> regmatch;
 
     bool matchQuote = false;
     
-    std::string::iterator last = command->end();
-    std::string::iterator first;
     
-    args.push_back(*command);
+    args.push_back(*tcommand);
     
     do {
-        first = command->begin();
         skip = 0;
-        if(regex_search(first, last, regmatch, reg2)){
-            pos = regmatch.position();
-            if(regmatch.str().compare(" ")){
-                if(matchQuote){
-                    matchQuote = false;
-                    skip = 1;
-                    reg2 = reg;
-                } else {
-                    reg2 = regmatch.str();
-                    matchQuote = true;
-                }
-            } else if(matchQuote){
-                continue;
-            }
-            
-        } else {
-			pos = command->length();
-		}
+        while(tcommand->front() == ' '){
+            tcommand->erase(0, 1);
+        }
+        //        cout << "parse command regex search. first: " << *first << " last: " << *last << endl;
+        if(regex_search(*tcommand, regmatch, reg, std::regex_constants::match_continuous )){
+            cout << "regex matched" << endl;
+            pos = regmatch.length();
+            skip = 1;
+        } else if ( ( pos = tcommand->find(" ")) == std::string::npos ){
+            pos = tcommand->length();
+        }
         
-        if(pos == 0)
-            pos++;
-        
-        if(pos > command->length())
+        if(pos > tcommand->length())
             break;
         
-		word = command->substr(0, pos);
-		*command = command->substr(pos+skip, (unsigned long int)(command->length() - (pos+skip)));
+        word = tcommand->substr( skip, pos - 2 * skip );
+        tcommand->erase(0, pos);
         
-        pos -= word.length();
-        
-        if(word.compare(" ") == 0 || matchQuote){
+        if( word.compare(" ") == 0 ){
             continue;
         }
         
-        if(!commandWord){
-            if((it = this->commandMap->find(word)) != this->commandMap->end()){
-                commandWord = new string(word);
-                cout << "command is '" << word << "'" << endl;                
-            } else {
-                cout << "command '" << word << "' is unknown" << endl;
-                delete command;
-                return;
-            }
-        } else {
-            args.push_back(word);
-            cout << "argument: " << word << endl;
+        if( args.size() == 0 ){
+            this->commandWord = word;
+            this->commandArgs = *tcommand;
         }
         
-	} while (pos < command->length());
-    
-    if(it->second){
-        (this->demon->*it->second)(&args);
+        args.push_back(word);
+        
+        
+    } while ( tcommand->length() );
+    this->currentArgs = args;
+    this->checkCommand();
+    if( run ) {
+        signalHandler->call("callCommand", &args);
     }
-    delete command;
+    delete tcommand;
     
 }
-void FlacDemon::CommandParser::setMapForDemon(FlacDemon::Demon* iDemon, std::map<string, demonCommandFunction>* iMap){
-    this->commandMap = iMap;
-    this->demon = iDemon;
+CommandType FlacDemon::CommandParser::checkCommand(){
+    if(this->commandWord == "s" || this->commandWord == "search"){
+        return ( this->commandType = search_command );
+    }
+    for(fd_stringvector::iterator it = remoteCommands->begin(); it != remoteCommands->end(); it++){
+        if ( it->find(this->commandWord) != std::string::npos ) {
+            return ( this->commandType = remote_command );
+        }
+    }
+    for(fd_stringvector::iterator it = localCommands->begin(); it != localCommands->end(); it++){
+        if ( it->find(this->commandWord) != std::string::npos ) {
+            return ( this->commandType = local_command );
+        }
+    }
+    return ( this-> commandType = no_command );
+}
+void FlacDemon::CommandParser::historyPush ( std::string * icommand ) {
+    this->history.push_back( *icommand );
 }

@@ -34,6 +34,7 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_DIRECTORY_IS_DISC                 256
 #define FLACDEMON_IS_TAG_SIMILARITY_ALBUM_DIRECTORY 512
 #define FLACDEMON_FILECOUNT_IS_ABOVE_THRESHOLD      1024
+#define FLACDEMON_ALBUM_HAS_MULTIPLE_ARTISTS        2048
 
 /* Error Flags */
 #define FLACDEMON_TRACKNUMBER_MISMATCH          1
@@ -50,8 +51,10 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_FILENAME_MATCHES_ALBUM        512
 #define FLACDEMON_FILENAME_MATCHES_ARTIST       1024
 #define FLACDEMON_FILENAME_MATCHES_ALBUMARTIST  2048
+#define FLACDEMON_ALBUMARTIST_IS_INCORRECT      4096
 
-#define FLACDEMON_FILECOUNT_THRESHOLD   100
+/* filecount threshold */
+#define FLACDEMON_FILECOUNT_THRESHOLD           100
 
 // flag accessors
 #define set_flag this->flags = this->flags |

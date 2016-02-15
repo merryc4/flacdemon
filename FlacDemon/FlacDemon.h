@@ -17,7 +17,7 @@
 #include "Player.h"
 #include "TCPHandler.h"
 #include "Session.h"
-
+#include "includes.h"
 #include "tests.h"
 
 enum flacdemonInterfaceMode {
@@ -31,6 +31,10 @@ using namespace std;
 class FlacDemon::Demon {
     friend FlacDemon::CommandParser;
 private:
+    
+    std::map< std::string, demonCommandFunction > * commandMap;
+    
+    void callCommandHandler( const char * signal, void * arg );
 
 protected:
     vector<string>* commands;
@@ -48,11 +52,11 @@ public:
     ~Demon();
     
     void run();
-    int add(vector<string>* args);
-    int play(vector<string>* args);
-    int stop(vector<string>* args);
-    int set(vector<string>* args);
-    int get(vector<string>* args);
+    int add( fd_stringvector * args);
+    int play( fd_stringvector * args);
+    int stop( fd_stringvector * args);
+    int set( fd_stringvector * args);
+    int get( fd_stringvector * args);
 };
 
 #endif /* defined(__FlacDemon__FlacDemon__) */
