@@ -139,7 +139,7 @@ void FlacDemon::Database::add(FlacDemon::Track *track){
     std::string sql="'";
     std::string value;
     for(std::vector<std::string>::iterator it = this->allkeys->begin(); it != this->allkeys->end(); it++){
-        value = fd_sqlescape(*track->valueForKey(&(*it)));
+        value = fd_sqlescape( track->valueForKey(&(*it) ) );
 
         sql.append(value);
         sql.append("','");
@@ -334,9 +334,9 @@ void FlacDemon::Database::initDB(){
 
 FlacDemon::Track * FlacDemon::Database::trackForID(unsigned long ID){
     for(std::vector<FlacDemon::Track *>::iterator it = this->openTracks->begin(); it != this->openTracks->end(); it++){
-        std::string * value = nullptr;
+        std::string value = "";
         std::string strID = std::to_string(ID);
-        if((value = (*it)->valueForKey("id")) && value->compare(strID) == 0){
+        if((value = (*it)->valueForKey("id")).length() && value == strID ){
             return (*it);
         }
     }

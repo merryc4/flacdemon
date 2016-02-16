@@ -38,7 +38,7 @@ public:
     void initInfo();
     int openFilePath();
     
-    virtual std::string * keymapFileValue( std::string * key );
+    virtual std::string keymapFileValue( std::string * key );
     
 };
 

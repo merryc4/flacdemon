@@ -20,8 +20,8 @@ void FlacDemon::Library::libraryUpdate(fd_keymap_vector * values){
         this->addTrackListing(*it);
     }
 }
-void FlacDemon::Library::addTrackListing( FlacDemon::TrackListing *tracklisting ){
-    
+void FlacDemon::Library::addTrackListing( FlacDemon::TrackListing *trackListing ){
+    this->tracks.insert( std::pair<std::string, FlacDemon::TrackListing * >( trackListing->valueForKey( "id" ) , trackListing ));
 }
 void FlacDemon::Library::addTrackListing( fd_keymap *keymap ){
     std::string idKey("id");
@@ -34,7 +34,7 @@ void FlacDemon::Library::addTrackListing( fd_keymap *keymap ){
         //update
     } else {
         FlacDemon::TrackListing * trackListing = new FlacDemon::TrackListing(keymap);
-        this->tracks.insert(std::pair<std::string, FlacDemon::TrackListing * >(*id, trackListing));
+        this->addTrackListing( trackListing );
     }
 }
 void FlacDemon::Library::sort( std::string sortKey ){

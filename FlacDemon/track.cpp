@@ -44,19 +44,19 @@ int FlacDemon::Track::openFilePath(){
     
     return this->file==nullptr ? 0 : 1;
 }
-std::string * FlacDemon::Track::keymapFileValue( std::string * key ){
+std::string FlacDemon::Track::keymapFileValue( std::string * key ){
     //this should not return a pointer
-    std::string * value = nullptr;
+    std::string value = "";
     if(this->trackinfo && this->trackinfo->count(*key)){
-        value = new std::string{std::to_string(this->trackinfo->at(*key))};
+        value = std::to_string( this->trackinfo->at( *key ) ) ;
     }
     else if(this->keymap && this->keymap->count(*key))
-        value = this->keymap->at(*key);
+        value = *this->keymap->at(*key);
     else if(this->file){
         if(key->compare("albumuuid") == 0)
-            value = this->file->albumuuid;
+            value = *this->file->albumuuid;
         else
-            value = new std::string ( this->file->getMetaDataEntry(key) );
+            value =  this->file->getMetaDataEntry( key );
     }
     return value;
 }

@@ -21,7 +21,8 @@ bool TrackSorter::operator()( FlacDemon::TrackListing * track1, FlacDemon::Track
     
     for( fd_stringvector::iterator it = std::find(sortKeys->begin(), sortKeys->end(), this->currentSortKey); it != sortKeys->end() && !isDiff && nextKey; it++){
         sortKey = (*it);
-        if( ! (isDiff = ( ( diff = fd_strnumbercompare( track1->valueForKey(&sortKey) , track2->valueForKey(&sortKey) ) ) < 0 )) ){
+        std::string value1, value2;
+        if( ! (isDiff = ( ( diff = fd_strnumbercompare( &( value1 = track1->valueForKey( &sortKey ) ) , &( value2 = track2->valueForKey( &sortKey ) ) ) ) < 0 )) ){
             nextKey = (diff == 0);
         }
     }

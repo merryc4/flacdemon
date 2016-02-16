@@ -135,7 +135,7 @@ void FlacDemon::Player::playAudio(FlacDemon::Track * track, AVCodecContext * cod
         if((error = avcodec_decode_audio4(codecContext, frame, &gotFrame, packet)) < 0){
             char errbuf[255];
             av_strerror(error, errbuf, sizeof(errbuf));
-            cout << "could not read decode audio frame: " << *track->valueForKey("filepath") << ". " << errbuf << endl;
+            cout << "could not read decode audio frame: " << track->valueForKey("filepath") << ". " << errbuf << endl;
             break;
         }
 //        cout << "got audio frame " << endl;

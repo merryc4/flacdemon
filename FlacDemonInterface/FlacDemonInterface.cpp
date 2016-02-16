@@ -384,7 +384,7 @@ void FlacDemonInterface::printLibrary(int offset = 0){
         for(std::vector< std::string >::iterator it2 = libraryTitles->begin(); it2 != libraryTitles->end(); it2++){
             key = (*it2);
             fd_standardiseKey(&key);
-            values.push_back(*(*it)->valueForKey(&key));
+            values.push_back( ( *it )->valueForKey( &key ) );
         }
         this->printLibraryLine( this->browserWindow , &values );
         if( this->currentBrowserRow > this->browserRows )
@@ -452,9 +452,9 @@ void FlacDemonInterface::setNowPlaying(std::string ID){
 void FlacDemonInterface::printNowPlaying(){
     wclear(this->playbackWindow);
     if(this->nowPlaying){
-        std::string * title = this->nowPlaying->valueForKey("title");
-        cout << "setting title to " << *title << endl;
-        mvwprintw(this->playbackWindow, 0, (this->maxColumns - title->length()) / 2, title->c_str());
+        std::string title = this->nowPlaying->valueForKey("title");
+        cout << "setting title to " << title << endl;
+        mvwprintw(this->playbackWindow, 0, (this->maxColumns - title.length()) / 2, title.c_str());
     } else {
         char msg2[] = "Nothing Playing";
         mvwprintw(this->playbackWindow, 0, (this->maxColumns - strlen(msg2)) / 2, msg2);
@@ -482,10 +482,10 @@ void FlacDemonInterface::setCommandCursor(){
 void FlacDemonInterface::printProgress(){
     if(!this->nowPlaying)
         return;
-    std::string * tracktime = this->nowPlaying->valueForKey("tracktime");
-    cout << "printing progress " << this->progress << " tracktime " << *tracktime << endl;
+    std::string tracktime = this->nowPlaying->valueForKey("tracktime");
+    cout << "printing progress " << this->progress << " tracktime " << tracktime << endl;
     int itime;
-    fd_stringtoint(tracktime, &itime);
+    fd_stringtoint( &tracktime , &itime );
     itime = itime / 1000;
     int progressTime = (int)(itime * this->progress);
     std::string formatTime = fd_secondstoformattime(itime);

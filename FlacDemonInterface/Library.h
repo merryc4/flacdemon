@@ -49,7 +49,7 @@ public:
     ~Library();
 
     void libraryUpdate( fd_keymap_vector * values );
-    void addTrackListing( FlacDemon::TrackListing * tracklisting );
+    void addTrackListing( FlacDemon::TrackListing * trackListing );
     void addTrackListing( fd_keymap * keymap );
     void sort( std::string sortKey );
     void search( fd_stringvector terms );
