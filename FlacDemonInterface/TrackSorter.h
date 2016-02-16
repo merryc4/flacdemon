@@ -14,13 +14,13 @@
 #include "TrackListing.h"
 #include "FlacDemonUtils.h"
 
-class TrackSorter {
+template < class T > class TrackSorter {
 public:
     std::string currentSortKey;
-    std::string sortKey;
     
     TrackSorter( std::string sortKey );
-    bool operator() ( FlacDemon::TrackListing * track1, FlacDemon::TrackListing * track2 );
+    
+    bool operator()( T a, T b );
 };
 
 #endif

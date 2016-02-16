@@ -72,7 +72,8 @@ std::string FlacDemon::TrackListing::valueForKey(std::string* key){
 std::string FlacDemon::TrackListing::keymapFileValue(std::string *key){
     std::string value = "";
     if(this->trackinfo && this->trackinfo->count(*key)){
-        value = this->trackinfo->at( *key );
+        value = std::to_string( this->trackinfo->at( *key ) );
+        
     }
     else if(this->keymap && this->keymap->count(*key)){
         value = this->keymap->at( *key );

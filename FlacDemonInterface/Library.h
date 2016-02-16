@@ -16,7 +16,7 @@
 #include "FlacDemonUtils.h"
 #include "TrackListing.h"
 #include "Group.h"
-#include "TrackSorter.h"
+#include "TrackSorter.cpp" //needed due to templates
 #include "Album.h"
 
 #include <algorithm>
@@ -28,6 +28,7 @@ private:
     std::map < std::string, FlacDemon::TrackListing * > tracks;
     std::map < std::string, FlacDemon::Album * > albums;
     fd_tracklistingvector sortedTracks;
+    std::vector < FlacDemon::Album * > sortedAlbums;
     std::string currentSortKey;
     
     std::mutex searchMutex;

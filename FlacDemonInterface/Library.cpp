@@ -61,8 +61,10 @@ void FlacDemon::Library::sort( std::string sortKey ){
     for( std::map < std::string, FlacDemon::TrackListing * > :: iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
         this->sortedTracks.push_back(it->second);
     }
-    TrackSorter tracksorter( sortKey );
+    TrackSorter < FlacDemon::TrackListing * > tracksorter( sortKey );
     std::sort(this->sortedTracks.begin(), this->sortedTracks.end(), tracksorter);
+    TrackSorter < FlacDemon::Album * > albumsorter ( sortKey );
+    std::sort( this->sortedAlbums.begin() , this->sortedAlbums.end() , albumsorter );
 }
 void FlacDemon::Library::search( fd_stringvector terms ){
     if( ! this->setSearchTerms( terms ) )
