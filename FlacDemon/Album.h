@@ -30,6 +30,8 @@ public:
     bool multipleArtists;
     bool metadataInconsistency;
     
+    bool verified;
+    
     Album( std::string * iuuid = nullptr );
     ~Album();
     
@@ -41,6 +43,7 @@ public:
     void setValueForKey( std::string * value , std::string * key );
     
     bool matchesSearch();
+    float playcount();
     //playcount, date added, various flags, artist info (from scraper)
 };
 

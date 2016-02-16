@@ -11,5 +11,5 @@
 
 extern fd_stringvector * libraryTitlesTracks;
 extern fd_stringvector * libraryTitlesAlbums;
-
+extern fd_stringvector * libraryTitlesAlbumCopyFromTrack;
 #endif

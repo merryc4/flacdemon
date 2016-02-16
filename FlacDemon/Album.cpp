@@ -15,9 +15,11 @@ FlacDemon::Album::Album( std::string * iuuid ){
     
     this->path = "";
     this->uuid = "";
+    this->verified = true;
+    
     if(iuuid && iuuid->length() ){
         this->uuid = *iuuid;
-//        this->setValueForKey("albumuuid", iuuid);
+        this->setValueForKey( iuuid , "albumuuid" );
     }
 }
 FlacDemon::Album::~Album(){
@@ -27,20 +29,20 @@ void FlacDemon::Album::addTrackListing ( FlacDemon::TrackListing * track ){
     this->tracks.push_back(track);
     this->trackCount = this->tracks.size();
     this->addMetaDataFromTrackListing( track );
+    if( ! track->getTrackInfoForKey("verified") ){
+        this->verified = false;
+    }
 }
 void FlacDemon::Album::addMetaDataFromTrackListing( FlacDemon::TrackListing * track ) {
     std::string value, trackValue, key;
-//    fd_keymap::iterator * it = nullptr;
-//    while ( ( it = track->iterateMetadata( it ) ) ) {
-    for( fd_stringvector::iterator it = libraryTitlesAlbums->begin(); it != libraryTitlesAlbums->end(); it++ ) {
-//        trackValue = (*it)->second;
-        key = *fd_standardiseKey(&(*it));
+    for( fd_stringvector::iterator it = libraryTitlesAlbumCopyFromTrack->begin(); it != libraryTitlesAlbumCopyFromTrack->end(); it++ ) {
+        key = (*it);
         trackValue = track->valueForKey( &key );
         if( ! trackValue.length() ) continue;
-//        key = (*it)->first;
         value = this->valueForKey( &key );
         if( ! value.length() ) {
-            this->setValueForKey( &trackValue , &key );
+            if( trackValue != "-1" )
+                this->setValueForKey( &trackValue , &key );
         } else if( trackValue != value && value != FlacDemonMetaDataMultipleValues ){
             this->setValueForKey( FlacDemonMetaDataMultipleValues , &key );
         }
@@ -51,7 +53,12 @@ std::string FlacDemon::Album::valueForKey( std::string * key ) {
     if( this->metadata.count( *key ) ) {
         rvalue = this->metadata.at( *key );
     } else {
-        if( )
+        if( *key == "tracks" )
+            rvalue = std::to_string( this->trackCount );
+        else if( *key == "playcount" )
+            rvalue = std::to_string( this->playcount() );
+        else if( *key == "verified" )
+            rvalue = std::to_string( (int) this->verified );
     }
     return rvalue;
 }
@@ -78,4 +85,12 @@ bool FlacDemon::Album::matchesSearch() {
             return true;
     }
     return false;
+}
+float FlacDemon::Album::playcount(){
+    float total = 0;
+    for( fd_tracklistingvector::iterator it = this->tracks.begin(); it != this->tracks.end(); it++ ){
+        total += (*it)->getTrackInfoForKey("playcount");
+    }
+    total /= this->tracks.size();
+    return total;
 }
