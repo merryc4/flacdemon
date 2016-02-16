@@ -8,8 +8,6 @@
 
 #include "FlacDemonInterface.h"
 
-fd_stringvector * libraryTitles = new fd_stringvector{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount", "Verified"};
-
 std::map< std::string , unsigned long > * commandFlags = new std::map < std::string , unsigned long >{
     { "get all" , fd_interface_libraryupdate },
     { "playing" , fd_interface_playing },
@@ -377,11 +375,25 @@ void FlacDemonInterface::printLibrary(int offset = 0){
     this->currentBrowserRow = 0;
     std::string key;
     fd_tracklistingvector * tracks = this->library.allTracks();
-    for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
-        if(this->isSearch && !(*it)->matchesSearch)
+//    for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
+//        if(this->isSearch && !(*it)->matchesSearch)
+//            continue;
+//        std::vector < std::string > values;
+//        for(std::vector< std::string >::iterator it2 = libraryTitles->begin(); it2 != libraryTitles->end(); it2++){
+//            key = (*it2);
+//            fd_standardiseKey(&key);
+//            values.push_back( ( *it )->valueForKey( &key ) );
+//        }
+//        this->printLibraryLine( this->browserWindow , &values );
+//        if( this->currentBrowserRow > this->browserRows )
+//            break;
+//    }
+    fd_albumvector& albums = this->library.allAlbums();
+    for(fd_albumvector::iterator it = albums.begin() + offset; it != albums.end(); it++){
+        if(this->isSearch && !(*it)->matchesSearch())
             continue;
         std::vector < std::string > values;
-        for(std::vector< std::string >::iterator it2 = libraryTitles->begin(); it2 != libraryTitles->end(); it2++){
+        for(std::vector< std::string >::iterator it2 = libraryTitlesAlbums->begin(); it2 != libraryTitlesAlbums->end(); it2++){
             key = (*it2);
             fd_standardiseKey(&key);
             values.push_back( ( *it )->valueForKey( &key ) );
@@ -397,7 +409,7 @@ void FlacDemonInterface::printLibraryHeaders(){
     char title[] = "Library";
     mvwprintw(this->browserWindow, 0, (this->maxColumns - strlen(title)) / 2, title);
     this->currentBrowserRow = 1;
-    this->printLibraryLine( this->browserHeaderWindow , libraryTitles );
+    this->printLibraryLine( this->browserHeaderWindow , libraryTitlesAlbums );
 }
 void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::string> *values ){
     int width = (this->maxColumns / values->size());

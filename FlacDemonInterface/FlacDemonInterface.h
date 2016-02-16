@@ -23,6 +23,8 @@
 #include "TrackListing.h"
 #include "Library.h"
 #include "CommandParser.h"
+#include "LibraryTitles.h"
+
 
 #define fd_interface_printlibrary   1 << 0
 #define fd_interface_libraryupdate  1 << 1

@@ -8,6 +8,9 @@
 
 #include "Library.h"
 
+fd_stringvector * libraryTitlesTracks = new fd_stringvector{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount", "Verified"};
+fd_stringvector * libraryTitlesAlbums = new fd_stringvector{"albumuuid", "Album", "Artist", "AlbumArtist", "Playcount", "Verified"};
+
 FlacDemon::Library::Library(){
     this->searchDelayTime = -1;
     this->searching = false;
@@ -63,6 +66,11 @@ void FlacDemon::Library::sort( std::string sortKey ){
     }
     TrackSorter < FlacDemon::TrackListing * > tracksorter( sortKey );
     std::sort(this->sortedTracks.begin(), this->sortedTracks.end(), tracksorter);
+    
+    this->sortedAlbums.clear();
+    for( std::map < std::string, FlacDemon::Album * > :: iterator it = this->albums.begin(); it != this->albums.end(); it++){
+        this->sortedAlbums.push_back(it->second);
+    }
     TrackSorter < FlacDemon::Album * > albumsorter ( sortKey );
     std::sort( this->sortedAlbums.begin() , this->sortedAlbums.end() , albumsorter );
 }
@@ -113,6 +121,9 @@ FlacDemon::TrackListing * FlacDemon::Library::trackListingForID(std::string ID){
 }
 fd_tracklistingvector * FlacDemon::Library::allTracks(){
     return &this->sortedTracks;
+}
+fd_albumvector& FlacDemon::Library::allAlbums(){
+    return this->sortedAlbums;
 }
 size_t FlacDemon::Library::count(){
     return this->tracks.size();

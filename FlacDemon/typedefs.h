@@ -29,4 +29,5 @@ typedef std::vector < std::string > fd_stringvector;
 typedef std::vector < FlacDemon::File * > fd_filevector;
 typedef std::vector < FlacDemon::Track * > fd_trackvector;
 typedef std::vector < FlacDemon::TrackListing * > fd_tracklistingvector;
+typedef std::vector < FlacDemon::Album * > fd_albumvector;
 #endif

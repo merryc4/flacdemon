@@ -16,7 +16,6 @@
 #include "SignalHandler.h"
 #include "FlacDemonUtils.h"
 #include "SessionManager.h"
-
 #include "FlacDemonNameSpace.h"
 
 using std::cout;

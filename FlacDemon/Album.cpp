@@ -17,6 +17,7 @@ FlacDemon::Album::Album( std::string * iuuid ){
     this->uuid = "";
     if(iuuid && iuuid->length() ){
         this->uuid = *iuuid;
+//        this->setValueForKey("albumuuid", iuuid);
     }
 }
 FlacDemon::Album::~Album(){
@@ -29,11 +30,14 @@ void FlacDemon::Album::addTrackListing ( FlacDemon::TrackListing * track ){
 }
 void FlacDemon::Album::addMetaDataFromTrackListing( FlacDemon::TrackListing * track ) {
     std::string value, trackValue, key;
-    fd_keymap::iterator * it = nullptr;
-    while ( ( it = track->iterateMetadata( it ) ) ) {
-        trackValue = (*it)->second;
+//    fd_keymap::iterator * it = nullptr;
+//    while ( ( it = track->iterateMetadata( it ) ) ) {
+    for( fd_stringvector::iterator it = libraryTitlesAlbums->begin(); it != libraryTitlesAlbums->end(); it++ ) {
+//        trackValue = (*it)->second;
+        key = *fd_standardiseKey(&(*it));
+        trackValue = track->valueForKey( &key );
         if( ! trackValue.length() ) continue;
-        key = (*it)->first;
+//        key = (*it)->first;
         value = this->valueForKey( &key );
         if( ! value.length() ) {
             this->setValueForKey( &trackValue , &key );
@@ -46,6 +50,8 @@ std::string FlacDemon::Album::valueForKey( std::string * key ) {
     std::string rvalue = "";
     if( this->metadata.count( *key ) ) {
         rvalue = this->metadata.at( *key );
+    } else {
+        if( )
     }
     return rvalue;
 }
@@ -65,4 +71,11 @@ void FlacDemon::Album::setValueForKey( std::string * value , std::string * key )
             this->metadata.insert( std::make_pair( *key , *value ));
         }
     }
+}
+bool FlacDemon::Album::matchesSearch() {
+    for( fd_tracklistingvector::iterator it = this->tracks.begin(); it != this->tracks.end(); it++ ){
+        if( (*it)->matchesSearch )
+            return true;
+    }
+    return false;
 }

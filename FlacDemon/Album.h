@@ -13,6 +13,7 @@
 #include "includes.h"
 #include "typedefs.h"
 #include "TrackListing.h"
+#include "LibraryTitles.h"
 
 class FlacDemon::Album {
     
@@ -22,7 +23,7 @@ private:
 public:
     std::string path;
     std::string uuid;
-    std::vector< FlacDemon::TrackListing * > tracks;
+    fd_tracklistingvector tracks;
     unsigned long trackCount;
     fd_keymap metadata;
     
@@ -38,6 +39,8 @@ public:
     void setValueForKey( const char * value , std::string * key );
     void setValueForKey( std::string * value , const char * key );
     void setValueForKey( std::string * value , std::string * key );
+    
+    bool matchesSearch();
     //playcount, date added, various flags, artist info (from scraper)
 };
 

@@ -18,7 +18,7 @@
 #include "Group.h"
 #include "TrackSorter.cpp" //needed due to templates
 #include "Album.h"
-
+#include "LibraryTitles.h"
 #include <algorithm>
 
 #define FLACDEMON_LIBRARY_SEARCH_DELAY 3000
@@ -28,7 +28,7 @@ private:
     std::map < std::string, FlacDemon::TrackListing * > tracks;
     std::map < std::string, FlacDemon::Album * > albums;
     fd_tracklistingvector sortedTracks;
-    std::vector < FlacDemon::Album * > sortedAlbums;
+    fd_albumvector sortedAlbums;
     std::string currentSortKey;
     
     std::mutex searchMutex;
@@ -59,6 +59,7 @@ public:
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);
     fd_tracklistingvector * allTracks();
+    fd_albumvector& allAlbums();
     size_t count();
 
 };
