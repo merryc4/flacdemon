@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "ncurses.h"
+#include "panel.h"
 #include <condition_variable>
 
 #include "FlacDemonUtils.h"
@@ -47,6 +48,9 @@ private:
     WINDOW * browserHeaderWindow;
     WINDOW * commandWindow;
     WINDOW * playbackWindow;
+    
+    PANEL * browserPanel;
+    PANEL * verifyPanel;
     
     FlacDemon::Library library;
     

@@ -74,6 +74,8 @@ void FlacDemonInterface::initialize(){
     this->browserHeaderWindow = this->nextwin( 2 , &row );
     this->browserRows = this->maxRows - row;
     this->browserWindow = nextwin( this->browserRows );
+    
+    this->browserPanel = new_panel( this->browserWindow );
 }
 WINDOW * FlacDemonInterface::nextwin( size_t rowSize , size_t * row ){
     static size_t currentWindowRow = 0;
@@ -146,11 +148,15 @@ void FlacDemonInterface::callCommand( const char * signal, void * arg ){
     
     cout << "call command " << args->front() << endl;
     
-    if(this->commandParser.commandType == local_command ){
+    if( this->commandParser.commandType == no_command && this->typeSearch ){
+        this->typeSearch = false;
+    }
+    else if(this->commandParser.commandType == local_command ){
         
     } else if( this->commandParser.commandType == remote_command ){
         this->sendCommand(args->front().c_str());
     }
+    
 }
 void FlacDemonInterface::sendCommand(const char * icommand){
     if(this->socketFileDescriptor < STDERR_FILENO){

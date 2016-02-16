@@ -42,8 +42,10 @@ string* FlacDemon::CommandParser::getInput() {
 	return input;
 }
 void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) {
-	if (!icommand->length())
+    if (!icommand->length()){
+        this->clear();
 		return;
+    }
     std::string * tcommand = new std::string( *icommand );
     while(tcommand->back() == '\n'){
         tcommand->pop_back();
@@ -95,7 +97,7 @@ void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) 
             continue;
         }
         
-        if( args.size() == 0 ){
+        if( args.size() == 1 ){
             this->commandWord = word;
             this->commandArgs = *tcommand;
         }
@@ -130,4 +132,11 @@ CommandType FlacDemon::CommandParser::checkCommand(){
 }
 void FlacDemon::CommandParser::historyPush ( std::string * icommand ) {
     this->history.push_back( *icommand );
+}
+void FlacDemon :: CommandParser :: clear() {
+    this->commandType = no_command;
+    this->commandArgs.clear();
+    this->commandWord.clear();
+    this->currentArgs.clear();
+    
 }

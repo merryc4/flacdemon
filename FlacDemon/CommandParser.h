@@ -48,6 +48,7 @@ public:
     void parseCommand( std::string* icommand , bool run = true );
     CommandType checkCommand();
     void historyPush ( std::string * icommand );
+    void clear();
 };
 
 #endif /* defined(__FlacDemon__CommandParser__) */
