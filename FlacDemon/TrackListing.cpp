@@ -29,12 +29,13 @@ void FlacDemon::TrackListing::init(){
     this->matchesSearch = false;
     
     this->trackinfo = new std::map<std::string, long>{
-        {"playcount", 0},
-        {"dateadded", 0},
-        {"tracktime", 0},
-        {"verified", 0},
-        {"track", 0},
-        {"disc", 0}
+        { "playcount" , 0 },
+        { "dateadded" , 0 },
+        { "tracktime" , 0 },
+        { "verified" , 0 },
+        { "errorflags" , 0 },
+        { "track" , 0 },
+        { "disc", 0 }
     };
     if(this->keymap){
         for(std::map<std::string, long>::iterator it = this->trackinfo->begin(); it != this->trackinfo->end(); it++){
@@ -47,6 +48,7 @@ void FlacDemon::TrackListing::init(){
                     this->trackinfo->at(key) = ivalue;
             }
         }
+        
     }
 }
 

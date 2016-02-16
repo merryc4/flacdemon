@@ -53,6 +53,7 @@ extern const char * FlacDemonMetaDataMultipleValues;
 #define FLACDEMON_FILENAME_MATCHES_ALBUMARTIST  2048
 #define FLACDEMON_ALBUMARTIST_IS_INCORRECT      4096
 
+
 /* filecount threshold */
 #define FLACDEMON_FILECOUNT_THRESHOLD           100
 
@@ -73,7 +74,7 @@ extern const char * FlacDemonMetaDataMultipleValues;
 
 enum checkDiscMethod {
     FLACDEMON_CHECK_DISC_METHOD_ALBUM,
-    FLACDEMON_CHECK_DISC_METHOD_ARTST
+    FLACDEMON_CHECK_DISC_METHOD_ARTIST
 };
 
 enum setChildMetadata {
@@ -152,6 +153,7 @@ public:
     void checkDiscs(int method);
     void setDiscNumber(int discNumber);
     void checkMetaData(bool albumConsistency, bool artistConsistency);
+    void checkAlbumArtist( bool albumConsistency = false , bool artistConstitency = false );
     void reparseTags();
     
     bool checkExists(struct stat * buffer = nullptr);
@@ -175,10 +177,10 @@ public:
     void setToDirectory();
     
     void printMetaDataDict(AVDictionary* dict);
-    std::string* getMetaDataEntry(const char* key, int flags = 0);
-    std::string* getMetaDataEntry(string* key, int flags = 0);
-    std::string* getMetaDataEntry(const char* key, AVDictionaryEntry * t, int flags = 0);
-    std::string* getMetaDataEntry(string* key, AVDictionaryEntry *t, int flags = 0);
+    std::string getMetaDataEntry(const char* key, int flags = 0);
+    std::string getMetaDataEntry(string* key, int flags = 0);
+    std::string getMetaDataEntry(const char* key, AVDictionaryEntry * t, int flags = 0);
+    std::string getMetaDataEntry(string* key, AVDictionaryEntry *t, int flags = 0);
     
     void setMetaDataEntry(std::string *key, std::string * value, setChildMetadata setChildren = FLACDEMON_DO_NOT_SET_CHILD_METADATA);
     void setMetaDataEntry(const char * key, std::string * value, setChildMetadata setChildren = FLACDEMON_DO_NOT_SET_CHILD_METADATA);

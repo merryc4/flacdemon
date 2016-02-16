@@ -12,8 +12,8 @@ struct SQLStatements{
     char * fields = nullptr;
     const char * createTableTracksFormat = "create table if not exists `tracks` (id INTEGER PRIMARY KEY AUTOINCREMENT, %s)";
     const char * addTrackFormat = "insert into tracks (%s) values(%s)";
-    const char * createTableFiles = "create table if not exists `associate_files` (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath varchar(255), albumuuid varchar(255), flags INTEGER)";
-    const char * addFileFormat = "insert into associate_files (filepath, albumuuid, flags) values(%s)";
+    const char * createTableFiles = "create table if not exists `associate_files` (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath varchar(255), albumuuid varchar(255), flags INTEGER, errorflags INTERGER)";
+    const char * addFileFormat = "insert into associate_files (filepath, albumuuid, flags, errorflags) values(%s)";
     const char * setValueFormat = "update tracks set %s=`%s` where id=%lu";
     const char * getValueFormat = "select %s from `tracks` where id=%lu";
     const char * getJSONFormat = "select * from `tracks` where id=%lu";
@@ -115,6 +115,8 @@ void FlacDemon::Database::add(FlacDemon::File * file){
     values.append(fd_sqlescape(*(file->filepath)));
     values.append("','");
     values.append(*file->albumuuid);
+    values.append("','");
+    values.append(std::to_string(file->flags));
     values.append("',");
     values.append(std::to_string(file->errorFlags));
 
