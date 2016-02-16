@@ -24,8 +24,8 @@ public:
     void setString(std::string * key, std::string * value);
     void setString(const char * key, std::string * value);
 
-    std::string * getString(std::string * key);
-    std::string * getString(const char * key);
+    std::string getString(std::string * key);
+    std::string getString(const char * key);
 };
 
 #endif /* defined(__FlacDemon__Session__) */

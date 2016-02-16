@@ -38,17 +38,18 @@ void FlacDemon::TrackListing::init(){
         { "disc", 0 }
     };
     if(this->keymap){
+        std::string key;
         for(std::map<std::string, long>::iterator it = this->trackinfo->begin(); it != this->trackinfo->end(); it++){
-            std::string key = it->first;
+            key = it->first;
             if (this->keymap->count(key)) {
-                std::string * value = this->keymap->at(key);
+                std::string value = this->keymap->at(key);
                 int ivalue;
-                fd_stringtoint(value, &ivalue);
+                fd_stringtoint(&value, &ivalue);
                 if(ivalue >= 0)
                     this->trackinfo->at(key) = ivalue;
             }
         }
-        
+        this->uuid = new std::string( this->valueForKey( "albumuuid" ) );
     }
 }
 
@@ -59,7 +60,7 @@ std::string FlacDemon::TrackListing::valueForKey (const char * key){
 std::string FlacDemon::TrackListing::valueForKey(std::string* key){
     std::string value = "";
     if(key->compare("filepath")==0){
-        value = *this->filepath;
+        value = this->filepath;
     }
     value = this->keymapFileValue(key);
     
@@ -74,7 +75,7 @@ std::string FlacDemon::TrackListing::keymapFileValue(std::string *key){
         value = this->trackinfo->at( *key );
     }
     else if(this->keymap && this->keymap->count(*key)){
-        value = *this->keymap->at( *key );
+        value = this->keymap->at( *key );
     }
     return value;
 }
@@ -86,8 +87,22 @@ std::string FlacDemon::TrackListing::standardiseMetaValue(std::string *value, st
     }
     return rvalue;
 }
-void FlacDemon::TrackListing::setValueForKey(std::string * value, std::string *key){
+void FlacDemon::TrackListing::setValueForKey(std::string * value, std::string * key){
     
+}
+fd_keymap::iterator * FlacDemon::TrackListing::iterateMetadata( fd_keymap::iterator * it ) {
+    //expects it to be a valid pointer
+    if( it == nullptr ){
+        it = new fd_keymap::iterator( this->keymap->begin() );
+    } else {
+        it->operator++();
+        if( *it == this->keymap->end() ){
+            delete it;
+            it = nullptr;
+        }
+    }
+    
+    return it;
 }
 
 long FlacDemon::TrackListing::getTrackInfoForKey(const char * key){
@@ -108,7 +123,7 @@ void FlacDemon::TrackListing::setTrackInfoForKey(std::string * key, long value){
     this->trackinfo->at(*key) = value;
 }
 bool FlacDemon::TrackListing::compareSearchStrings(std::vector < std::string > * sstrings, bool setMatch){
-    std::string * value;
+    std::string value;
     bool match = false;
     int matchCount = 0;
 //    bool partMatch = false;
@@ -118,7 +133,7 @@ bool FlacDemon::TrackListing::compareSearchStrings(std::vector < std::string > *
 //        partMatch = false;
         for ( fd_keymap::iterator it = this->keymap->begin(); it != this->keymap->end(); it++ ){
             value = it->second;
-            if ( std::search(value->begin(), value->end(), (*it2).begin(), (*it2).end(), searchPredicate ) != value->end() ) {
+            if ( std::search(value.begin(), value.end(), (*it2).begin(), (*it2).end(), searchPredicate ) != value.end() ) {
                 matchCount++;
                 break;
             }

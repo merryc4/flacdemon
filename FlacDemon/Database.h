@@ -48,7 +48,7 @@ protected:
     int sqlCount(std::string * sql);
     int sqlCount(const char * sql);
     void clearSelect();
-    std::string * sqlSelectOne(std::string * isql);
+    std::string sqlSelectOne(std::string * isql);
 
     
     void initDB();
@@ -65,16 +65,16 @@ public:
     
     FlacDemon::Track * trackForID(unsigned long ID);
     FlacDemon::Track * trackWithKeyMap(fd_keymap * keyMap);
-    std::string * albumDirectoryUUIDForPath(std::string * path);
+    std::string albumDirectoryUUIDForPath(std::string * path);
     
     int hasEntryForFile(std::string * filepath, const char * table);
     
-    std::string * getUUID();
+    std::string getUUID();
     
     int setValue(unsigned long ID, std::string * key, std::string * value);
-    std::string * getValue(unsigned long ID, std::string * key);
-    std::string * getJSONForID(int uid);
-    std::string * getAll();
+    std::string getValue(unsigned long ID, std::string * key);
+    std::string getJSONForID(int uid);
+    std::string getAll();
     
     void fillDatabase(int entries);
 };

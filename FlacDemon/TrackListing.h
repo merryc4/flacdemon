@@ -22,7 +22,7 @@ protected:
     unsigned int playCount;
     time_t trackTime;
     
-    std::string * filepath = nullptr;    
+    std::string filepath;
     std::map<std::string, long> * trackinfo = nullptr;
     fd_keymap * keymap = nullptr;
     
@@ -40,7 +40,8 @@ public:
     
     virtual std::string keymapFileValue(std::string * key);
     
-    void setValueForKey(std::string * value, std::string* key);    
+    void setValueForKey(std::string * value, std::string* key);
+    fd_keymap::iterator * iterateMetadata( fd_keymap::iterator * it );
     std::string standardiseMetaValue(std::string * value, std::string * key);
     
     long getTrackInfoForKey(const char * key);

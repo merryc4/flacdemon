@@ -79,9 +79,8 @@ void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
     
     albumDirectory->standardisePath(nullptr);
     
-    std::string * uuid = this->albumDirectoryUUIDForPath(albumDirectory->filepath);
-    albumDirectory->setAlbumDirectoryUUID(uuid);
-    delete uuid;
+    std::string uuid = this->albumDirectoryUUIDForPath(albumDirectory->filepath);
+    albumDirectory->setAlbumDirectoryUUID(&uuid);
     
     albumDirectory->verifyAlbum();
     
@@ -211,7 +210,7 @@ fd_keymap_vector * FlacDemon::Database::sqlSelect(std::string *isql){
         columns = sqlite3_column_count(stmt);
         for (i = 0; i < columns; i++) {
             if((value = sqlite3_column_text(stmt, i)) && (key = sqlite3_column_name(stmt, i))){
-                result->insert(std::pair<std::string, std::string *>(*new std::string(key), new std::string(value, value + sqlite3_column_bytes(stmt, i)))); //will need to free the key
+                result->insert( fd_keypair( std::string(key), std::string(value, value + sqlite3_column_bytes(stmt, i)))); //will need to free the key
             }
             
         }
@@ -233,13 +232,13 @@ fd_keymap * FlacDemon::Database::sqlSelectRow(std::string *sql){
     else
         return nullptr;
 }
-std::string * FlacDemon::Database::sqlSelectOne(std::string * isql){
+std::string FlacDemon::Database::sqlSelectOne(std::string * isql){
     fd_keymap * results = this->sqlSelectRow(isql);
     this->clearSelect();
     if(results && results->size() == 1){
         return results->begin()->second;
     }
-    return nullptr;
+    return std::string("");
 }
 int FlacDemon::Database::sqlCount(std::string *sql){
     return this->sqlCount(sql->c_str());
@@ -355,12 +354,12 @@ FlacDemon::Track * FlacDemon::Database::trackWithKeyMap(fd_keymap *keyMap){
     this->openTracks->push_back(track);
     return track;
 }
-std::string * FlacDemon::Database::getUUID(){
+std::string FlacDemon::Database::getUUID(){
     uuid_t uuid;
     uuid_generate_random(uuid);
     char s[37];
     uuid_unparse(uuid, s);
-    return new std::string(s);
+    return std::string(s);
 }
 int FlacDemon::Database::hasEntryForFile(std::string * filepath, const char * table){
     std::string sql = "select count(*) from ";
@@ -374,12 +373,12 @@ int FlacDemon::Database::hasEntryForFile(std::string * filepath, const char * ta
     }
     return 0;
 }
-std::string * FlacDemon::Database::albumDirectoryUUIDForPath(std::string * path){
+std::string FlacDemon::Database::albumDirectoryUUIDForPath(std::string * path){
     std::string sql = "select (albumuuid) from associate_files where filepath='";
     sql.append(*path);
     sql.append("'");
-    std::string * value = this->sqlSelectOne(&sql);
-    if(value == nullptr)
+    std::string value = this->sqlSelectOne(&sql);
+    if( ! value.length() )
         value = this->getUUID();
     return value;
 }
@@ -400,7 +399,7 @@ int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::stri
     
     return 0;
 }
-std::string * FlacDemon::Database::getValue(unsigned long ID, std::string * key){
+std::string FlacDemon::Database::getValue(unsigned long ID, std::string * key){
     std::string sql = sql_statements.getValueFormat;
     size_t pos = sql.find("%s");
     sql.erase(pos, 2);
@@ -411,7 +410,7 @@ std::string * FlacDemon::Database::getValue(unsigned long ID, std::string * key)
     sql.insert(pos, std::to_string(ID));
     return this->sqlSelectOne(&sql);
 }
-std::string * FlacDemon::Database::getJSONForID(int uid){
+std::string FlacDemon::Database::getJSONForID(int uid){
     std::string sql = sql_statements.getJSONFormat;
     std::string search = "%lu";
     std::string replace = std::to_string(uid);
@@ -419,7 +418,7 @@ std::string * FlacDemon::Database::getJSONForID(int uid){
     fd_keymap * result = this->sqlSelectRow(&sql);
     return fd_keymaptojson(result);
 }
-std::string * FlacDemon::Database::getAll(){
+std::string FlacDemon::Database::getAll(){
     std::string sql = sql_statements.getAll;
     fd_keymap_vector * results = this->sqlSelect(&sql);
     return fd_keymap_vectortojson(results);

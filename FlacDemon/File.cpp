@@ -8,7 +8,7 @@
 
 #include "TrackFile.h"
 
-const char * FlacDemonMetaDataMultipleValues = "FlacDemonMetaDataMultipleValues";
+//const char * FlacDemonMetaDataMultipleValues = "FlacDemonMetaDataMultipleValues";
 
 FlacDemon::File::File(string* iPath, bool readTags){
     
@@ -1018,7 +1018,7 @@ void FlacDemon::File::standardisePath(std::string * workingDirectory){
     tpath = boost::filesystem::absolute(tpath);
     this->filepath = new std::string(tpath.string<std::string>()); //may need to free old this->filepath
     if(this->isMediaFile() && this->track){
-        this->track->filepath = this->filepath;
+        this->track->filepath = *this->filepath;
     }
 }
 

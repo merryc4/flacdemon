@@ -17,10 +17,12 @@
 #define iunset_flag(_flags, _flag) _flags = _flags & ~ _flag
 #define ihas_flag(_flags, _flag) _flags & _flag
 
+#define FlacDemonMetaDataMultipleValues "FlacDemonMetaDataMultipleValues"
+
 #include "FlacDemonNameSpace.h"
 
-typedef std::pair < std::string, std::string * > fd_keypair;
-typedef std::map < std::string, std::string * > fd_keymap;
+typedef std::pair < std::string, std::string > fd_keypair;
+typedef std::map < std::string, std::string > fd_keymap;
 typedef std::vector < fd_keymap * > fd_keymap_vector;
 
 typedef std::vector < std::string > fd_stringvector;

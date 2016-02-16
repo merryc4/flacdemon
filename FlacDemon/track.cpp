@@ -23,7 +23,7 @@ void FlacDemon::Track::setFile(FlacDemon::File * file){
     this->file = file;
     this->trackinfo->at("tracktime") = (long) this->file->mediaStreamInfo->duration / (0.001 * this->file->mediaStreamInfo->sampleRate);
     
-    this->filepath = new std::string(*file->filepath);
+    this->filepath = *file->filepath;
 }
 void FlacDemon::Track::initInfo(){
     this->trackinfo->at("dateadded") = time(nullptr);
@@ -33,9 +33,9 @@ void FlacDemon::Track::initInfo(){
 }
 int FlacDemon::Track::openFilePath(){
     //will need to do more checks, path exists, relative pathname, file opened succesfully etc
-    if(this->filepath){
+    if( this->filepath.length() ){
         if(!this->file){
-            this->file = new FlacDemon::File(this->filepath, false);
+            this->file = new FlacDemon::File( &( this->filepath ) , false);
             this->file->parse();
         } else {
             this->file->openFormatContext(true); //reset
@@ -51,12 +51,12 @@ std::string FlacDemon::Track::keymapFileValue( std::string * key ){
         value = std::to_string( this->trackinfo->at( *key ) ) ;
     }
     else if(this->keymap && this->keymap->count(*key))
-        value = *this->keymap->at(*key);
+        value = this->keymap->at(*key);
     else if(this->file){
         if(key->compare("albumuuid") == 0)
             value = *this->file->albumuuid;
         else
-            value =  this->file->getMetaDataEntry( key );
+            value = this->file->getMetaDataEntry( key );
     }
     return value;
 }

@@ -7,12 +7,12 @@
 //
 
 
-#ifndef _FlacDemonMetaDataMultipleValues
-#define _FlacDemonMetaDataMultipleValues
-
-extern const char * FlacDemonMetaDataMultipleValues;
-
-#endif
+//#ifndef _FlacDemonMetaDataMultipleValues
+//#define _FlacDemonMetaDataMultipleValues
+//
+//extern const char * FlacDemonMetaDataMultipleValues;
+//
+//#endif
 
 #ifndef __FlacDemon__File__
 #define __FlacDemon__File__

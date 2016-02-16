@@ -99,7 +99,7 @@ int FlacDemon::Demon::set(vector<string> * args){
     return 0;
 }
 int FlacDemon::Demon::get(vector<string> * args){
-    std::string * results;
+    std::string results;
     if (strcmp(args->back().c_str(), "all") == 0) {
         //get all
         results = this->database->getAll();
@@ -119,7 +119,7 @@ int FlacDemon::Demon::get(vector<string> * args){
         results = this->database->getValue(id, &metaTagName);
     }
 
-    sessionManager->getSession()->setString(&((*args)[0]), results);
+    sessionManager->getSession()->setString(&((*args)[0]), &results);
     
     return 0;
 }

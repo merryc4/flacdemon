@@ -22,6 +22,10 @@ void FlacDemon::Library::libraryUpdate(fd_keymap_vector * values){
 }
 void FlacDemon::Library::addTrackListing( FlacDemon::TrackListing *trackListing ){
     this->tracks.insert( std::pair<std::string, FlacDemon::TrackListing * >( trackListing->valueForKey( "id" ) , trackListing ));
+    FlacDemon::Album * album = this->getOrCreateAlbum( trackListing->uuid );
+    if( album ) {
+        album->addTrackListing ( trackListing );
+    }
 }
 void FlacDemon::Library::addTrackListing( fd_keymap *keymap ){
     std::string idKey("id");
@@ -29,14 +33,28 @@ void FlacDemon::Library::addTrackListing( fd_keymap *keymap ){
         std::cout << "Error: Malformed keymap, has no ID" << std::endl;
         return;
     }
-    std::string * id = keymap->at(idKey);
-    if(this->tracks.count(*id)){
+    std::string id = keymap->at(idKey);
+    if(this->tracks.count(id)){
         //update
     } else {
         FlacDemon::TrackListing * trackListing = new FlacDemon::TrackListing(keymap);
         this->addTrackListing( trackListing );
     }
 }
+FlacDemon::Album * FlacDemon::Library::getOrCreateAlbum ( std::string * albumuuid ) {
+    if( albumuuid == nullptr ) return nullptr;
+    FlacDemon::Album * album = nullptr;
+    if( this->albums.count( *albumuuid ) ) {
+        album = this->albums.at( *albumuuid );
+    } else {
+        FlacDemon::Album * album = new FlacDemon::Album( albumuuid );
+        this->albums.insert( std::make_pair( album->uuid , album ) );
+    }
+    return album;
+}
+//FlacDemon::Album * FlacDemon::Library::createAlbum( std::string * albumuuid ){
+//    return nullptr;
+//}
 void FlacDemon::Library::sort( std::string sortKey ){
     this->currentSortKey = sortKey;
     this->sortedTracks.clear();

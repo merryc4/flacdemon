@@ -59,7 +59,7 @@ void FlacDemon::TCPHandler::trackPlayingHandler(const char * signal, void * arg)
         id = "0";
     } else {
         FlacDemon::Track * track = (FlacDemon::Track * )arg;
-        id = *track->valueForKey("id");
+        id = track->valueForKey("id");
     }
     this->writeResponseForCommand(FD_ALL_SOCKETS, "playing", &id);
 }
@@ -102,10 +102,10 @@ void FlacDemon::TCPHandler::messageReceiverLoop(int sockfd){
         
         std::cout << "Command from socket: " << buffer << std::endl;
         this->addCommand(buffer);
-        std::string * results = sessionManager->getSession()->getString(buffer);
+        std::string results = sessionManager->getSession()->getString(buffer);
 //        cout << *results << endl;
 
-        if((n = this->writeResponseForCommand(sockfd, buffer, results)) < 0){
+        if((n = this->writeResponseForCommand(sockfd, buffer, &results)) < 0){
             continue;
         }
         //write response?

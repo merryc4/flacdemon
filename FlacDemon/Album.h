@@ -10,25 +10,34 @@
 #define __FlacDemon__Album__
 
 #include <stdio.h>
-#include "FlacDemonAll.h"
+#include "includes.h"
+#include "typedefs.h"
+#include "TrackListing.h"
 
 class FlacDemon::Album {
     
 private:
+    void addMetaDataFromTrackListing( FlacDemon::TrackListing * track );
     
 public:
-    string* path;
-    std::vector<FlacDemon::Track*> * tracks;
+    std::string path;
+    std::string uuid;
+    std::vector< FlacDemon::TrackListing * > tracks;
     unsigned long trackCount;
+    fd_keymap metadata;
     
     bool multipleArtists;
     bool metadataInconsistency;
     
-    Album();
+    Album( std::string * iuuid = nullptr );
     ~Album();
     
-    void addTrack(FlacDemon::Track*);
-    
+//    void addTrack(FlacDemon::Track*);
+    void addTrackListing( FlacDemon::TrackListing * );
+    std::string valueForKey( std::string * key );
+    void setValueForKey( const char * value , std::string * key );
+    void setValueForKey( std::string * value , const char * key );
+    void setValueForKey( std::string * value , std::string * key );
     //playcount, date added, various flags, artist info (from scraper)
 };
 

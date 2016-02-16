@@ -121,22 +121,21 @@ int fd_strnumbercompare(std::string * str1, std::string * str2){
 std::string fd_sqlescape(std::string isql) { //pointer version might save memory
     return regex_replace(isql, std::regex("'"), "''");
 }
-std::string * fd_keymap_vectortojson(fd_keymap_vector * ikeymap_vector){
+std::string fd_keymap_vectortojson(fd_keymap_vector * ikeymap_vector){
     //probably need a json string escape function
     std::stringstream ss;
     for(fd_keymap_vector::iterator it = ikeymap_vector->begin(); it != ikeymap_vector->end(); it++){
         ss << "{\n";
         for(fd_keymap::iterator it2 = (*it)->begin(); it2 != (*it)->end(); it2++){
-            ss << "\t\"" << it2->first << "\":\"" << *(it2->second) << "\",\n";
+            ss << "\t\"" << it2->first << "\":\"" << (it2->second) << "\",\n";
         }
         ss << "},\n";
     }
     
     ss.ignore(2);
-    std::string * json = new std::string(ss.str());
-    return json;
+    return ss.str();
 }
-std::string * fd_keymaptojson(fd_keymap * ikeymap){
+std::string fd_keymaptojson(fd_keymap * ikeymap){
     //probably need a json string escape function
     fd_keymap_vector kmv{ikeymap};
     return fd_keymap_vectortojson(&kmv);
@@ -166,7 +165,7 @@ fd_keymap_vector * fd_jsontokeymap_vector(std::string * json){
                 key = line.substr(pos2+offset, (pos - pos2 - offset));
                 pos2 = line.find("\"", pos+3);
                 value = line.substr(pos+3, (pos2 - pos - 3));
-                tkeymap->insert(fd_keypair(key, new std::string(value)));
+                tkeymap->insert(fd_keypair(key, value));
             } else if(line.find("{") == 0){
                 if(depth == 0){
                     tkeymap = new fd_keymap;
