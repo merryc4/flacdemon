@@ -28,6 +28,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->typeSearch = false;
     this->browserOffset = 0;
     this->userCommand = "";
+    this->printAlbums = false;
     
     auto f = boost::bind(&FlacDemonInterface::callCommand, this, _1, _2);
     signalHandler->signals("callCommand")->connect(f);
@@ -44,11 +45,23 @@ void FlacDemonInterface::initialize(){
     std::cout.rdbuf(out->rdbuf());
 
     initscr();
-
+    start_color();
     cbreak();
     noecho();
     keypad(stdscr, true);
     refresh(); //clears screen and sets scroll to correct position
+    
+    if( has_colors() == false || can_change_color() == false ){
+        cout << "no colors" << endl;
+    }
+    cout << "terminal supports " << COLORS << " colors" << endl;
+
+    init_color( COLOR_WHITE, 1000, 1000, 1000 );
+    init_pair(1, COLOR_BLACK, COLOR_WHITE);
+    init_pair(2, COLOR_BLUE, COLOR_WHITE);
+    init_pair(3, COLOR_GREEN, COLOR_WHITE);
+    
+    bkgd(COLOR_PAIR(1));
     
     char msg[] = "FlacDemon NCURSES Interface";
     
@@ -58,9 +71,11 @@ void FlacDemonInterface::initialize(){
     this->playbackWindow = this->nextwin( 3 );
     this->commandWindow = this->nextwin( 1 );
     
+    refresh();
+    
     mvwprintw(titleWindow, 0, (this->maxColumns - strlen(msg)) / 2, "%s", msg);
+    
     wrefresh(titleWindow);
-
     
     this->commandPrompt.assign("Command / Search:");
     this->commandCursorDefault = this->commandPrompt.length();
@@ -78,6 +93,8 @@ void FlacDemonInterface::initialize(){
 WINDOW * FlacDemonInterface::nextwin( size_t rowSize , size_t * row ){
     static size_t currentWindowRow = 0;
     WINDOW * window = newwin( rowSize, this->maxColumns, currentWindowRow, 0 );
+    wbkgd( window , COLOR_PAIR( 1 ) );
+
     currentWindowRow += rowSize;
     if( row != nullptr )
         *row = currentWindowRow;
@@ -170,13 +187,13 @@ void FlacDemonInterface::sendCommand(const char * icommand){
 }
 void FlacDemonInterface::readResponse(){
     ssize_t n;
-    char buffer[256];
+    char buffer[4096];
+    bzero(buffer,4096);
     std::string response="";
     std::string response2="";
     size_t pos;
+    cout << "reading ..." << endl;
     do{
-        bzero(buffer,256);
-        cout << "reading ..." << endl;
         if ((n = recv(this->socketFileDescriptor, buffer, sizeof(buffer), 0)) < 0){
             cout << "ERROR reading from socket" << std::endl;
             continue;
@@ -374,33 +391,36 @@ void FlacDemonInterface::printLibrary(int offset = 0){
     this->printLibraryHeaders();
     this->currentBrowserRow = 0;
     std::string key;
-    fd_tracklistingvector * tracks = this->library.allTracks();
-//    for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
-//        if(this->isSearch && !(*it)->matchesSearch)
-//            continue;
-//        std::vector < std::string > values;
-//        for(std::vector< std::string >::iterator it2 = libraryTitles->begin(); it2 != libraryTitles->end(); it2++){
-//            key = (*it2);
-//            fd_standardiseKey(&key);
-//            values.push_back( ( *it )->valueForKey( &key ) );
-//        }
-//        this->printLibraryLine( this->browserWindow , &values );
-//        if( this->currentBrowserRow > this->browserRows )
-//            break;
-//    }
-    fd_albumvector& albums = this->library.allAlbums();
-    for(fd_albumvector::iterator it = albums.begin() + offset; it != albums.end(); it++){
-        if(this->isSearch && !(*it)->matchesSearch())
-            continue;
-        std::vector < std::string > values;
-        for(std::vector< std::string >::iterator it2 = libraryTitlesAlbums->begin(); it2 != libraryTitlesAlbums->end(); it2++){
-            key = (*it2);
-            fd_standardiseKey(&key);
-            values.push_back( ( *it )->valueForKey( &key ) );
+    if( ! this->printAlbums ){
+        fd_tracklistingvector * tracks = this->library.allTracks();
+        for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
+            if(this->isSearch && !(*it)->matchesSearch)
+                continue;
+            std::vector < std::string > values;
+            for(std::vector< std::string >::iterator it2 = libraryTitlesTracks->begin(); it2 != libraryTitlesTracks->end(); it2++){
+                key = (*it2);
+                fd_standardiseKey(&key);
+                values.push_back( ( *it )->valueForKey( &key ) );
+            }
+            this->printLibraryLine( this->browserWindow , &values );
+            if( this->currentBrowserRow > this->browserRows )
+                break;
         }
-        this->printLibraryLine( this->browserWindow , &values );
-        if( this->currentBrowserRow > this->browserRows )
-            break;
+    } else {
+        fd_albumvector& albums = this->library.allAlbums();
+        for(fd_albumvector::iterator it = albums.begin() + offset; it != albums.end(); it++){
+            if(this->isSearch && !(*it)->matchesSearch())
+                continue;
+            std::vector < std::string > values;
+            for(std::vector< std::string >::iterator it2 = libraryTitlesAlbums->begin(); it2 != libraryTitlesAlbums->end(); it2++){
+                key = (*it2);
+                fd_standardiseKey(&key);
+                values.push_back( ( *it )->valueForKey( &key ) );
+            }
+            this->printLibraryLine( this->browserWindow , &values );
+            if( this->currentBrowserRow > this->browserRows )
+                break;
+        }
     }
     wrefresh(this->browserWindow);
     wrefresh(this->browserHeaderWindow);
@@ -416,6 +436,9 @@ void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::st
     int position = 0;
 //    cout << "printing line " << this->browserRows << endl;
     
+    int pair = 2 + ( this->currentBrowserRow % 2 );
+    wattron( window , COLOR_PAIR( pair ) );
+    
     for(std::vector< std::string >::iterator it = values->begin(); it != values->end(); it++){
         const char * val = this->formatValue(*it, width);
         mvwprintw(window, this->currentBrowserRow, position, val);
@@ -424,6 +447,7 @@ void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::st
         position++;
     }
     this->currentBrowserRow++;
+    wattroff( window , COLOR_PAIR( pair ) );
 }
 const char * FlacDemonInterface::formatValue(std::string value, int max){
     if(value.length() > max){

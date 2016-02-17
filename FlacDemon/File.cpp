@@ -223,15 +223,12 @@ void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
         return;
     }
     AVDictionaryEntry *copyFrom = nullptr, *copyTo=nullptr;
-//    this->printMetaDataDict( this->metadata );
-//    this->printMetaDataDict( file->metadata );
     const char * value = nullptr;
     while ((copyFrom = av_dict_get(file->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX))){
         if( av_dict_get( this->metadata, copyFrom->key , nullptr, 0 ) == nullptr ){
             av_dict_set( &this->metadata, copyFrom->key, FlacDemonMetaDataMultipleValues , 0 );
         }
     }
-//    this->printMetaDataDict( this->metadata );
 
     copyFrom = nullptr;
     copyTo = nullptr;
@@ -242,8 +239,6 @@ void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
             av_dict_set(&this->metadata, copyFrom->key, FlacDemonMetaDataMultipleValues, 0);
         }
     }
-    this->printMetaDataDict( this->metadata );
-//    this->printMetaDataDict( file->metadata );
 }
 void FlacDemon::File::checkFileStructure(){
     if(!this->containsMedia())

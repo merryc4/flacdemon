@@ -126,7 +126,8 @@ int FlacDemon::TCPHandler::writeResponseForCommand(int sockfd, const char * comm
     response.append("--data-end--");
     
     const char * cresponse = response.c_str();
-    cout << cresponse << endl;
+    if( strcmp( command , "get all" ) != 0 )
+        cout << cresponse << endl;
     if(sockfd == FD_ALL_SOCKETS){
         for(std::map < int , bool >::iterator it = this->openSockets.begin(); it != this->openSockets.end(); it++){
             sockfd = it->first;

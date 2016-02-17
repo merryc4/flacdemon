@@ -63,6 +63,8 @@ private:
     int browserRows;
     int currentBrowserRow;
     size_t browserOffset;
+    
+    bool printAlbums;
 
     size_t commandCursorPosition;
     size_t commandCursorDefault;
