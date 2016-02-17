@@ -27,6 +27,7 @@ namespace FlacDemon {
     class Player;
     
     class Session;
+    template < class Target > class CommandMap;
 }
 
 #endif

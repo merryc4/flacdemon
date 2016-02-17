@@ -11,13 +11,18 @@
 
 #include "includes.h"
 #include "FlacDemonNameSpace.h"
+#include "SignalHandler.h"
 
 typedef int (FlacDemon::Demon::*demonCommandFunction) (std::vector<std::string>*);
-typedef std::map< std::string, demonCommandFunction > DemonCommandMap;
+
+template < typename TType >
+using fd_demon_command_function = std::function < int ( TType&, fd_stringvector * ) > ;
+
+template < typename TType >
+using fd_commandmap = std::map < std::string, std::function < int ( TType&, fd_stringvector * ) > >;
 
 #define foreach1( action , staticarg , arg ) action( staticarg , arg )
 #define foreach2( action , staticarg , arg , ... ) action( staticarg , arg ) , foreach1( action, staticarg , __VA_ARGS__ )
-//#define foreach2( action , staticarg , arg , ... ) foreach1( action , staticarg arg)
 #define foreach3( action , staticarg , arg , ... ) action( staticarg , arg ) , foreach2( action, staticarg , __VA_ARGS__ )
 #define foreach4( action , staticarg , arg , ... ) action( staticarg , arg ) , foreach3( action, staticarg , __VA_ARGS__ )
 #define foreach5( action , staticarg , arg , ... ) action( staticarg , arg ) , foreach4( action, staticarg , __VA_ARGS__ )
@@ -143,9 +148,35 @@ typedef std::map< std::string, demonCommandFunction > DemonCommandMap;
                                                     (action,__VA_ARGS__)
 
 #define flacdemon_command_name( commandName ) #commandName
-#define flacdemon_commander( commander ) commander
-#define flacdemon_command( commander , commandName ) { #commandName , &commander::commandName }
+#define flacdemon_command( classType , commandName ) { #commandName , fd_demon_command_function < classType > { &classType::commandName } }
 
-#define flacdemon_command_map( commander , ...) new DemonCommandMap { foreach( flacdemon_command, commander , __VA_ARGS__ ) }
+#define flacdemon_command_map( classType , ...) fd_commandmap < classType > { foreach( flacdemon_command, classType , __VA_ARGS__ ) }
+#define flacdemon_commander( classType , commander , ...) FlacDemon::CommandMap < classType > ( commander , flacdemon_command_map( classType , __VA_ARGS__ ) )
+
+template < class Target >
+class FlacDemon::CommandMap {
+private:
+    fd_commandmap < Target > commandMap;
+    Target * target;
+protected:
+public:
+    CommandMap( Target * itarget , fd_commandmap < Target > map ) {
+        this->commandMap = map;
+        this->target = itarget;
+        auto f = boost::bind( &FlacDemon::CommandMap < Target >::callCommandHandler, this, _1, _2);
+        signalHandler->signals("callCommand")->connect(f);
+    }
+    ~CommandMap(){
+        //nothing
+    }
+    void callCommandHandler( const char * signal , void * arg ){
+        fd_stringvector * args = ( fd_stringvector * )arg;
+        std::string command = args->at(1);
+        if( this->commandMap.count( command ) ){
+            auto f = this->commandMap.at( command );
+            f( *this->target , args );
+        }
+    }
+};
 
 #endif /* defined(__FlacDemon__CommandMap__) */

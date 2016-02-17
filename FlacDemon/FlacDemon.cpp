@@ -22,16 +22,8 @@ FlacDemon::Demon::Demon() {
     
     this->player->setDatabase(this->database);
     
-//    this->commandMap = new std::map< std::string, demonCommandFunction >{
-//        flacdemon_command(add, FlacDemon::Demon),
-//        {"play", &FlacDemon::Demon::play},
-//        {"stop", &FlacDemon::Demon::stop},
-//        {"set", &FlacDemon::Demon::set},
-//        {"get", &FlacDemon::Demon::get}
-//    };
-    this->commandMap = flacdemon_command_map(FlacDemon::Demon,play,stop,set,get);
-    auto f = boost::bind( &FlacDemon::Demon::callCommandHandler, this, _1, _2);
-    signalHandler->signals("callCommand")->connect(f);
+    this->commander = new flacdemon_commander(FlacDemon::Demon,this,play,stop,set,get);
+
 }
 FlacDemon::Demon::~Demon() {
 	cout << "Deleting FlacDemon\n";
@@ -48,14 +40,7 @@ void FlacDemon::Demon::run() {
 		usleep(100); //revise sleep length
 	}
 }
-void FlacDemon::Demon::callCommandHandler( const char * signal , void * arg ){
-    fd_stringvector * args = ( fd_stringvector * )arg;
-    std::string command = args->at(1);
-    if( this->commandMap->count( command ) ){
-        demonCommandFunction f = this->commandMap->at( command );
-        (this->*f)(args);
-    }
-}
+
 int FlacDemon::Demon::add( fd_stringvector * args ){
     cout << "add some files" << endl;
     if( args->size() < 3 ) return -1;
@@ -66,7 +51,7 @@ int FlacDemon::Demon::add( fd_stringvector * args ){
     }
     return 0;
 }
-int FlacDemon::Demon::play(vector<string> * args){
+int FlacDemon::Demon::play(fd_stringvector * args){
     
     cout << "play some tunes" << endl;
     long ID = 1;
@@ -76,12 +61,12 @@ int FlacDemon::Demon::play(vector<string> * args){
     this->player->playTrackWithID(ID);
     return 0;
 }
-int FlacDemon::Demon::stop(vector<string> * args){
+int FlacDemon::Demon::stop(fd_stringvector * args){
     cout << "stop playback" << endl;
     this->player->stop();
     return 0;
 }
-int FlacDemon::Demon::set(vector<string> * args){
+int FlacDemon::Demon::set(fd_stringvector * args){
     if(args->size() < 5){
         cout << "command error: incorrect arguments" << endl;
         return 1;
@@ -99,7 +84,7 @@ int FlacDemon::Demon::set(vector<string> * args){
     
     return 0;
 }
-int FlacDemon::Demon::get(vector<string> * args){
+int FlacDemon::Demon::get(fd_stringvector * args){
     std::string results;
     if (strcmp(args->back().c_str(), "all") == 0) {
         //get all

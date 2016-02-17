@@ -13,3 +13,5 @@
 //flacdemon_command_map(test::object,play,stop,run,add);
 //flacdemon_commander(test);
 //flacdemon_commander(play)
+
+new flacdemon_commander(FlacDemon::Demon,this,play,stop,set,get);

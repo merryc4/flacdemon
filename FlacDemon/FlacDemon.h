@@ -34,7 +34,7 @@ class FlacDemon::Demon {
     friend FlacDemon::CommandParser;
 private:
     
-    std::map< std::string, demonCommandFunction > * commandMap;
+    FlacDemon::CommandMap < FlacDemon::Demon > * commander;
     
     void callCommandHandler( const char * signal, void * arg );
 
