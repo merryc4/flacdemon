@@ -223,17 +223,27 @@ void FlacDemon::File::addMetaDataFromFile(FlacDemon::File * file){
         return;
     }
     AVDictionaryEntry *copyFrom = nullptr, *copyTo=nullptr;
-    const char * value=nullptr;
+//    this->printMetaDataDict( this->metadata );
+//    this->printMetaDataDict( file->metadata );
+    const char * value = nullptr;
     while ((copyFrom = av_dict_get(file->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX))){
-        if((copyTo = av_dict_get(this->metadata, copyFrom->key, copyTo, 0))
-           && strcmp(copyTo->value, copyFrom->value) !=0 ){
-//            cout << "values for key '" << copyFrom->key << "' '" << copyTo->value << "' and '" << copyFrom->value << "' do not match" << endl;
-            value = FlacDemonMetaDataMultipleValues;
-        } else {
-            value = copyFrom->value;
+        if( av_dict_get( this->metadata, copyFrom->key , nullptr, 0 ) == nullptr ){
+            av_dict_set( &this->metadata, copyFrom->key, FlacDemonMetaDataMultipleValues , 0 );
         }
-        av_dict_set(&this->metadata, copyFrom->key, value, 0);
     }
+//    this->printMetaDataDict( this->metadata );
+
+    copyFrom = nullptr;
+    copyTo = nullptr;
+    while ((copyTo = av_dict_get(this->metadata, "", copyTo, AV_DICT_IGNORE_SUFFIX))){
+        if((copyFrom = av_dict_get(file->metadata, copyTo->key, nullptr, 0))
+           && strcmp(copyFrom->value, copyTo->value) != 0 ){
+            if( strcmp( copyTo->value , FlacDemonMetaDataMultipleValues ) == 0) continue;
+            av_dict_set(&this->metadata, copyFrom->key, FlacDemonMetaDataMultipleValues, 0);
+        }
+    }
+    this->printMetaDataDict( this->metadata );
+//    this->printMetaDataDict( file->metadata );
 }
 void FlacDemon::File::checkFileStructure(){
     if(!this->containsMedia())
@@ -325,29 +335,34 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
     float filenameSimilarity;
     std::map< std::string, int > * valueCounts;
     std::map< std::string,  std::map<std::string, int> * > values;
-    
+    fd_stringvector missingValues;
+    bool tagHasMissingValues;
     bool keyIsArtist, keyIsAlbum, keyIsAlbumArtist;
-    
+    bool tagSimilarityAlbumConsistency = false, tagSimilarityArtistConsitency = false;
+    bool missingValuesAlbumConsistency = false , missingValuesArtistConsistency = false;
     for(fd_stringvector::iterator metaIterator = this->inconsistentMetadata->begin(); metaIterator != this->inconsistentMetadata->end(); metaIterator++){
         if(metaIterator->compare("track") == 0) //track numbers checked in checkTrackNumbers()
             continue;
         key = (*metaIterator);
         keyIsAlbum = false; keyIsArtist = false, keyIsAlbumArtist = false;
+        tagHasMissingValues = false;
         
         if(key.compare("album") == 0)
             keyIsAlbum = true;
         else if(key.compare("artist") == 0)
             keyIsArtist = true;
-        else if(key.compare("albumartist"))
+        else if( key.compare("albumartist") == 0 )
             keyIsAlbumArtist = true;
         
         valueCounts = new std::map< std::string , int >;
         values.insert(std::pair<std::string, std::map< std::string , int> * >{(key), valueCounts});
+        
         flacdemon_loop_all_files(this->files){
             count = 1;
             tFile = (*it);
             if((value = tFile->getMetaDataEntry(&(*metaIterator))) == "" ){
                 //potentially use filename with internet scraper lookup, or filename with other such use
+                tagHasMissingValues = true;
                 continue;
             }
             
@@ -380,18 +395,35 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
                     this->similarMetadata = new fd_stringvector;
                 this->similarMetadata->push_back(key);
                 set_eflag FLACDEMON_METADATA_HAS_SIMILARITY;
-                if(keyIsAlbum)
-                    albumConsistency = true;
-                else if(keyIsArtist || keyIsAlbumArtist)
-                    artistConsistency = true;
+                if(keyIsAlbum){
+                    tagSimilarityAlbumConsistency = true;
+                } else if(keyIsArtist || keyIsAlbumArtist) {
+                    tagSimilarityArtistConsitency = true;
+                }
                 
             } else {
                 previous = "";
             }
             previous = value;
         }
+        
+        if( tagHasMissingValues && valueCounts->size() == 1 ){ //potentially add conditionals for tag similarity with some missing values
+            set_eflag FLACDEMON_ALBUM_HAS_PARTIALLY_MISSING_METADATA;
+            if( keyIsArtist )
+                set_eflag FLACDEMON_ALBUM_HAS_PARTIALLY_MISSING_ARTIST;
+            else if( keyIsAlbumArtist )
+                set_eflag FLACDEMON_ALBUM_HAS_PARTIALLY_MISSING_ALBUMARTIST;
+            else continue;
+            
+            missingValuesArtistConsistency = true;
+        }
     }
-    if(albumConsistency && artistConsistency)
+    albumConsistency = albumConsistency || tagSimilarityAlbumConsistency;
+    artistConsistency = artistConsistency || tagSimilarityArtistConsitency || missingValuesArtistConsistency;
+    if( albumConsistency && missingValuesArtistConsistency ){
+        set_flag FLACDEMON_IS_MISSING_VALUES_ALBUM_DIRECTORY;
+    }
+    if(albumConsistency && artistConsistency && ( tagSimilarityAlbumConsistency || tagSimilarityArtistConsitency ))
         set_flag FLACDEMON_IS_TAG_SIMILARITY_ALBUM_DIRECTORY;
     
     //free maps
@@ -592,7 +624,7 @@ bool FlacDemon::File::containsMedia(){
     return has_flag FLACDEMON_FILE_IS_MEDIA || has_flag FLACDEMON_CHILD_OF_DIRECTORY_IS_MEDIA;
 }
 bool FlacDemon::File::isAlbumDirectory(){
-    if((has_flag FLACDEMON_DIRECTORY_IS_ALBUM || has_flag FLACDEMON_IS_TAG_SIMILARITY_ALBUM_DIRECTORY) && !(has_flag FLACDEMON_DIRECTORY_IS_DISC))
+    if((has_flag FLACDEMON_DIRECTORY_IS_ALBUM || has_flag FLACDEMON_IS_TAG_SIMILARITY_ALBUM_DIRECTORY || has_flag FLACDEMON_IS_MISSING_VALUES_ALBUM_DIRECTORY ) && !(has_flag FLACDEMON_DIRECTORY_IS_DISC))
         return true;
     
     if(!(has_flag FLACDEMON_FILE_IS_MEDIA_DIRECTORY))
