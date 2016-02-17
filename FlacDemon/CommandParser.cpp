@@ -9,7 +9,7 @@
 #include "CommandParser.h"
 
 fd_stringvector * remoteCommands = new fd_stringvector{"add", "play", "stop", "get"};
-fd_stringvector * localCommands = new fd_stringvector{"search, sort"};
+fd_stringvector * localCommands = new fd_stringvector{"search", "sort", "show"};
 
 FlacDemon::CommandParser::CommandParser(){
     this->availableInterfaces = FDInterfaceCommandLine;

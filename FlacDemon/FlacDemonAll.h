@@ -22,8 +22,6 @@ using std::cout;
 using std::string;
 using std::endl;
 
-typedef int (FlacDemon::Demon::*demonCommandFunction) (std::vector<string>*);
-
 struct MediaStreamInfo {
     unsigned long bitRate;
     unsigned long sampleRate;

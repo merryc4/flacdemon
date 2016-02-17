@@ -20,6 +20,8 @@
 #include "includes.h"
 #include "tests.h"
 
+#include "CommandMap.h"
+
 enum flacdemonInterfaceMode {
     interfaceModeTerminal = 0,
     interfaceModeCurses,

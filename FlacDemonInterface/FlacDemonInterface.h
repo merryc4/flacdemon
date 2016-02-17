@@ -65,7 +65,9 @@ private:
     size_t browserOffset;
     
     bool printAlbums;
-
+    bool disableColors;
+    bool colorsOn;
+    
     size_t commandCursorPosition;
     size_t commandCursorDefault;
     
@@ -119,6 +121,7 @@ public:
     void setCommandCursor();
     void printProgress();
     void waitForSearch();
+    void setColor( WINDOW * window , int attr , bool onoff );
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

@@ -29,6 +29,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->browserOffset = 0;
     this->userCommand = "";
     this->printAlbums = false;
+    this->colorsOn = true;
     
     auto f = boost::bind(&FlacDemonInterface::callCommand, this, _1, _2);
     signalHandler->signals("callCommand")->connect(f);
@@ -51,10 +52,10 @@ void FlacDemonInterface::initialize(){
     keypad(stdscr, true);
     refresh(); //clears screen and sets scroll to correct position
     
-    if( has_colors() == false || can_change_color() == false ){
-        cout << "no colors" << endl;
-    }
-    cout << "terminal supports " << COLORS << " colors" << endl;
+    if( ( this->disableColors = ( has_colors() == false || can_change_color() == false ) ) ) {
+        cout << "terminal does not support colors" << endl;
+    } else
+        cout << "terminal supports " << COLORS << " colors" << endl;
 
     init_color( COLOR_WHITE, 1000, 1000, 1000 );
     init_pair(1, COLOR_BLACK, COLOR_WHITE);
@@ -426,10 +427,12 @@ void FlacDemonInterface::printLibrary(int offset = 0){
     wrefresh(this->browserHeaderWindow);
 }
 void FlacDemonInterface::printLibraryHeaders(){
+    this->colorsOn = false;
     char title[] = "Library";
-    mvwprintw(this->browserWindow, 0, (this->maxColumns - strlen(title)) / 2, title);
+    mvwprintw(this->browserHeaderWindow, 0, (this->maxColumns - strlen(title)) / 2, title);
     this->currentBrowserRow = 1;
-    this->printLibraryLine( this->browserHeaderWindow , libraryTitlesAlbums );
+    this->printLibraryLine( this->browserHeaderWindow , ( this->printAlbums ? libraryTitlesAlbums : libraryTitlesTracks ));
+    this->colorsOn = true;
 }
 void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::string> *values ){
     int width = (this->maxColumns / values->size());
@@ -437,7 +440,7 @@ void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::st
 //    cout << "printing line " << this->browserRows << endl;
     
     int pair = 2 + ( this->currentBrowserRow % 2 );
-    wattron( window , COLOR_PAIR( pair ) );
+    this->setColor( this->browserWindow , COLOR_PAIR( pair ), true );
     
     for(std::vector< std::string >::iterator it = values->begin(); it != values->end(); it++){
         const char * val = this->formatValue(*it, width);
@@ -447,7 +450,8 @@ void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::st
         position++;
     }
     this->currentBrowserRow++;
-    wattroff( window , COLOR_PAIR( pair ) );
+
+    this->setColor( this->browserWindow , COLOR_PAIR( pair ), false );
 }
 const char * FlacDemonInterface::formatValue(std::string value, int max){
     if(value.length() > max){
@@ -540,4 +544,8 @@ void FlacDemonInterface::waitForSearch(){
     cout << "search wait over" << endl;
 
     this->event(fd_interface_printlibrary);
+}
+void FlacDemonInterface::setColor( WINDOW * window, int attr , bool onoff ) {
+    if( !this->disableColors && this->colorsOn )
+        onoff ? wattron( window , attr ) : wattroff( window , attr );
 }

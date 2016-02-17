@@ -22,13 +22,14 @@ FlacDemon::Demon::Demon() {
     
     this->player->setDatabase(this->database);
     
-    this->commandMap = new std::map< std::string, demonCommandFunction >{
-        {"add", &FlacDemon::Demon::add},
-        {"play", &FlacDemon::Demon::play},
-        {"stop", &FlacDemon::Demon::stop},
-        {"set", &FlacDemon::Demon::set},
-        {"get", &FlacDemon::Demon::get}
-    };
+//    this->commandMap = new std::map< std::string, demonCommandFunction >{
+//        flacdemon_command(add, FlacDemon::Demon),
+//        {"play", &FlacDemon::Demon::play},
+//        {"stop", &FlacDemon::Demon::stop},
+//        {"set", &FlacDemon::Demon::set},
+//        {"get", &FlacDemon::Demon::get}
+//    };
+    this->commandMap = flacdemon_command_map(FlacDemon::Demon,play,stop,set,get);
     auto f = boost::bind( &FlacDemon::Demon::callCommandHandler, this, _1, _2);
     signalHandler->signals("callCommand")->connect(f);
 }
