@@ -81,7 +81,7 @@ void FlacDemon::Album::setValueForKey( std::string * value , std::string * key )
 }
 bool FlacDemon::Album::matchesSearch() {
     for( fd_tracklistingvector::iterator it = this->tracks.begin(); it != this->tracks.end(); it++ ){
-        if( (*it)->matchesSearch )
+        if( (*it)->matchesSearch() )
             return true;
     }
     return false;

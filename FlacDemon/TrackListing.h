@@ -13,8 +13,9 @@
 #include "FlacDemonNameSpace.h"
 #include "typedefs.h"
 #include "FlacDemonUtils.h"
+#include "LibraryListing.h"
 
-class FlacDemon::TrackListing {
+class FlacDemon::TrackListing : public FlacDemon::LibraryListing {
 private:
 protected:
     void init();
@@ -29,13 +30,13 @@ protected:
     
 public:
     std::string * uuid = nullptr;
-    bool matchesSearch;
 
     TrackListing();
     TrackListing (fd_keymap * keymap);
     ~TrackListing();
     
-    std::string valueForKey (const char * key);
+//    std::string valueForKey (const char * key);
+    using FlacDemon::LibraryListing::valueForKey;
     std::string valueForKey (std::string * key);
     
     virtual std::string keymapFileValue(std::string * key);

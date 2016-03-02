@@ -28,8 +28,10 @@ FlacDemonInterface::FlacDemonInterface(){
     this->typeSearch = false;
     this->browserOffset = 0;
     this->userCommand = "";
-    this->printAlbums = false;
     this->colorsOn = true;
+    
+    this->printAlbums = true;
+    this->library.listingMode = ( this->printAlbums ? FlacDemonListingModeAlbums : FlacDemonListingModeTracks );
     
     auto f = boost::bind(&FlacDemonInterface::callCommand, this, _1, _2);
     signalHandler->signals("callCommand")->connect(f);
@@ -385,6 +387,9 @@ void FlacDemonInterface::escapeHandler(){
     }
     this->userCommand.clear();
 }
+fd_stringvector& FlacDemonInterface::libraryTitles(){ //move to library
+    return this->printAlbums ? *libraryTitlesAlbums : *libraryTitlesTracks;
+}
 void FlacDemonInterface::printLibrary(int offset = 0){
 //    cout << "printing library" << endl;
     wclear(this->browserWindow);
@@ -392,36 +397,51 @@ void FlacDemonInterface::printLibrary(int offset = 0){
     this->printLibraryHeaders();
     this->currentBrowserRow = 0;
     std::string key;
-    if( ! this->printAlbums ){
-        fd_tracklistingvector * tracks = this->library.allTracks();
-        for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
-            if(this->isSearch && !(*it)->matchesSearch)
-                continue;
-            std::vector < std::string > values;
-            for(std::vector< std::string >::iterator it2 = libraryTitlesTracks->begin(); it2 != libraryTitlesTracks->end(); it2++){
-                key = (*it2);
-                fd_standardiseKey(&key);
-                values.push_back( ( *it )->valueForKey( &key ) );
-            }
-            this->printLibraryLine( this->browserWindow , &values );
-            if( this->currentBrowserRow > this->browserRows )
-                break;
+//    if( ! this->printAlbums ){
+//        fd_tracklistingvector * tracks = this->library.allTracks();
+//        for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
+//            if(this->isSearch && !(*it)->matchesSearch)
+//                continue;
+//            std::vector < std::string > values;
+//            for(std::vector< std::string >::iterator it2 = libraryTitlesTracks->begin(); it2 != libraryTitlesTracks->end(); it2++){
+//                key = (*it2);
+//                fd_standardiseKey(&key);
+//                values.push_back( ( *it )->valueForKey( &key ) );
+//            }
+//            this->printLibraryLine( this->browserWindow , &values );
+//            if( this->currentBrowserRow > this->browserRows )
+//                break;
+//        }
+//    } else {
+//        fd_albumvector& albums = this->library.allAlbums();
+//        for(fd_albumvector::iterator it = albums.begin() + offset; it != albums.end(); it++){
+//            if(this->isSearch && !(*it)->matchesSearch())
+//                continue;
+//            std::vector < std::string > values;
+//            for(std::vector< std::string >::iterator it2 = libraryTitlesAlbums->begin(); it2 != libraryTitlesAlbums->end(); it2++){
+//                key = (*it2);
+//                fd_standardiseKey(&key);
+//                values.push_back( ( *it )->valueForKey( &key ) );
+//            }
+//            this->printLibraryLine( this->browserWindow , &values );
+//            if( this->currentBrowserRow > this->browserRows )
+//                break;
+//        }
+//    }
+    fd_librarylistingvector & listings = this->library.allListings();
+    fd_stringvector & titles = this->libraryTitles();
+    for(fd_librarylistingvector::iterator it = listings.begin() + offset; it != listings.end(); it++){
+        if(this->isSearch && !(*it)->matchesSearch())
+            continue;
+        std::vector < std::string > values;
+        for(std::vector< std::string >::iterator it2 = titles.begin(); it2 != titles.end(); it2++){
+            key = (*it2);
+            fd_standardiseKey(&key);
+            values.push_back( ( *it )->valueForKey( &key ) );
         }
-    } else {
-        fd_albumvector& albums = this->library.allAlbums();
-        for(fd_albumvector::iterator it = albums.begin() + offset; it != albums.end(); it++){
-            if(this->isSearch && !(*it)->matchesSearch())
-                continue;
-            std::vector < std::string > values;
-            for(std::vector< std::string >::iterator it2 = libraryTitlesAlbums->begin(); it2 != libraryTitlesAlbums->end(); it2++){
-                key = (*it2);
-                fd_standardiseKey(&key);
-                values.push_back( ( *it )->valueForKey( &key ) );
-            }
-            this->printLibraryLine( this->browserWindow , &values );
-            if( this->currentBrowserRow > this->browserRows )
-                break;
-        }
+        this->printLibraryLine( this->browserWindow , &values );
+        if( this->currentBrowserRow > this->browserRows )
+            break;
     }
     wrefresh(this->browserWindow);
     wrefresh(this->browserHeaderWindow);
@@ -431,7 +451,7 @@ void FlacDemonInterface::printLibraryHeaders(){
     char title[] = "Library";
     mvwprintw(this->browserHeaderWindow, 0, (this->maxColumns - strlen(title)) / 2, title);
     this->currentBrowserRow = 1;
-    this->printLibraryLine( this->browserHeaderWindow , ( this->printAlbums ? libraryTitlesAlbums : libraryTitlesTracks ));
+    this->printLibraryLine( this->browserHeaderWindow , &this->libraryTitles());
     this->colorsOn = true;
 }
 void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::string> *values ){
@@ -464,7 +484,15 @@ void FlacDemonInterface::parseLibraryUpdate(std::string *response){
     fd_keymap_vector * results = fd_jsontokeymap_vector(response);
     this->library.libraryUpdate(results);
     this->library.sort("artist");
+    this->setColumnWidths();
     this->event(fd_interface_printlibrary);
+}
+void FlacDemonInterface::setColumnWidths() {
+    fd_stringvector& titles = this->libraryTitles();
+    
+    for( fd_stringvector::iterator it = titles.begin(); it != titles.end(); it++ ){
+        
+    }
 }
 void FlacDemonInterface::changeOffset(int diff, bool absolute){
     if(absolute){

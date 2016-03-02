@@ -59,7 +59,7 @@ FlacDemon::Album * FlacDemon::Library::getOrCreateAlbum ( std::string * albumuui
 //FlacDemon::Album * FlacDemon::Library::createAlbum( std::string * albumuuid ){
 //    return nullptr;
 //}
-void FlacDemon::Library::sort( std::string sortKey ){
+void FlacDemon::Library::sort( std::string sortKey , FlacDemonListingMode iListingMode ){
     this->currentSortKey = sortKey;
     this->sortedTracks.clear();
     for( std::map < std::string, FlacDemon::TrackListing * > :: iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
@@ -74,6 +74,20 @@ void FlacDemon::Library::sort( std::string sortKey ){
     }
     TrackSorter < FlacDemon::Album * > albumsorter ( sortKey );
     std::sort( this->sortedAlbums.begin() , this->sortedAlbums.end() , albumsorter );
+    
+    if( iListingMode ) { //none default
+        this->listingMode = iListingMode;
+    }
+    this->sortedListings.clear();
+    switch ( this->listingMode ) {
+        case FlacDemonListingModeDefault:
+        case FlacDemonListingModeTracks:
+            this->sortedListings.insert( this->sortedListings.begin(), this->sortedTracks.begin(), this->sortedTracks.end() );
+            break;
+        case FlacDemonListingModeAlbums:
+            this->sortedListings.insert( this->sortedListings.begin(), this->sortedAlbums.begin(), this->sortedAlbums.end() );
+            break;
+    }
 }
 void FlacDemon::Library::search( fd_stringvector terms ){
     if( ! this->setSearchTerms( terms ) )
@@ -120,11 +134,15 @@ FlacDemon::TrackListing * FlacDemon::Library::trackListingForID(std::string ID){
     }
     return this->tracks.at(ID);
 }
-fd_tracklistingvector * FlacDemon::Library::allTracks(){
-    return &this->sortedTracks;
+fd_tracklistingvector & FlacDemon::Library::allTracks(){
+    return this->sortedTracks;
 }
-fd_albumvector& FlacDemon::Library::allAlbums(){
+fd_albumvector & FlacDemon::Library::allAlbums(){
     return this->sortedAlbums;
+}
+fd_librarylistingvector & FlacDemon::Library::allListings( FlacDemonListingMode iListingMode ) {
+    
+    return this->sortedListings;
 }
 size_t FlacDemon::Library::count(){
     return this->tracks.size();

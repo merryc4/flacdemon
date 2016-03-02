@@ -9,13 +9,12 @@
 #ifndef __FlacDemon__Album__
 #define __FlacDemon__Album__
 
-#include <stdio.h>
 #include "includes.h"
 #include "typedefs.h"
 #include "TrackListing.h"
 #include "LibraryTitles.h"
 
-class FlacDemon::Album {
+class FlacDemon::Album : public FlacDemon::LibraryListing {
     
 private:
     void addMetaDataFromTrackListing( FlacDemon::TrackListing * track );
@@ -38,6 +37,8 @@ public:
 //    void addTrack(FlacDemon::Track*);
     void addTrackListing( FlacDemon::TrackListing * );
     std::string valueForKey( std::string * key );
+    using FlacDemon::LibraryListing::valueForKey;
+
     void setValueForKey( const char * value , std::string * key );
     void setValueForKey( std::string * value , const char * key );
     void setValueForKey( std::string * value , std::string * key );

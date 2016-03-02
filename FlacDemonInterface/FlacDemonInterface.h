@@ -63,6 +63,7 @@ private:
     int browserRows;
     int currentBrowserRow;
     size_t browserOffset;
+    std::map < std::string , size_t > columnWidths;
     
     bool printAlbums;
     bool disableColors;
@@ -103,6 +104,7 @@ public:
     void trySearch();
     void clearSearch();
     void escapeHandler();
+    fd_stringvector& libraryTitles();
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine( WINDOW * window , std::vector< std:: string > * values);
@@ -115,6 +117,7 @@ public:
     const char * formatValue(std::string value, int max);
     void parseLibraryUpdate(std::string * response);
     void changeOffset(int diff, bool absolute = false);
+    void setColumnWidths();
     void setNowPlaying(std::string ID);
     void printNowPlaying();
     void printCommand();

@@ -26,7 +26,7 @@ void FlacDemon::TrackListing::init(){
     this->dateAdded = 0;
     this->trackTime = 0;
     
-    this->matchesSearch = false;
+    this->isSearchMatch = false;
     
     this->trackinfo = new std::map<std::string, long>{
         { "playcount" , 0 },
@@ -53,10 +53,6 @@ void FlacDemon::TrackListing::init(){
     }
 }
 
-std::string FlacDemon::TrackListing::valueForKey (const char * key){
-    std::string tkey = key;
-    return this->valueForKey(&tkey);
-}
 std::string FlacDemon::TrackListing::valueForKey(std::string* key){
     std::string value = "";
     if(key->compare("filepath")==0){
@@ -144,6 +140,6 @@ bool FlacDemon::TrackListing::compareSearchStrings(std::vector < std::string > *
         match = true;
     }
     if(setMatch)
-        this->matchesSearch = match;
+        this->isSearchMatch = match;
     return match;
 }

@@ -23,12 +23,20 @@
 
 #define FLACDEMON_LIBRARY_SEARCH_DELAY 3000
 
+typedef enum {
+    FlacDemonListingModeDefault,
+    FlacDemonListingModeTracks,
+    FlacDemonListingModeAlbums
+} FlacDemonListingMode;
+
 class FlacDemon::Library{
 private:
     std::map < std::string, FlacDemon::TrackListing * > tracks;
     std::map < std::string, FlacDemon::Album * > albums;
     fd_tracklistingvector sortedTracks;
     fd_albumvector sortedAlbums;
+    fd_librarylistingvector sortedListings;
+    
     std::string currentSortKey;
     
     std::mutex searchMutex;
@@ -44,22 +52,25 @@ private:
     
 protected:
 public:
-    bool searching;
-
+    
     Library();
     ~Library();
+    
+    bool searching;
+    FlacDemonListingMode listingMode;
 
     void libraryUpdate( fd_keymap_vector * values );
     void addTrackListing( FlacDemon::TrackListing * trackListing );
     void addTrackListing( fd_keymap * keymap );
     FlacDemon::Album * getOrCreateAlbum( std::string * albumuuid );
 //    FlacDemon::Album * createAlbum( std::string * albumuuid );
-    void sort( std::string sortKey );
+    void sort( std::string sortKey , FlacDemonListingMode iListingMode = FlacDemonListingModeDefault );
     void search( fd_stringvector terms );
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);
-    fd_tracklistingvector * allTracks();
-    fd_albumvector& allAlbums();
+    fd_tracklistingvector & allTracks();
+    fd_albumvector & allAlbums();
+    fd_librarylistingvector & allListings( FlacDemonListingMode iListingMode = FlacDemonListingModeDefault );
     size_t count();
 
 };
