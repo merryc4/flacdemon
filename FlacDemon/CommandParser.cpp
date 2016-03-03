@@ -8,8 +8,8 @@
 
 #include "CommandParser.h"
 
-fd_stringvector * remoteCommands = new fd_stringvector{"add", "play", "stop", "get"};
-fd_stringvector * localCommands = new fd_stringvector{"search", "sort", "show"};
+fd_stringvector * daemonCommands = new fd_stringvector{"add", "play", "stop", "get"};
+fd_stringvector * interfaceCommands = new fd_stringvector{"search", "sort", "show", "verify"};
 
 FlacDemon::CommandParser::CommandParser(){
     this->availableInterfaces = FDInterfaceCommandLine;
@@ -118,14 +118,14 @@ CommandType FlacDemon::CommandParser::checkCommand(){
     if(this->commandWord == "s" || this->commandWord == "search"){
         return ( this->commandType = search_command );
     }
-    for(fd_stringvector::iterator it = remoteCommands->begin(); it != remoteCommands->end(); it++){
+    for(fd_stringvector::iterator it = daemonCommands->begin(); it != daemonCommands->end(); it++){
         if ( it->find(this->commandWord) != std::string::npos ) {
-            return ( this->commandType = remote_command );
+            return ( this->commandType = daemon_command );
         }
     }
-    for(fd_stringvector::iterator it = localCommands->begin(); it != localCommands->end(); it++){
+    for(fd_stringvector::iterator it = interfaceCommands->begin(); it != interfaceCommands->end(); it++){
         if ( it->find(this->commandWord) != std::string::npos ) {
-            return ( this->commandType = local_command );
+            return ( this->commandType = interface_command );
         }
     }
     return ( this-> commandType = no_command );

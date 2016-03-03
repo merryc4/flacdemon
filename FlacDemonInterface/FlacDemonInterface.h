@@ -24,6 +24,7 @@
 #include "Library.h"
 #include "CommandParser.h"
 #include "LibraryTitles.h"
+#include "CommandMap.h"
 
 
 #define fd_interface_printlibrary   1 << 0
@@ -33,11 +34,20 @@
 #define fd_interface_printplaying   1 << 4
 #define fd_interface_playbackprogress 1 << 5
 #define fd_interface_printprogress  1 << 6
+#define fd_interface_printalbum     1 << 7
+#define fd_interface_verifyview     1 << 8
+
+#define COLOR_GREY  8
+
+#define COLOR_PAIR_BLACK_WHITE  1
+#define COLOR_PAIR_GREY_WHITE   2
+#define COLOR_PAIR_BLUE_WHITE   3
+#define COLOR_PAIR_GREEN_WHITE  4
 
 using std::cout;
 using std::endl;
 
-class FlacDemonInterface{
+class FlacDemonInterface : public FlacDemon::CommandMap < FlacDemonInterface >{
 private:
     int socketFileDescriptor;
     std::thread * readThread;
@@ -89,6 +99,8 @@ private:
     FlacDemon::TrackListing * nowPlaying;
     float progress;
     
+    FlacDemon::Album * currentViewAlbum;
+    
 protected:
     
 public:
@@ -113,6 +125,11 @@ public:
     void printLibraryLine( WINDOW * window , std::vector< std:: string > * values);
     void callCommand( const char * signal, void * args );
     void sendCommand(const char * command);
+    
+    int search ( fd_stringvector * args );
+    int show ( fd_stringvector * args );
+    int verify ( fd_stringvector * args );
+    
     void readResponse();
     void parseResponse(std::string response);
     std::string parseCommandFromResponse(std::string * response);

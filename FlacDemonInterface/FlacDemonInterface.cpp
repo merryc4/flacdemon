@@ -29,13 +29,19 @@ FlacDemonInterface::FlacDemonInterface(){
     this->browserOffset = 0;
     this->userCommand = "";
     this->colorsOn = true;
-    
+    this->currentViewAlbum = nullptr;
     this->printAlbums = false;
     this->library.listingMode = ( this->printAlbums ? FlacDemonListingModeAlbums : FlacDemonListingModeTracks );
     
-    auto f = boost::bind(&FlacDemonInterface::callCommand, this, _1, _2);
-    signalHandler->signals("callCommand")->connect(f);
-//    this->initialize();
+//    auto f = boost::bind(&FlacDemonInterface::callCommand, this, _1, _2);
+//    signalHandler->signals("callCommand")->connect(f);
+    
+    this->setTargetMap( this , fd_commandmap < FlacDemonInterface > {
+        flacdemon_command( FlacDemonInterface , "search" , search ),
+        flacdemon_command( FlacDemonInterface , "show" , show ),
+        flacdemon_command( FlacDemonInterface , "verify" , verify )
+    });
+
 }
 FlacDemonInterface::~FlacDemonInterface(){
     //de-init
@@ -59,20 +65,26 @@ void FlacDemonInterface::initialize(){
     } else
         cout << "terminal supports " << COLORS << " colors" << endl;
 
-    init_color( COLOR_WHITE, 1000, 1000, 1000 );
-    init_pair(1, COLOR_BLACK, COLOR_WHITE);
-    init_pair(2, COLOR_BLUE, COLOR_WHITE);
-    init_pair(3, COLOR_GREEN, COLOR_WHITE);
+    init_color( COLOR_WHITE , 1000, 1000, 1000 );
+    init_color( COLOR_GREY , 500, 500, 500 );
     
-    bkgd(COLOR_PAIR(1));
+    init_pair( COLOR_PAIR_BLACK_WHITE, COLOR_BLACK, COLOR_WHITE );
+    init_pair( COLOR_PAIR_GREY_WHITE, COLOR_GREY, COLOR_WHITE );
+
+    init_pair( COLOR_PAIR_BLUE_WHITE, COLOR_BLUE, COLOR_WHITE );
+    init_pair( COLOR_PAIR_GREEN_WHITE, COLOR_GREEN, COLOR_WHITE );
+    
+    bkgd(COLOR_PAIR( COLOR_PAIR_BLACK_WHITE ));
     
     char msg[] = "FlacDemon NCURSES Interface";
     
     getmaxyx(stdscr, this->maxRows, this->maxColumns);
     
+    size_t row;
+    
     WINDOW * titleWindow = this->nextwin( 1 );
     this->playbackWindow = this->nextwin( 3 );
-    this->commandWindow = this->nextwin( 1 );
+    this->commandWindow = this->nextwin( 1 , &row );
     
     refresh();
     
@@ -86,17 +98,17 @@ void FlacDemonInterface::initialize(){
     mvwprintw(this->commandWindow, 0, 0, this->commandPrompt.c_str());
     wrefresh(this->commandWindow);
     
-    size_t row;
+    size_t browserPanelRow = row;
+
     this->browserHeaderWindow = this->nextwin( 2 , &row );
     this->browserRows = this->maxRows - row;
-    size_t browserWindowRow = row;
     
     this->browserWindow = this->nextwin( this->browserRows );
     
-    this->albumViewWindow = this->nextwin(this->browserRows, &row, ( int )browserWindowRow);
+    this->albumViewWindow = this->nextwin( ( this->maxRows - browserPanelRow ), &row, ( int )browserPanelRow);
     
     int verifyColums = ( this->maxColumns > 20 ) ? 10 : ( this->maxColumns - 10 );
-    this->verifyWindow = newwin( ( int )this->browserRows , verifyColums, browserWindowRow, ( this->maxColumns - verifyColums ));
+    this->verifyWindow = newwin( ( this->maxRows - browserPanelRow ) , verifyColums, browserPanelRow, ( this->maxColumns - verifyColums ));
     
     this->verifyPanel = new_panel( this->verifyWindow );
     this->browserPanel = new_panel( this->browserWindow );
@@ -109,7 +121,7 @@ WINDOW * FlacDemonInterface::nextwin( size_t rowSize , size_t * row , int reset)
         currentWindowRow = reset;
     }
     WINDOW * window = newwin( ( int )rowSize, this->maxColumns, ( int )currentWindowRow, 0 );
-    wbkgd( window , COLOR_PAIR( 1 ) );
+    wbkgd( window , COLOR_PAIR( COLOR_PAIR_BLACK_WHITE ) );
 
     currentWindowRow += rowSize;
     if( row != nullptr )
@@ -182,9 +194,9 @@ void FlacDemonInterface::callCommand( const char * signal, void * arg ){
     if( this->commandParser.commandType == no_command && this->typeSearch ){
         this->typeSearch = false;
     }
-    else if(this->commandParser.commandType == local_command ){
+    else if(this->commandParser.commandType == interface_command ){
         
-    } else if( this->commandParser.commandType == remote_command ){
+    } else if( this->commandParser.commandType == daemon_command ){
         this->sendCommand(args->front().c_str());
     }
     
@@ -201,6 +213,31 @@ void FlacDemonInterface::sendCommand(const char * icommand){
         this->socketFileDescriptor = -1;
     }
 }
+int FlacDemonInterface::search ( fd_stringvector * args ) {
+    this->trySearch();
+    return 0;
+}
+int FlacDemonInterface::show ( fd_stringvector * args ) {
+    if( args->size() < 3 ) return 1;
+    
+    std::string & showValue = args->at(2);
+    if( showValue ==  "albums" ) {
+        this->library.listingMode = FlacDemonListingModeAlbums;
+    } else if( showValue == "tracks" ) {
+        this->library.listingMode = FlacDemonListingModeTracks;
+    }
+    this->library.sort("artist");
+    this->event( fd_interface_printlibrary );
+    return 0;
+}
+int FlacDemonInterface::verify ( fd_stringvector * args ){
+    fd_albumvector & albums = this->library.allAlbums();
+    FlacDemon::Album * album = albums[0];
+    this->currentViewAlbum = album;
+    this->event( fd_interface_printalbum | fd_interface_verifyview );
+    return 0;
+}
+                       
 void FlacDemonInterface::readResponse(){
     ssize_t n;
     char buffer[4096];
@@ -303,6 +340,15 @@ void FlacDemonInterface::printFlags(){
     if(ihas_flag(this->flags, fd_interface_printprogress)){
         cout << "printing progress" << endl;
         this->printProgress();
+    }
+    if( ihas_flag( this->flags, fd_interface_printalbum ) ) {
+        this->printAlbum( this->albumViewWindow , this->currentViewAlbum );
+    }
+    if( ihas_flag( this->flags, fd_interface_verifyview ) ) {
+        hide_panel( this->browserPanel );
+        show_panel( this->verifyPanel );
+        update_panels();
+        doupdate();
     }
     this->flags = 0;
     this->setCommandCursor();
@@ -410,37 +456,7 @@ void FlacDemonInterface::printLibrary(int offset = 0){
     this->printLibraryHeaders();
     this->currentBrowserRow = 0;
     std::string key;
-//    if( ! this->printAlbums ){
-//        fd_tracklistingvector * tracks = this->library.allTracks();
-//        for(fd_tracklistingvector::iterator it = tracks->begin() + offset; it != tracks->end(); it++){
-//            if(this->isSearch && !(*it)->matchesSearch)
-//                continue;
-//            std::vector < std::string > values;
-//            for(std::vector< std::string >::iterator it2 = libraryTitlesTracks->begin(); it2 != libraryTitlesTracks->end(); it2++){
-//                key = (*it2);
-//                fd_standardiseKey(&key);
-//                values.push_back( ( *it )->valueForKey( &key ) );
-//            }
-//            this->printLibraryLine( this->browserWindow , &values );
-//            if( this->currentBrowserRow > this->browserRows )
-//                break;
-//        }
-//    } else {
-//        fd_albumvector& albums = this->library.allAlbums();
-//        for(fd_albumvector::iterator it = albums.begin() + offset; it != albums.end(); it++){
-//            if(this->isSearch && !(*it)->matchesSearch())
-//                continue;
-//            std::vector < std::string > values;
-//            for(std::vector< std::string >::iterator it2 = libraryTitlesAlbums->begin(); it2 != libraryTitlesAlbums->end(); it2++){
-//                key = (*it2);
-//                fd_standardiseKey(&key);
-//                values.push_back( ( *it )->valueForKey( &key ) );
-//            }
-//            this->printLibraryLine( this->browserWindow , &values );
-//            if( this->currentBrowserRow > this->browserRows )
-//                break;
-//        }
-//    }
+
     fd_librarylistingvector & listings = this->library.allListings();
     fd_stringvector & titles = this->libraryTitles();
     for(fd_librarylistingvector::iterator it = listings.begin() + offset; it != listings.end(); it++){
@@ -472,7 +488,7 @@ void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::st
     int position = 0;
 //    cout << "printing line " << this->browserRows << endl;
     
-    int pair = 2 + ( this->currentBrowserRow % 2 );
+    int pair = COLOR_PAIR_BLUE_WHITE + ( this->currentBrowserRow % 2 );
     this->setColor( this->browserWindow , COLOR_PAIR( pair ), true );
     
     for(std::vector< std::string >::iterator it = values->begin(); it != values->end(); it++){
@@ -591,5 +607,33 @@ void FlacDemonInterface::setColor( WINDOW * window, int attr , bool onoff ) {
         onoff ? wattron( window , attr ) : wattroff( window , attr );
 }
 void FlacDemonInterface::printAlbum( WINDOW * window , FlacDemon::Album * album ) {
+    wclear( window );
+    int maxX, maxY;
+    getmaxyx( window , maxY , maxX );
+    std::string value = album->valueForKey( "album" );
+
+    mvwprintw( window , 0 , ( maxX - value.length() ) / 2, value.c_str() );
+
+    std::string key;
+    int row = 1;
+    for( fd_keymap::iterator keyIterator = album->metadata.begin(); keyIterator != album->metadata.end(); keyIterator++ ){
+        key = keyIterator->first;
+        value = album->valueForKey( & key );
+        this->setColor( window , COLOR_PAIR( COLOR_PAIR_GREY_WHITE ), true );
+        mvwprintw( window , row , 0 , key.c_str() );
+        this->setColor( window , COLOR_PAIR( COLOR_PAIR_GREY_WHITE ), false );
+        row++;
+        
+        if( value == FlacDemonMetaDataMultipleValues ) {
+            //show number of different values
+            value = "Multiple Values";
+        }
+        
+        mvwprintw( window , row , 0 , value.c_str() );
+        row += 2;
+    }
+    
+    
+    wrefresh( window );
     
 }

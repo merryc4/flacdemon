@@ -30,14 +30,10 @@ enum flacdemonInterfaceMode {
 
 using namespace std;
 
-class FlacDemon::Demon {
+class FlacDemon::Demon : public FlacDemon::CommandMap < FlacDemon::Demon > {
     friend FlacDemon::CommandParser;
 private:
     
-    FlacDemon::CommandMap < FlacDemon::Demon > * commander;
-    
-    void callCommandHandler( const char * signal, void * arg );
-
 protected:
     vector<string>* commands;
     FlacDemon::TCPHandler * tcpHandler;

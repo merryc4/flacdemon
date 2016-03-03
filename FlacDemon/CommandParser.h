@@ -21,8 +21,8 @@ enum FDInterfaceMethods {
 
 enum CommandType {
     no_command,
-    remote_command,
-    local_command,
+    daemon_command,
+    interface_command,
     search_command
 };
 

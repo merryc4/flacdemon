@@ -64,7 +64,7 @@ public:
     void addTrackListing( fd_keymap * keymap );
     FlacDemon::Album * getOrCreateAlbum( std::string * albumuuid );
 //    FlacDemon::Album * createAlbum( std::string * albumuuid );
-    void sort( std::string sortKey , FlacDemonListingMode iListingMode = FlacDemonListingModeDefault );
+    void sort( std::string sortKey = ""  , FlacDemonListingMode iListingMode = FlacDemonListingModeDefault );
     void search( fd_stringvector terms );
     
     FlacDemon::TrackListing * trackListingForID(std::string ID);

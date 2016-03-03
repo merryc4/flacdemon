@@ -56,11 +56,11 @@ FlacDemon::Album * FlacDemon::Library::getOrCreateAlbum ( std::string * albumuui
     }
     return album;
 }
-//FlacDemon::Album * FlacDemon::Library::createAlbum( std::string * albumuuid ){
-//    return nullptr;
-//}
 void FlacDemon::Library::sort( std::string sortKey , FlacDemonListingMode iListingMode ){
-    this->currentSortKey = sortKey;
+    if( sortKey.length() ) {
+        this->currentSortKey = sortKey;
+    }
+    
     this->sortedTracks.clear();
     for( std::map < std::string, FlacDemon::TrackListing * > :: iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
         this->sortedTracks.push_back(it->second);

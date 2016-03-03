@@ -622,7 +622,7 @@ bool FlacDemon::File::isAlbumDirectory(){
     if(!(has_flag FLACDEMON_FILE_IS_MEDIA_DIRECTORY))
         return false;
     
-    return this->hasConsistantAlbumMetaData();
+    return false;
 }
 
 void FlacDemon::File::verifyAlbum(){

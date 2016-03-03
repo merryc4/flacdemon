@@ -22,7 +22,12 @@ FlacDemon::Demon::Demon() {
     
     this->player->setDatabase(this->database);
     
-    this->commander = new flacdemon_commander(FlacDemon::Demon,this,play,stop,set,get);
+    this->setTargetMap( this , fd_commandmap < FlacDemon::Demon > {
+        flacdemon_command( FlacDemon::Demon , "play" , play ),
+        flacdemon_command( FlacDemon::Demon , "stop" , stop ),
+        flacdemon_command( FlacDemon::Demon , "set" , set ),
+        flacdemon_command( FlacDemon::Demon , "get" , get )
+    });
 
 }
 FlacDemon::Demon::~Demon() {
