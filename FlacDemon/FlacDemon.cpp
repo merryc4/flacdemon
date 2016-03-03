@@ -26,7 +26,8 @@ FlacDemon::Demon::Demon() {
         flacdemon_command( FlacDemon::Demon , "play" , play ),
         flacdemon_command( FlacDemon::Demon , "stop" , stop ),
         flacdemon_command( FlacDemon::Demon , "set" , set ),
-        flacdemon_command( FlacDemon::Demon , "get" , get )
+        flacdemon_command( FlacDemon::Demon , "get" , get ),
+        flacdemon_command( FlacDemon::Demon , "add" , add )
     });
 
 }

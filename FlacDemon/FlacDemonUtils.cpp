@@ -219,13 +219,16 @@ void waitfor0(bool * value){
 int isMainThread(){
     return std::this_thread::get_id() == mainThreadID;
 }
-std::string * fd_standardiseKey(std::string * key){
-    fd_tolowercase(key);
-    std::regex e("album[^a-zA-Z]artist", std::regex_constants::icase);
-    if(regex_match((*key), e)){
-        key->assign("albumartist");
+std::string fd_standardiseKey(std::string * key){
+    std::string standardisedKey = *key;
+    fd_tolowercase( &standardisedKey );
+    std::regex e( "album[^a-zA-Z]artist" , std::regex_constants::icase );
+    if (regex_match( standardisedKey, e ) ) {
+        standardisedKey = "albumartist";
+    } else if ( standardisedKey.compare( "date" ) == 0 ) {
+        standardisedKey = "year";
     }
-    return key;
+    return standardisedKey;
 }
 std::string fd_secondstoformattime(int seconds){
     std::string formatTime="";

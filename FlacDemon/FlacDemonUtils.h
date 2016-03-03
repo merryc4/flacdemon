@@ -37,7 +37,7 @@ void waitfor0(bool * value);
 
 int isMainThread();
 
-std::string * fd_standardiseKey(std::string * key);
+std::string fd_standardiseKey(std::string * key);
 std::string fd_secondstoformattime(int seconds);
 
 std::vector < std::string > fd_splitstring(std::string * str, const char * delim);

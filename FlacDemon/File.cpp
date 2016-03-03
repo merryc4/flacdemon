@@ -867,18 +867,17 @@ void FlacDemon::File::makeTrack(){
 }
 void FlacDemon::File::standardiseMetaTags(){
     // this function is not finished
-    AVDictionaryEntry *copyFrom = nullptr;
-    string * key = nullptr, * newKey = nullptr;
-    std::vector<std::pair<string *, const char *>> toAdd;
-    while ((copyFrom = av_dict_get(this->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX))){
-        key = new string(copyFrom->key);
-        newKey = fd_standardiseKey(new std::string(*key));
-        delete key;
+    AVDictionaryEntry * copyFrom = nullptr;
+    std::string key, newKey;
+    std::map < std::string , const char * > toAdd;
+    while ( ( copyFrom = av_dict_get( this->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX ) ) ){
+        key = copyFrom->key;
+        newKey = fd_standardiseKey(&key);
         if(key != newKey)
-            toAdd.push_back(*new std::pair<string *, const char*>{newKey, copyFrom->value});
+            toAdd.insert( std::pair < std::string , const char * > { newKey, copyFrom->value } );
     }
-    for(std::vector<std::pair<string *, const char *>>::iterator it = toAdd.begin(); it != toAdd.end(); it++){
-        av_dict_set(&this->metadata, (*it).first->c_str(), (*it).second, 0);
+    for( std::map < std::string , const char * > ::iterator it = toAdd.begin(); it != toAdd.end(); it++){
+        av_dict_set( & this->metadata , it->first.c_str() , it->second , 0);
     }
 }
 void FlacDemon::File::printMetaDataDict(AVDictionary *dict){

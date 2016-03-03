@@ -35,7 +35,8 @@ FlacDemon::Database::Database(){
         "album",
         "genre",
         "composer",
-        "disc"
+        "disc",
+        "year"
     };
     this->trackinfokeys = new std::vector<std::string>{
         "tracktime",
