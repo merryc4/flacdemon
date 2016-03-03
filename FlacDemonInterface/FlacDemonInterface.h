@@ -51,6 +51,9 @@ private:
     WINDOW * commandWindow;
     WINDOW * playbackWindow;
     
+    WINDOW * verifyWindow;
+    WINDOW * albumViewWindow;
+    
     PANEL * browserPanel;
     PANEL * verifyPanel;
     
@@ -92,7 +95,7 @@ public:
     FlacDemonInterface();
     ~FlacDemonInterface();
     void initialize();
-    WINDOW * nextwin( size_t rowSize , size_t * row = nullptr);
+    WINDOW * nextwin( size_t rowSize , size_t * row = nullptr , int reset = -1);
     void connect();
     void retryConnect();
     void onConnect();
@@ -125,6 +128,8 @@ public:
     void printProgress();
     void waitForSearch();
     void setColor( WINDOW * window , int attr , bool onoff );
+    void printAlbum( WINDOW * window , FlacDemon::Album * album );
+    
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */

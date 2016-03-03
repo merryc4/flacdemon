@@ -167,7 +167,6 @@ public:
     bool isMediaFile();
     bool containsMedia();
     bool isAlbumDirectory();
-    bool hasConsistantAlbumMetaData();
     void verifyAlbum();
     void setVerified(bool verified);
     void parseTrackNumber();

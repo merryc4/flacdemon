@@ -265,9 +265,9 @@ void FlacDemon::File::checkFileStructure(){
             
             if(!albumConsistency || !artistConsistency){
 
-                if((skey.compare("album"))==0 ) {
+                if(( skey.compare("album"))==0 ) {
                     albumConsistency = true;
-                } else if (skey.compare("albumartist") == 0 ) {
+                } else if ( skey.compare("albumartist") == 0 ) {
                     artistConsistencyIsAlbumArtist = true;
                 } else if ( skey.compare("artist") == 0 ) {
                     artistConsistencyIsArtist = true;
@@ -306,8 +306,6 @@ void FlacDemon::File::checkFileStructure(){
                     albumConsistency = true;
                 }
             }
-            //need to check "album" tag to see if they include disc numbers in album name
-
         }
     }
     if(!lookForDiscs && !this->isAlbumDirectory() && this->consistentMetadata->size()){
@@ -374,7 +372,6 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
                 set_eflag flag;
             }
             if(valueCounts->count(value)){
-//                valueCounts->at(*value) = valueCounts->at(*value) + 1;
                 valueCounts->at(value) += 1;
             } else {
                 valueCounts->insert(std::pair<std::string, int> { value, 1});
@@ -627,28 +624,7 @@ bool FlacDemon::File::isAlbumDirectory(){
     
     return this->hasConsistantAlbumMetaData();
 }
-bool FlacDemon::File::hasConsistantAlbumMetaData(){ //deprecated
-//    bool albumConsistency = false,
-//    artistConsistency = false;
-//    
-//    for(vector<string*>::iterator it = this->consistentMetadata->begin(); it != this->consistentMetadata->end() && !(albumConsistency && artistConsistency); it++){
-//        cout << **it << ", ";
-//        if(((*it)->compare("album"))==0 ) {
-//            albumConsistency = true;
-//        } else if ((*it)->compare("albumartist")==0) {
-//            artistConsistency = true;
-//        } else if(((*it)->compare("artist"))==0){
-//            artistConsistency = true;
-//        }
-//    }
-//    cout << endl;
-//    
-//    if(albumConsistency && artistConsistency){
-//        set_flag FLACDEMON_DIRECTORY_IS_ALBUM;
-//        return true;
-//    }
-    return false;
-}
+
 void FlacDemon::File::verifyAlbum(){
     if(!this->albumuuid) //set by database when adding an album directory
         return;

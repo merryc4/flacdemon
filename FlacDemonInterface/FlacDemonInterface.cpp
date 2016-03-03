@@ -30,7 +30,7 @@ FlacDemonInterface::FlacDemonInterface(){
     this->userCommand = "";
     this->colorsOn = true;
     
-    this->printAlbums = true;
+    this->printAlbums = false;
     this->library.listingMode = ( this->printAlbums ? FlacDemonListingModeAlbums : FlacDemonListingModeTracks );
     
     auto f = boost::bind(&FlacDemonInterface::callCommand, this, _1, _2);
@@ -89,13 +89,26 @@ void FlacDemonInterface::initialize(){
     size_t row;
     this->browserHeaderWindow = this->nextwin( 2 , &row );
     this->browserRows = this->maxRows - row;
-    this->browserWindow = nextwin( this->browserRows );
+    size_t browserWindowRow = row;
     
+    this->browserWindow = this->nextwin( this->browserRows );
+    
+    this->albumViewWindow = this->nextwin(this->browserRows, &row, ( int )browserWindowRow);
+    
+    int verifyColums = ( this->maxColumns > 20 ) ? 10 : ( this->maxColumns - 10 );
+    this->verifyWindow = newwin( ( int )this->browserRows , verifyColums, browserWindowRow, ( this->maxColumns - verifyColums ));
+    
+    this->verifyPanel = new_panel( this->verifyWindow );
     this->browserPanel = new_panel( this->browserWindow );
+    
+    hide_panel( this->verifyPanel );
 }
-WINDOW * FlacDemonInterface::nextwin( size_t rowSize , size_t * row ){
+WINDOW * FlacDemonInterface::nextwin( size_t rowSize , size_t * row , int reset){
     static size_t currentWindowRow = 0;
-    WINDOW * window = newwin( rowSize, this->maxColumns, currentWindowRow, 0 );
+    if ( reset >= 0 ) {
+        currentWindowRow = reset;
+    }
+    WINDOW * window = newwin( ( int )rowSize, this->maxColumns, ( int )currentWindowRow, 0 );
     wbkgd( window , COLOR_PAIR( 1 ) );
 
     currentWindowRow += rowSize;
@@ -576,4 +589,7 @@ void FlacDemonInterface::waitForSearch(){
 void FlacDemonInterface::setColor( WINDOW * window, int attr , bool onoff ) {
     if( !this->disableColors && this->colorsOn )
         onoff ? wattron( window , attr ) : wattroff( window , attr );
+}
+void FlacDemonInterface::printAlbum( WINDOW * window , FlacDemon::Album * album ) {
+    
 }

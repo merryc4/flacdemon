@@ -29,6 +29,8 @@ namespace FlacDemon {
     
     class Session;
     template < class Target > class CommandMap;
+    
+    class Verifier;
 }
 
 #endif
