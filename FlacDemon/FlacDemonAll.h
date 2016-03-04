@@ -11,6 +11,7 @@
 
 #include "includes.h"
 #include "avincludes.h"
+#include "netincludes.h"
 #include "globals.h"
 #include "typedefs.h"
 #include "SignalHandler.h"

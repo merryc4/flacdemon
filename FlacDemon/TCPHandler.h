@@ -12,9 +12,7 @@
 #include "FlacDemonAll.h"
 #include "Track.h"
 
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include "netincludes.h"
 
 #define FD_ALL_SOCKETS 0
 

@@ -5,6 +5,17 @@
 //  Created by merryclarke on 24/11/2015.
 //  Copyright (c) 2015 c4software. All rights reserved.
 //
+/*
+ The MIT License (MIT)
+ 
+ Copyright (c) <2016> <Meriadoc Clarke>
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #include "FlacDemonUtils.h"
 
@@ -12,6 +23,7 @@ std::vector< std::string > * fd_numbers;
 
 void initGlobals(){
     fd_numbers = new std::vector< std::string >{"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"};
+    curl_global_init( CURL_GLOBAL_SSL );
 }
 
 int fd_stringtoint(std::string * str, int * value){
@@ -184,6 +196,15 @@ fd_keymap_vector * fd_jsontokeymap_vector(std::string * json){
     }
     return rkeymap_vector;
 }
+json_t * fd_decodeJSON( std::string & jsonString) {
+    json_error_t error;
+    json_t * json = json_loads( jsonString.c_str() , 0 , & error );
+    if ( ! json ) {
+        cout << "Error decoding json: " << error.text << ", Source of error: " << error.source << endl;
+    }
+    return json;
+
+}
 std::vector< std::string > fd_splitjsondescriptor(std::string * json){
     std::regex reg("[{}]");
     std::match_results<std::string::iterator> regmatch;
@@ -246,21 +267,33 @@ std::string fd_secondstoformattime(int seconds){
     formatTime.append(time);
     return formatTime;
 }
-std::vector < std::string > fd_splitstring(std::string * str, const char * delim){
+std::vector < std::string > fd_splitstring(std::string & str, const char * delim){
     return fd_splitstring(str, std::string(delim));
 }
-std::vector < std::string > fd_splitstring(std::string * str, std::string delim){
+std::vector < std::string > fd_splitstring(std::string & str, std::string delim){
     std::vector < std::string > components;
     size_t pos = 0, pos2 = 0;
     std::string sub;
-    while ( ( pos2 = str->find( delim , pos ) ) != std::string::npos ){
-        sub = str->substr(pos, ( pos2 - pos ) );
+    while ( ( pos2 = str.find( delim , pos ) ) != std::string::npos ){
+        sub = str.substr(pos, ( pos2 - pos ) );
         pos = pos2 + 1;
         components.push_back(sub);
     }
-    sub = str->substr(pos);
+    sub = str.substr(pos);
     components.push_back(sub);
     return components;
+}
+fd_keymap fd_parsekeyvaluepairs( std::string & str , const char * pairSeparator , const char * keyValueSeparator ) {
+    fd_keymap keyValueMap;
+    fd_stringvector pairs = fd_splitstring( str , pairSeparator );
+    for( fd_stringvector::iterator pairsIterator = pairs.begin(); pairsIterator != pairs.end(); pairsIterator++ ){
+        std::string pairString = ( * pairsIterator );
+        fd_stringvector keyValue = fd_splitstring( pairString , keyValueSeparator );
+        if( keyValue.size() == 2 ){
+            keyValueMap.insert( std::make_pair( keyValue[0], keyValue[1] ) );
+        }
+    }
+    return keyValueMap;
 }
 bool searchPredicate(char a, char b){
     return std::tolower(a) == std::tolower(b);

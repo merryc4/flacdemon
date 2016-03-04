@@ -17,10 +17,12 @@
 #include "Player.h"
 #include "TCPHandler.h"
 #include "Session.h"
+#include "Scraper.h"
 #include "includes.h"
 #include "tests.h"
 
 #include "CommandMap.h"
+
 
 enum flacdemonInterfaceMode {
     interfaceModeTerminal = 0,
@@ -45,6 +47,7 @@ public:
     int interfaceMode;
     
     FlacDemon::Database* database;
+    FlacDemon::Scraper * scraper;
 
     Demon();
     ~Demon();

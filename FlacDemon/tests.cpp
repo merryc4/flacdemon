@@ -21,6 +21,7 @@ void run_tests(){
     
 //    std::string all = *demon->database->getAll();
 //    fd_keymap_vector * test = fd_jsontokeymap_vector(&all);
+
     
 }
 void test_comparetags(){

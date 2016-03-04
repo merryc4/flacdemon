@@ -15,6 +15,7 @@ namespace FlacDemon {
     class TCPHandler;
     class NCURSESHandler;
     class FileImporter;
+    class Scraper;
     class File;
     
     class TrackListing;

@@ -25,6 +25,8 @@
 #include <mba/diff.h>
 #include <thread>
 
+#include <jansson.h>
+
 using std::cout;
 using std::cin;
 using std::endl;

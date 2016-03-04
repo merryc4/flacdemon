@@ -43,6 +43,7 @@ int main(int argc, const char * argv[])
     delete demon;
     delete signalHandler;
     
+    curl_global_cleanup();
     
     return 0;
 }

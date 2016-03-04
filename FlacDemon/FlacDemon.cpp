@@ -19,6 +19,7 @@ FlacDemon::Demon::Demon() {
     this->database = new FlacDemon::Database();
     this->player = new FlacDemon::Player();
     this->tcpHandler = new FlacDemon::TCPHandler();
+    this->scraper = new FlacDemon::Scraper();
     
     this->player->setDatabase(this->database);
     

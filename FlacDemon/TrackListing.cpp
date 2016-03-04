@@ -55,7 +55,7 @@ void FlacDemon::TrackListing::init(){
 
 std::string FlacDemon::TrackListing::valueForKey(std::string* key){
     std::string value = "";
-    if(key->compare("filepath")==0){
+    if( key->compare("filepath") == 0 ){
         value = this->filepath;
     } else
         value = this->keymapFileValue(key);

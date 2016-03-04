@@ -343,6 +343,7 @@ void FlacDemonInterface::printFlags(){
     }
     if( ihas_flag( this->flags, fd_interface_printalbum ) ) {
         this->printAlbum( this->albumViewWindow , this->currentViewAlbum );
+        thhis->printVerifySuggestions( this->currentViewAlbum );
     }
     if( ihas_flag( this->flags, fd_interface_verifyview ) ) {
         hide_panel( this->browserPanel );
@@ -465,7 +466,7 @@ void FlacDemonInterface::printLibrary(int offset = 0){
         std::vector < std::string > values;
         for(std::vector< std::string >::iterator it2 = titles.begin(); it2 != titles.end(); it2++){
             key = (*it2);
-            fd_standardiseKey(&key);
+            key = fd_standardiseKey(&key);
             values.push_back( ( *it )->valueForKey( &key ) );
         }
         this->printLibraryLine( this->browserWindow , &values );
@@ -635,5 +636,8 @@ void FlacDemonInterface::printAlbum( WINDOW * window , FlacDemon::Album * album 
     
     
     wrefresh( window );
+    
+}
+void FlacDemonInterface::printVerifySuggestions( FlacDemon::Album * album ){
     
 }

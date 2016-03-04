@@ -146,7 +146,7 @@ public:
     void waitForSearch();
     void setColor( WINDOW * window , int attr , bool onoff );
     void printAlbum( WINDOW * window , FlacDemon::Album * album );
-    
+    void printVerifySuggestions( FlacDemon::Album * album );
 };
 
 #endif /* defined(__FlacDemon__FlacDemonInterface__) */
