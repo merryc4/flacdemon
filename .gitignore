@@ -1,3 +1,5 @@
 .DS_Store
 FlacPlayer
-FlacDemon.xcodeproj/project.xcworkspace/xcuserdata/merryclarke.xcuserdatad/UserInterfaceState.xcuserstate
+FlacDemon.xcodeproj
+FlacDemon/FlacDemon.1
+FlacDemon/flacdemon
