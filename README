@@ -1,0 +1,43 @@
+README for FlacDemon Media Library Manager
+
+FlacDemon is a working title and is likely to change
+
+ATTENTION:
+==========
+
+FlacDemon is still in early stages of development and many features do not yet exist. In its current state it should not be considered stable code and no attempt should be made to install or run it.
+
+AUTHORS:
+=======
+FlacDemon is written and maintained by Meriadoc Clarke
+
+ABOUT:
+======
+
+FlacDemon aims to be a comprehensive music library manager and player with network connectivity and synchronisation.It features advanced tag lookups and pattern checking as well as online music database scraping to make importing music into your library as seemless and automated as possible. 
+
+PLANNED FEATURES:
+=================
+
+LIBRARY AND TAGS:
+ - Advanced tag checking, filename checking, and tag pattern checking to correctly determine if tags are mislabeled. and autocorrect where appropriate.
+ - Comprehensive tag editor with wildcard and regular expression support
+ - Intelligently determined tag editor auto-suggestions.
+ - Online music database scraper.
+
+NETWORK:
+ - Daemon + Interface structure : Connect to your music library remotely
+ - Communication using json
+ - multiple instances of the daemon running on the same network (or configured to connect via the internet) will share music libraries and allow master / slave operation for playback on multiple devices
+ - Connected daemons may playback remotely or locally or both (synchronised)
+
+DAEMON:
+ - Tag checking
+ - Importing and management of SQLite database
+ - Respond to user and interface commands
+ - Serve data to interface
+
+INTERFACE:
+ - Highly configurable library display based on user preferences
+
+note: the main interface will be command line only and provide a base for operating system specific graphical interfaces to be built around it
