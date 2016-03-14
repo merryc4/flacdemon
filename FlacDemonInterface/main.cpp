@@ -1,5 +1,5 @@
 /***********************************************************************
- * SignalHandler.h : Boost signals management
+ * main.cpp : Interface main()
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,27 +19,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef __FlacDemon__SignalHandler__
-#define __FlacDemon__SignalHandler__
-
 #include <iostream>
-#include <boost/signals2.hpp>
+#include "FlacDemonInterface.h"
 
-typedef boost::signals2::signal<void (const char *, void *)> fd_signal;
+FlacDemonInterface * interface;
 
-class SignalHandler {
-protected:
-    
-public:
-    SignalHandler();
-    ~SignalHandler();
-    void setSystemSignalHandler();
-    static void systemSignalHandler(int signum);
-        
-    std::map<const char *, fd_signal*> * signalMap;
-    
-    fd_signal * signals(const char * signalName, bool returnNull = false) const; // return signal for key
-    void call(const char * signalName, void * ) const;
-};
+std::thread::id mainThreadID;
+const SignalHandler * signalHandler = new SignalHandler();
 
-#endif /* defined(__FlacDemon__SignalHandler__) */
+int main(int argc, const char * argv[]) {
+    mainThreadID = std::this_thread::get_id();
+
+    initGlobals();
+    sleep(2); //debug only, allows gdb to attach before initialising interface
+    interface = new FlacDemonInterface();
+
+    if(argc < 2 || *(argv[1])=='1'){
+        interface->initialize();
+    }
+
+    if(argc < 3 || *(argv[2])=='1'){
+        interface->connect();
+    }
+
+    interface->run();
+    return 0;
+}

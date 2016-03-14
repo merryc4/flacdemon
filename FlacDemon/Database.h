@@ -1,10 +1,23 @@
-//
-//  Database.h
-//  FlacDemon
-//
-//  Created by merryclarke on 15/06/2015.
-//  Copyright (c) 2015 c4software. All rights reserved.
-//
+/***********************************************************************
+ * Database.h : SQLite Database management
+ * part of FlacDemon
+ ************************************************************************
+ *  Copyright (c) 2016 Meriadoc Clarke.
+ *
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 #ifndef __FlacDemon__Database__
 #define __FlacDemon__Database__
@@ -18,6 +31,7 @@
 #include "File.h"
 #include "TrackListing.h"
 #include "Track.h"
+#include "Album.h"
 
 typedef std::map<std::string, const unsigned char *> fd_sqlresults;
 
@@ -65,6 +79,7 @@ public:
     
     FlacDemon::Track * trackForID(unsigned long ID);
     FlacDemon::Track * trackWithKeyMap(fd_keymap * keyMap);
+    FlacDemon::Album * albumForID( unsigned long ID );
     std::string albumDirectoryUUIDForPath(std::string * path);
     
     int hasEntryForFile(std::string * filepath, const char * table);
@@ -75,6 +90,7 @@ public:
     std::string getValue(unsigned long ID, std::string * key);
     std::string getJSONForID(int uid);
     std::string getAll();
+    
     
     void fillDatabase(int entries);
 };

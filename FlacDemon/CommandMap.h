@@ -1,10 +1,23 @@
-//
-//  CommandMap.h
-//  FlacDemon
-//
-//  Created by merryclarke on 17/02/2016.
-//  Copyright (c) 2016 c4software. All rights reserved.
-//
+/***********************************************************************
+ * CommandMap.h : Map command names to functions
+ * part of FlacDemon
+ ************************************************************************
+ *  Copyright (c) 2016 Meriadoc Clarke.
+ *
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 #ifndef __FlacDemon__CommandMap__
 #define __FlacDemon__CommandMap__
@@ -23,6 +36,7 @@ using fd_commandmap = std::map < std::string, std::function < int ( TType&, fd_s
 
 #define flacdemon_command_map( classType , ...) fd_commandmap < classType > { foreach( flacdemon_command, classType , __VA_ARGS__ ) }
 #define flacdemon_commander( classType , commander , ...) FlacDemon::CommandMap < classType > ( commander , flacdemon_command_map( classType , __VA_ARGS__ ) )
+#define flacdemon_command_handler( name ) int name( fd_stringvector * args );
 
 template < class Target >
 class FlacDemon::CommandMap {

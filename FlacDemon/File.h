@@ -1,27 +1,29 @@
-//
-//  File.h
-//  FlacDemon
-//
-//  Created by merryclarke on 28/06/2015.
-//  Copyright (c) 2015 c4software. All rights reserved.
-//
-
-
-//#ifndef _FlacDemonMetaDataMultipleValues
-//#define _FlacDemonMetaDataMultipleValues
-//
-//extern const char * FlacDemonMetaDataMultipleValues;
-//
-//#endif
+/***********************************************************************
+ * File.h : File management and audio file tag reading, parsing, and checking
+ * part of FlacDemon
+ ************************************************************************
+ *  Copyright (c) 2016 Meriadoc Clarke.
+ *
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 #ifndef __FlacDemon__File__
 #define __FlacDemon__File__
 
 #include "FlacDemonAll.h"
 #include "FlacDemonFileSystem.h"
-
-
-//#define FLACDEMON_METADATA_MULTIPLE_VALUES "FlacDemonMetaDataMultipleValues"
 
 #define FLACDEMON_FILE_IS_MEDIA                     1
 #define FLACDEMON_DIRECTORY_IS_ALBUM                2
@@ -168,6 +170,7 @@ public:
     bool containsMedia();
     bool isAlbumDirectory();
     void verifyAlbum();
+    
     void setVerified(bool verified);
     void parseTrackNumber();
     int checkTrackNumbers();

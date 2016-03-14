@@ -1,10 +1,23 @@
-//
-//  Database.cpp
-//  FlacDemon
-//
-//  Created by merryclarke on 15/06/2015.
-//  Copyright (c) 2015 c4software. All rights reserved.
-//
+/***********************************************************************
+ * Database.cpp : SQLite Database management
+ * part of FlacDemon
+ ************************************************************************
+ *  Copyright (c) 2016 Meriadoc Clarke.
+ *
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 #include "Database.h"
 
@@ -354,6 +367,11 @@ FlacDemon::Track * FlacDemon::Database::trackWithKeyMap(fd_keymap *keyMap){
     FlacDemon::Track * track = new FlacDemon::Track(keyMap);
     this->openTracks->push_back(track);
     return track;
+}
+FlacDemon::Album * FlacDemon::Database::albumForID( unsigned long ID ) {
+    //check already open tracks / albums
+    
+    std::string sql = "select * "
 }
 std::string FlacDemon::Database::getUUID(){
     uuid_t uuid;
