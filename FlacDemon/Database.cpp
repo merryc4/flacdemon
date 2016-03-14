@@ -371,7 +371,8 @@ FlacDemon::Track * FlacDemon::Database::trackWithKeyMap(fd_keymap *keyMap){
 FlacDemon::Album * FlacDemon::Database::albumForID( unsigned long ID ) {
     //check already open tracks / albums
     
-    std::string sql = "select * "
+    std::string sql = "select * ";
+    return nullptr;
 }
 std::string FlacDemon::Database::getUUID(){
     uuid_t uuid;
