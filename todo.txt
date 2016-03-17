@@ -1,0 +1,3 @@
+fix adds .log files as media files > done
+genre parser, check for generic genres eg. "Other" or "Soundtrack"
+

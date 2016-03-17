@@ -1,5 +1,5 @@
 /***********************************************************************
- * includes.h : Standard C / C++ and third party library includes
+ * globals.h : Global variable definitions
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,29 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef FlacDemon_includes_h
-#define FlacDemon_includes_h
+#ifndef FlacDemon_globals_h
+#define FlacDemon_globals_h
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sstream>
-#include <regex>
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <vector>
-#include <algorithm>
-#include <functional>
-#include <map>
-#include <thread>
-#include <uuid/uuid.h>
-#include <mba/diff.h>
-#include <thread>
+#include "FlacDemonNameSpace.h"
+#include "SignalHandler.h"
+#include "SessionManager.h"
 
-#include <jansson.h>
-
-using std::cout;
-using std::cin;
-using std::endl;
+extern std::thread::id mainThreadID;
+extern char * workingDirectory;
+extern const SignalHandler * signalHandler;
+extern FlacDemon::Demon * demon;
+extern SessionManager * sessionManager;
 
 #endif

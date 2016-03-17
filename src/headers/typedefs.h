@@ -33,6 +33,7 @@
 #define FlacDemonMetaDataMultipleValues "FlacDemonMetaDataMultipleValues"
 
 #include "FlacDemonNameSpace.h"
+#include "includes.h"
 
 typedef std::pair < std::string, std::string > fd_keypair;
 typedef std::map < std::string, std::string > fd_keymap;

@@ -22,8 +22,11 @@
 #ifndef __FlacDemon__CommandParser__
 #define __FlacDemon__CommandParser__
 
-#include <iostream>
-#include "FlacDemonAll.h"
+#include "FlacDemonNameSpace.h"
+#include "includes.h"
+#include "globals.h"
+#include "typedefs.h"
+#include "FlacDemonUtils.h"
 
 enum FDInterfaceMethods {
     FDInterfaceStartIterate = 1,

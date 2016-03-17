@@ -1,5 +1,5 @@
 /***********************************************************************
- * main.cpp : daemon main()
+ * globals.cpp : global variables initialization
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,37 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#include <iostream>
-#include "FlacDemonAll.h"
-#include "FlacDemon.h"
+#include "globals.h"
+#include "SignalHandler.h"
+#include "SessionManager.h"
+#include "includes.h"
 
-#define FDOPTIONS_USE_FLACS_DIR 0
 
 const SignalHandler * signalHandler = new SignalHandler();
-FlacDemon::Demon * demon = nullptr;
-std::thread::id mainThreadID;
+std::thread::id mainThreadID = std::this_thread::get_id();
 SessionManager * sessionManager = new SessionManager();
 char * workingDirectory = nullptr;
-
-int main(int argc, const char * argv[])
-{
-
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    mainThreadID = std::this_thread::get_id();
-    
-    initGlobals();
-    
-    demon = new FlacDemon::Demon();
-    
-    
-    demon->run();
-
-    delete demon;
-    delete signalHandler;
-    
-    curl_global_cleanup();
-    
-    return 0;
-}
-

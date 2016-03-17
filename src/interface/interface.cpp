@@ -1,5 +1,5 @@
 /***********************************************************************
- * FlacDemonAll.h : all header files and data structures
+ * main.cpp : Interface main()
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,38 +19,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef FlacDemon_FlacDemonAll_h
-#define FlacDemon_FlacDemonAll_h
+#include <iostream>
+#include "FlacDemonInterface.h"
 
-#include "includes.h"
-#include "avincludes.h"
-#include "netincludes.h"
-#include "globals.h"
-#include "typedefs.h"
-#include "SignalHandler.h"
-#include "FlacDemonUtils.h"
-#include "SessionManager.h"
-#include "FlacDemonNameSpace.h"
+#include "globals.cpp"
 
-using std::cout;
-using std::string;
-using std::endl;
+FlacDemonInterface * interface;
 
-struct MediaStreamInfo {
-    unsigned long bitRate;
-    unsigned long sampleRate;
-    unsigned long channels;
-    unsigned long duration;
-    AVCodecID codecID;
-};
+int main(int argc, const char * argv[]) {
+    mainThreadID = std::this_thread::get_id();
 
-extern const SignalHandler * signalHandler;
-extern FlacDemon::Demon * demon;
-extern SessionManager * sessionManager;
+    initGlobals();
+    sleep(2); //debug only, allows gdb to attach before initialising interface
+    interface = new FlacDemonInterface();
 
-//demon flags
-#define demon_set_flag demon->flags |=
-#define demon_unset_flag demon->flags = demon->flags & ~
-#define demon_has_flag demon->flags &
+    if(argc < 2 || *(argv[1])=='1'){
+        interface->initialize();
+    }
 
-#endif
+    if(argc < 3 || *(argv[2])=='1'){
+        interface->connect();
+    }
+
+    interface->run();
+    return 0;
+}

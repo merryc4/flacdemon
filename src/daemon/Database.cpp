@@ -91,7 +91,7 @@ void FlacDemon::Database::signalReceiver(const char * signalName, void * arg){
 void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
     std::cout << "add album directory: " << *albumDirectory->filepath << endl;
     
-    albumDirectory->standardisePath(nullptr);
+    albumDirectory->standardisePath();
     
     std::string uuid = this->albumDirectoryUUIDForPath(albumDirectory->filepath);
     albumDirectory->setAlbumDirectoryUUID(&uuid);
@@ -109,7 +109,7 @@ void FlacDemon::Database::addAlbumDirectory(FlacDemon::File *albumDirectory){
 void FlacDemon::Database::add(FlacDemon::File * file){
     if(!file)
         return;
-    file->standardisePath(nullptr);
+    file->standardisePath();
     if(file->isMediaFile()){
         this->add(file->track);
         return;

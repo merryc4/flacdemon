@@ -28,7 +28,6 @@
 #include "typedefs.h"
 #include "FlacDemonUtils.h"
 #include "TrackListing.h"
-#include "Group.h"
 #include "TrackSorter.cpp" //needed due to templates
 #include "Album.h"
 #include "LibraryTitles.h"

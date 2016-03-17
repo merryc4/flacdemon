@@ -1,5 +1,5 @@
 /***********************************************************************
- * globals.h : Global variable definitions
+ * main.cpp : daemon main()
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,9 +19,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef FlacDemon_globals_h
-#define FlacDemon_globals_h
+#include <iostream>
+#include "FlacDemonAll.h"
+#include "FlacDemon.h"
 
-extern std::thread::id mainThreadID;
-extern char * workingDirectory;
-#endif
+#define FDOPTIONS_USE_FLACS_DIR 0
+
+#include "globals.cpp"
+
+FlacDemon::Demon * demon = nullptr;
+
+int main(int argc, const char * argv[])
+{
+
+    // insert code here...
+    std::cout << "Hello, World!\n";
+    
+    initGlobals();
+    
+    demon = new FlacDemon::Demon();
+    
+    
+    demon->run();
+
+    delete demon;
+    delete signalHandler;
+    
+    curl_global_cleanup();
+    
+    return 0;
+}
+

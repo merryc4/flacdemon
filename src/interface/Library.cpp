@@ -20,10 +20,7 @@
  ***********************************************************************/
 
 #include "Library.h"
-
-fd_stringvector * libraryTitlesTracks = new fd_stringvector{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount", "Verified"};
-fd_stringvector * libraryTitlesAlbums = new fd_stringvector{"albumuuid", "Album", "Artist", "AlbumArtist", "Tracks", "Playcount", "Verified"};
-fd_stringvector * libraryTitlesAlbumCopyFromTrack = new fd_stringvector { "album" , "artist" , "albumartist" , "year" };
+#include "LibraryTitles.cpp"
 
 FlacDemon::Library::Library(){
     this->searchDelayTime = -1;

@@ -21,8 +21,6 @@
 
 #include "TrackFile.h"
 
-//const char * FlacDemonMetaDataMultipleValues = "FlacDemonMetaDataMultipleValues";
-
 FlacDemon::File::File(string* iPath, bool readTags){
     
     this->fileSize = 0;
@@ -1026,12 +1024,18 @@ std::vector<FlacDemon::File*> * FlacDemon::File::getNoneAlbumFiles(int max){
     }
     return noneAlbumFiles;
 }
-void FlacDemon::File::standardisePath(std::string * workingDirectory){
+void FlacDemon::File::standardisePath(){
     if(this->filepath->at(0) == '/')
         return;
-    boost::filesystem::path tpath = (*this->filepath);
-    tpath = boost::filesystem::absolute(tpath);
-    this->filepath = new std::string(tpath.string<std::string>()); //may need to free old this->filepath
+
+    std::string absPath = workingDirectory;
+    if( absPath.back() != '/' ){
+        absPath.append( "/" );
+    }
+    absPath.append( *this->filepath );
+     //check for ~ , . , .. and replace as appropriate
+    
+    
     if(this->isMediaFile() && this->track){
         this->track->filepath = *this->filepath;
     }

@@ -23,7 +23,7 @@
 #define __FlacDemon__File__
 
 #include "FlacDemonAll.h"
-#include "FlacDemonFileSystem.h"
+#include "filesystem.h"
 
 #define FLACDEMON_FILE_IS_MEDIA                     1
 #define FLACDEMON_DIRECTORY_IS_ALBUM                2
@@ -198,7 +198,7 @@ public:
     std::vector<FlacDemon::File*> * getMediaFiles(int depth = INT_MAX);
     std::vector<FlacDemon::File*> * getNoneAlbumFiles(int depth = INT_MAX);
     
-    void standardisePath(std::string * workingDirectory);
+    void standardisePath();
 };
 
 #endif /* defined(__FlacDemon__File__) */

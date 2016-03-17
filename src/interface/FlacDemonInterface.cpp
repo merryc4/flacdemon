@@ -356,7 +356,7 @@ void FlacDemonInterface::printFlags(){
     }
     if( ihas_flag( this->flags, fd_interface_printalbum ) ) {
         this->printAlbum( this->albumViewWindow , this->currentViewAlbum );
-        thhis->printVerifySuggestions( this->currentViewAlbum );
+        this->printVerifySuggestions( this->currentViewAlbum );
     }
     if( ihas_flag( this->flags, fd_interface_verifyview ) ) {
         hide_panel( this->browserPanel );

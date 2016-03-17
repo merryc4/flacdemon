@@ -1,5 +1,5 @@
 /***********************************************************************
- * FlacDemonFileSystem.h : file system includes
+ * FlacDemonAll.h : all header files and data structures
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,16 +19,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef FlacDemon_FlacDemonFileSystem_h
-#define FlacDemon_FlacDemonFileSystem_h
+#ifndef FlacDemon_FlacDemonAll_h
+#define FlacDemon_FlacDemonAll_h
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
+#include "includes.h"
+#include "avincludes.h"
+#include "netincludes.h"
+#include "globals.h"
+#include "typedefs.h"
+#include "filesystem.h"
 
-//if mac os x
-#include <libgen.h>
+#include "SignalHandler.h"
+#include "FlacDemonUtils.h"
+#include "SessionManager.h"
+#include "FlacDemonNameSpace.h"
+#include "globals.h"
 
-#include "boost/filesystem.hpp"
+using std::cout;
+using std::string;
+using std::endl;
+
+struct MediaStreamInfo {
+    unsigned long bitRate;
+    unsigned long sampleRate;
+    unsigned long channels;
+    unsigned long duration;
+    AVCodecID codecID;
+};
+
+//demon flags
+#define demon_set_flag demon->flags |=
+#define demon_unset_flag demon->flags = demon->flags & ~
+#define demon_has_flag demon->flags &
 
 #endif

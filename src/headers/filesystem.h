@@ -1,5 +1,5 @@
 /***********************************************************************
- * LibraryTitles.h : Library column headers
+ * filesystem.h : file system includes
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,10 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef FlacDemon_LibraryTitles_h
-#define FlacDemon_LibraryTitles_h
+#ifndef filesystem_h
+#define filesystem_h
 
-extern fd_stringvector * libraryTitlesTracks;
-extern fd_stringvector * libraryTitlesAlbums;
-extern fd_stringvector * libraryTitlesAlbumCopyFromTrack;
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+
+//if mac os x
+#include <libgen.h>
+
 #endif

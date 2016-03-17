@@ -22,12 +22,9 @@
 #ifndef __FlacDemon__Database__
 #define __FlacDemon__Database__
 
-#include <iostream>
-#include <sqlite3.h>
-#include <boost/format.hpp>
 
 #include "FlacDemonAll.h"
-//#include "Group.h"
+
 #include "File.h"
 #include "TrackListing.h"
 #include "Track.h"

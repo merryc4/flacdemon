@@ -23,6 +23,7 @@
 
 #include "includes.h"
 #include "typedefs.h"
+#include "globals.h"
 #include "TrackListing.h"
 #include "LibraryTitles.h"
 
@@ -46,7 +47,6 @@ public:
     Album( std::string * iuuid = nullptr );
     ~Album();
     
-//    void addTrack(FlacDemon::Track*);
     void addTrackListing( FlacDemon::TrackListing * );
     std::string valueForKey( std::string * key );
     using FlacDemon::LibraryListing::valueForKey;

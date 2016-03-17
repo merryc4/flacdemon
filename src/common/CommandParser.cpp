@@ -48,7 +48,7 @@ void FlacDemon::CommandParser::getCommand() {
     std::string * cmd = this->getInput();
     this->parseCommand(cmd);
 }
-string* FlacDemon::CommandParser::getInput() {
+std::string * FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";
     std::string* input = new std::string();
     getline(std::cin >> std::ws, *input);
@@ -80,8 +80,6 @@ void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) 
     std::regex reg2 = reg;
     std::smatch regmatch;
 //    std::match_results<std::string::iterator> regmatch;
-
-    bool matchQuote = false;
     
     
     args.push_back(*tcommand);

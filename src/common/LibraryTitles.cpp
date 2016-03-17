@@ -1,5 +1,5 @@
 /***********************************************************************
- * main.cpp : Interface main()
+ * LibraryTitle.cpp : Library titles initialization
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,29 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#include <iostream>
-#include "FlacDemonInterface.h"
+#include "LibraryTitles.h"
 
-FlacDemonInterface * interface;
-
-std::thread::id mainThreadID;
-const SignalHandler * signalHandler = new SignalHandler();
-
-int main(int argc, const char * argv[]) {
-    mainThreadID = std::this_thread::get_id();
-
-    initGlobals();
-    sleep(2); //debug only, allows gdb to attach before initialising interface
-    interface = new FlacDemonInterface();
-
-    if(argc < 2 || *(argv[1])=='1'){
-        interface->initialize();
-    }
-
-    if(argc < 3 || *(argv[2])=='1'){
-        interface->connect();
-    }
-
-    interface->run();
-    return 0;
-}
+fd_stringvector * libraryTitlesTracks = new fd_stringvector{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount", "Verified"};
+fd_stringvector * libraryTitlesAlbums = new fd_stringvector{"albumuuid", "Album", "Artist", "AlbumArtist", "Tracks", "Playcount", "Verified"};
+fd_stringvector * libraryTitlesAlbumCopyFromTrack = new fd_stringvector { "album" , "artist" , "albumartist" , "year" };
