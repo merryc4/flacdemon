@@ -59,4 +59,6 @@ std::vector < std::string > fd_splitstring(std::string & str, std::string delim)
 fd_keymap fd_parsekeyvaluepairs( std::string & str , const char * pairSeparator , const char * keyValueSeparator );
 bool searchPredicate(char a, char b);
 
+std::string fd_uuid();
+
 #endif /* defined(__FlacDemon__FlacDemonUtils__) */

@@ -20,7 +20,6 @@
  ***********************************************************************/
 
 #include "Library.h"
-#include "LibraryTitles.cpp"
 
 FlacDemon::Library::Library(){
     this->searchDelayTime = -1;

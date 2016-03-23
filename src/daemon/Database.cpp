@@ -374,13 +374,6 @@ FlacDemon::Album * FlacDemon::Database::albumForID( unsigned long ID ) {
     std::string sql = "select * ";
     return nullptr;
 }
-std::string FlacDemon::Database::getUUID(){
-    uuid_t uuid;
-    uuid_generate_random(uuid);
-    char s[37];
-    uuid_unparse(uuid, s);
-    return std::string(s);
-}
 int FlacDemon::Database::hasEntryForFile(std::string * filepath, const char * table){
     std::string sql = "select count(*) from ";
     sql.append(table);
@@ -399,7 +392,7 @@ std::string FlacDemon::Database::albumDirectoryUUIDForPath(std::string * path){
     sql.append("'");
     std::string value = this->sqlSelectOne(&sql);
     if( ! value.length() )
-        value = this->getUUID();
+        value = fd_uuid();
     return value;
 }
 int FlacDemon::Database::setValue(unsigned long ID, std::string * key, std::string * value){

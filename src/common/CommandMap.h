@@ -38,8 +38,16 @@ using fd_commandmap = std::map < std::string, std::function < int ( TType&, fd_s
 #define flacdemon_commander( classType , commander , ...) FlacDemon::CommandMap < classType > ( commander , flacdemon_command_map( classType , __VA_ARGS__ ) )
 #define flacdemon_command_handler( name ) int name( fd_stringvector * args );
 
+class FlacDemon::CommandMapBase {
+public:
+    virtual void callCommandHandler( const char * signal , void * arg ) = 0;
+    virtual ~CommandMapBase(){
+    	//nothing
+    }
+};
+
 template < class Target >
-class FlacDemon::CommandMap {
+class FlacDemon::CommandMap : public FlacDemon::CommandMapBase {
 private:
     fd_commandmap < Target > commandMap;
     Target * target;
@@ -54,8 +62,6 @@ public:
     void setTargetMap( Target * iTarget , fd_commandmap < Target > map ) {
         this->target = iTarget;
         this->commandMap = map;
-        auto f = boost::bind( &FlacDemon::CommandMap < Target >::callCommandHandler, this, _1, _2);
-        signalHandler->signals("callCommand")->connect(f);
     };
     void callCommandHandler( const char * signal , void * arg ){
         fd_stringvector * args = ( fd_stringvector * )arg;

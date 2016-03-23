@@ -22,9 +22,12 @@
 #ifndef FlacDemon_includes_h
 #define FlacDemon_includes_h
 
-#include <cstddef>
-#include <stdio.h>
+
 #include <stdlib.h>
+#include <stdio.h>
+
+#include <cstddef>
+
 #include <sstream>
 #include <regex>
 #include <iostream>

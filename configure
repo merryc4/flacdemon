@@ -4377,50 +4377,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 # Checks for libraries.
 #check for standard libraries here?
 
-
-as_ac_Lib=`$as_echo "ac_cv_lib_mba ''_diff " | $as_tr_sh`
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for diff  in -lmba " >&5
-$as_echo_n "checking for diff  in -lmba ... " >&6; }
-if eval \${$as_ac_Lib+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmba   $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char diff  ();
-int
-main ()
-{
-return diff  ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  eval "$as_ac_Lib=yes"
-else
-  eval "$as_ac_Lib=no"
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-eval ac_res=\$$as_ac_Lib
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
-$as_echo "$ac_res" >&6; }
-if eval test \"x\$"$as_ac_Lib"\" = x"yes"; then :
-  flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lmba"
-else
-   as_fn_error $? "Library dependency missing: libmba " "$LINENO" 5
-fi
+#AC_CHECK_LIB([mba] , [diff] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lmba"] , [ AC_MSG_ERROR( Library dependency missing: libmba ) ] )
 
 as_ac_Lib=`$as_echo "ac_cv_lib_sqlite3 ''_sqlite3_open_v2 " | $as_tr_sh`
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sqlite3_open_v2  in -lsqlite3 " >&5
@@ -4466,50 +4423,7 @@ else
    as_fn_error $? "Library dependency missing: libsqlite3 " "$LINENO" 5
 fi
 
-as_ac_Lib=`$as_echo "ac_cv_lib_uuid ''_uuid_generate_random " | $as_tr_sh`
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for uuid_generate_random  in -luuid " >&5
-$as_echo_n "checking for uuid_generate_random  in -luuid ... " >&6; }
-if eval \${$as_ac_Lib+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-luuid   $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char uuid_generate_random  ();
-int
-main ()
-{
-return uuid_generate_random  ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  eval "$as_ac_Lib=yes"
-else
-  eval "$as_ac_Lib=no"
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-eval ac_res=\$$as_ac_Lib
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
-$as_echo "$ac_res" >&6; }
-if eval test \"x\$"$as_ac_Lib"\" = x"yes"; then :
-  flacdemon_LDFLAGS="$flacdemon_LDFLAGS -luuid"
-else
-   as_fn_error $? "Library dependency missing: libuuid " "$LINENO" 5
-fi
-
+#AC_CHECK_LIB([uuid] , [uuid_generate_random] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -luuid"] , [ AC_MSG_ERROR( Library dependency missing: libuuid ) ] )
 as_ac_Lib=`$as_echo "ac_cv_lib_curl ''_curl_global_init " | $as_tr_sh`
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_global_init  in -lcurl " >&5
 $as_echo_n "checking for curl_global_init  in -lcurl ... " >&6; }
@@ -5319,14 +5233,7 @@ else
 fi
 
 
-ac_fn_cxx_check_header_mongrel "$LINENO" "mba/diff.h" "ac_cv_header_mba_diff_h" "$ac_includes_default"
-if test "x$ac_cv_header_mba_diff_h" = xyes; then :
-
-else
-   as_fn_error $? "Missing required header mba/diff.h" "$LINENO" 5
-fi
-
-
+#AC_CHECK_HEADER([mba/diff.h], [], [ AC_MSG_ERROR( Missing required header mba/diff.h) ])
 ac_fn_cxx_check_header_mongrel "$LINENO" "sqlite3.h" "ac_cv_header_sqlite3_h" "$ac_includes_default"
 if test "x$ac_cv_header_sqlite3_h" = xyes; then :
 
@@ -5412,14 +5319,6 @@ if test "x$ac_cv_header_jansson_h" = xyes; then :
 
 else
    as_fn_error $? "Missing required header jansson.h" "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "boost/signals2.hpp" "ac_cv_header_boost_signals2_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_signals2_hpp" = xyes; then :
-
-else
-   as_fn_error $? "Missing required header boost/signals2.hpp" "$LINENO" 5
 fi
 
 
@@ -5710,7 +5609,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile src/daemon/Makefile src/interface/Makefile"
+ac_config_files="$ac_config_files Makefile build/daemon/Makefile build/interface/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6444,8 +6343,8 @@ do
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "src/daemon/Makefile") CONFIG_FILES="$CONFIG_FILES src/daemon/Makefile" ;;
-    "src/interface/Makefile") CONFIG_FILES="$CONFIG_FILES src/interface/Makefile" ;;
+    "build/daemon/Makefile") CONFIG_FILES="$CONFIG_FILES build/daemon/Makefile" ;;
+    "build/interface/Makefile") CONFIG_FILES="$CONFIG_FILES build/interface/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

@@ -25,11 +25,15 @@
 #include "FlacDemonNameSpace.h"
 #include "SignalHandler.h"
 #include "SessionManager.h"
+#include "CommandManager.h"
+
+#include <thread>
 
 extern std::thread::id mainThreadID;
 extern char * workingDirectory;
 extern const SignalHandler * signalHandler;
 extern FlacDemon::Demon * demon;
 extern SessionManager * sessionManager;
+extern FlacDemon::CommandManager * commandManager;
 
 #endif

@@ -27,6 +27,7 @@ namespace FlacDemon {
     class CommandParser;
     class TCPHandler;
     class NCURSESHandler;
+    class CommandManager;
     class FileImporter;
     class Scraper;
     class File;
@@ -42,6 +43,7 @@ namespace FlacDemon {
     class Player;
     
     class Session;
+    class CommandMapBase;
     template < class Target > class CommandMap;
     
     class Verifier;

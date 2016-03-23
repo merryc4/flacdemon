@@ -25,7 +25,7 @@
 
 #define FDOPTIONS_USE_FLACS_DIR 0
 
-#include "globals.cpp"
+#include "globals.hpp"
 
 FlacDemon::Demon * demon = nullptr;
 

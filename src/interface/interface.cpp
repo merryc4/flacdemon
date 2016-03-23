@@ -22,7 +22,7 @@
 #include <iostream>
 #include "FlacDemonInterface.h"
 
-#include "globals.cpp"
+#include "globals.hpp"
 
 FlacDemonInterface * interface;
 

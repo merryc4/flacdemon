@@ -22,10 +22,13 @@
 #include "globals.h"
 #include "SignalHandler.h"
 #include "SessionManager.h"
+#include "CommandManager.h"
 #include "includes.h"
 
+#include "LibraryTitles.hpp"
 
 const SignalHandler * signalHandler = new SignalHandler();
 std::thread::id mainThreadID = std::this_thread::get_id();
 SessionManager * sessionManager = new SessionManager();
+FlacDemon::CommandManager * commandManager = new FlacDemon::CommandManager();
 char * workingDirectory = nullptr;

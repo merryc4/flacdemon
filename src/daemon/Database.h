@@ -80,9 +80,7 @@ public:
     std::string albumDirectoryUUIDForPath(std::string * path);
     
     int hasEntryForFile(std::string * filepath, const char * table);
-    
-    std::string getUUID();
-    
+
     int setValue(unsigned long ID, std::string * key, std::string * value);
     std::string getValue(unsigned long ID, std::string * key);
     std::string getJSONForID(int uid);

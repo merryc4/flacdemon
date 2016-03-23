@@ -311,3 +311,14 @@ fd_keymap fd_parsekeyvaluepairs( std::string & str , const char * pairSeparator 
 bool searchPredicate(char a, char b){
     return std::tolower(a) == std::tolower(b);
 }
+std::string fd_uuid() {
+#ifdef WIN32
+
+#else
+    uuid_t uuid;
+    uuid_generate_random(uuid);
+    char s[37];
+    uuid_unparse(uuid, s);
+    return std::string(s);
+#endif
+}
