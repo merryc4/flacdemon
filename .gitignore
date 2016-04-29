@@ -11,7 +11,7 @@ build
 compile
 config.h*
 config.status
-configure.ac
+configure
 depcomp
 dustyfingers
 fd_interface.log
