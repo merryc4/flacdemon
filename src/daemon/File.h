@@ -201,5 +201,8 @@ public:
     void standardisePath();
 };
 
+//TODO move this to somewhere sensible
+void fd_print_av_error( int errnum );
+
 #endif /* defined(__FlacDemon__File__) */
 

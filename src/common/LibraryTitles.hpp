@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#include "LibraryTitles.h"
+//#include "LibraryTitles.h"
 
 fd_stringvector * libraryTitlesTracks = new fd_stringvector{"id", "Track", "Disc", "Title", "Album", "Artist", "AlbumArtist", "Playcount", "Verified"};
 fd_stringvector * libraryTitlesAlbums = new fd_stringvector{"albumuuid", "Album", "Artist", "AlbumArtist", "Tracks", "Playcount", "Verified"};

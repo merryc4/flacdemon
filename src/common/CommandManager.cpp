@@ -24,13 +24,18 @@
 
 FlacDemon::CommandManager::CommandManager() {
 	// TODO Auto-generated constructor stub
-
 }
 
 FlacDemon::CommandManager::~CommandManager() {
 	// TODO Auto-generated destructor stub
 }
 
-void FlacDemon::CommandManager::add( FlacDemon::CommandMapBase & map ) {
-
+void FlacDemon::CommandManager::add( FlacDemon::CommandMapBase * map ) {
+    this->commandMaps.insert( std::pair< std::string , FlacDemon::CommandMapBase * >{ fd_uuid(), map } );
+}
+void FlacDemon::CommandManager::call( fd_stringvector & args ) {
+    //call command maps
+    for( std::map< std::string , FlacDemon::CommandMapBase * >::iterator it = this->commandMaps.begin(); it != this->commandMaps.end(); it++){
+        it->second->callCommandHandler(args);
+    }
 }

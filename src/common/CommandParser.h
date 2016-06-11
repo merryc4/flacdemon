@@ -52,6 +52,8 @@ public:
     CommandType commandType;
     std::string commandWord;
     std::string commandArgs;
+    std::string currentCommand;
+    
     fd_stringvector currentArgs;
     
     CommandParser();

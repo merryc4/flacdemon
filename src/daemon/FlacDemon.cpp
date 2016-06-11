@@ -26,6 +26,7 @@ FlacDemon::Demon::Demon() {
     
     this->flags = 0;
     av_register_all();
+    avcodec_register_all();
     
     this->commandParser = new FlacDemon::CommandParser();
     this->fileImporter = new FlacDemon::FileImporter();
@@ -61,75 +62,75 @@ void FlacDemon::Demon::run() {
 	}
 }
 
-int FlacDemon::Demon::add( fd_stringvector * args ){
+int FlacDemon::Demon::add( fd_stringvector & args ){
     cout << "add some files" << endl;
-    if( args->size() < 3 ) return -1;
+    if( args.size() < 3 ) return -1;
     std::string path;
-    for(vector<string>::iterator it = (args->begin() + 2); it != args->end(); it++){
+    for(vector<string>::iterator it = (args.begin() + 2); it != args.end(); it++){
         path = *it;
         this->fileImporter->importFilesFromPath(&path);
     }
     return 0;
 }
-int FlacDemon::Demon::play(fd_stringvector * args){
+int FlacDemon::Demon::play(fd_stringvector & args){
     
     cout << "play some tunes" << endl;
     long ID = 1;
-    if(args && args->size() > 2){
-        ID = std::strtol((*args)[2].c_str(), nullptr, 0);
+    if( args.size() > 2){
+        ID = std::strtol(args[2].c_str(), nullptr, 0);
     }
     this->player->playTrackWithID(ID);
     return 0;
 }
-int FlacDemon::Demon::stop(fd_stringvector * args){
+int FlacDemon::Demon::stop(fd_stringvector & args){
     cout << "stop playback" << endl;
     this->player->stop();
     return 0;
 }
-int FlacDemon::Demon::set(fd_stringvector * args){
-    if(args->size() < 5){
+int FlacDemon::Demon::set(fd_stringvector & args){
+    if(args.size() < 5){
         cout << "command error: incorrect arguments" << endl;
         return 1;
     }
 
     int id;
-    if(fd_stringtoint(&(*args)[2], &id)){
-        cout << "command error : unknown id: " << (*args)[0] << endl;
+    if(fd_stringtoint(&(args)[2], &id)){
+        cout << "command error : unknown id: " << args[0] << endl;
         return 1;
     }
-    std::string metaTagName = (*args)[3];
-    std::string metaTagValue = (*args)[4];
+    std::string metaTagName = args[3];
+    std::string metaTagValue = args[4];
     
     this->database->setValue(id, &metaTagName, &metaTagValue);
     
     return 0;
 }
-int FlacDemon::Demon::get(fd_stringvector * args){
+int FlacDemon::Demon::get(fd_stringvector & args){
     std::string results;
-    if (strcmp(args->back().c_str(), "all") == 0) {
+    if (strcmp(args.back().c_str(), "all") == 0) {
         //get all
         results = this->database->getAll();
     }
     else {
-        if(args->size() < 3){
+        if(args.size() < 3){
             cout << "command error: incorrect arguments" << endl;
             return 1;
         }
         
         int id;
-        if(fd_stringtoint(&(*args)[1], &id)){
-            cout << "command error : unknown id: " << (*args)[0] << endl;
+        if(fd_stringtoint(&(args)[1], &id)){
+            cout << "command error : unknown id: " << args[0] << endl;
             return 1;
         }
-        std::string metaTagName = (*args)[2];
+        std::string metaTagName = args[2];
         results = this->database->getValue(id, &metaTagName);
     }
 
-    sessionManager->getSession()->setString(&((*args)[0]), &results);
+    sessionManager->getSession()->setString(&(args[0]), &results);
     
     return 0;
 }
-int FlacDemon::Demon::verify( fd_stringvector * args ) {
+int FlacDemon::Demon::verify( fd_stringvector & args ) {
     
     return 0;
 }

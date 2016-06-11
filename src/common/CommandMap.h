@@ -23,28 +23,21 @@
 #define __FlacDemon__CommandMap__
 
 #include "includes.h"
+#include "globals.h"
 #include "FlacDemonNameSpace.h"
-#include "SignalHandler.h"
+#include "CommandMapBase.h"
 
 template < typename TType >
-using fd_demon_command_function = std::function < int ( TType&, fd_stringvector * ) > ;
+using fd_demon_command_function = std::function < int ( TType&, fd_stringvector & ) > ;
 
 template < typename TType >
-using fd_commandmap = std::map < std::string, std::function < int ( TType&, fd_stringvector * ) > >;
+using fd_commandmap = std::map < std::string, std::function < int ( TType&, fd_stringvector & ) > >;
 
 #define flacdemon_command( classType , commandName , funcName) { commandName , fd_demon_command_function < classType > { &classType::funcName } }
 
 #define flacdemon_command_map( classType , ...) fd_commandmap < classType > { foreach( flacdemon_command, classType , __VA_ARGS__ ) }
 #define flacdemon_commander( classType , commander , ...) FlacDemon::CommandMap < classType > ( commander , flacdemon_command_map( classType , __VA_ARGS__ ) )
-#define flacdemon_command_handler( name ) int name( fd_stringvector * args );
-
-class FlacDemon::CommandMapBase {
-public:
-    virtual void callCommandHandler( const char * signal , void * arg ) = 0;
-    virtual ~CommandMapBase(){
-    	//nothing
-    }
-};
+#define flacdemon_command_handler( name ) int name( fd_stringvector & args );
 
 template < class Target >
 class FlacDemon::CommandMap : public FlacDemon::CommandMapBase {
@@ -55,6 +48,7 @@ protected:
 public:
     CommandMap( Target * iTarget = nullptr ) {
         this->target = iTarget;
+        commandManager->add(this);
     };
     ~CommandMap(){
         //nothing
@@ -63,14 +57,14 @@ public:
         this->target = iTarget;
         this->commandMap = map;
     };
-    void callCommandHandler( const char * signal , void * arg ){
-        fd_stringvector * args = ( fd_stringvector * )arg;
-        std::string command = args->at(1);
+    void callCommandHandler( fd_stringvector & args ){
+        std::string command = args.at(1);
         if( this->commandMap.count( command ) ){
             auto f = this->commandMap.at( command );
             f( ( *this->target ), args );
         }
     };
 };
+
 
 #endif /* defined(__FlacDemon__CommandMap__) */

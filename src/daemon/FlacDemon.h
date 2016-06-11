@@ -65,12 +65,12 @@ public:
     ~Demon();
     
     void run();
-    int add( fd_stringvector * args);
-    int play( fd_stringvector * args);
-    int stop( fd_stringvector * args);
-    int set( fd_stringvector * args);
-    int get( fd_stringvector * args);
-    int verify( fd_stringvector * args);
+    int add( fd_stringvector & args);
+    int play( fd_stringvector & args);
+    int stop( fd_stringvector & args);
+    int set( fd_stringvector & args);
+    int get( fd_stringvector & args);
+    int verify( fd_stringvector & args);
 };
 
 #endif /* defined(__FlacDemon__FlacDemon__) */

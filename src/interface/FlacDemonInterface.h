@@ -136,12 +136,12 @@ public:
     void printLibrary(int offset);
     void printLibraryHeaders();
     void printLibraryLine( WINDOW * window , std::vector< std:: string > * values);
-    void callCommand( const char * signal, void * args );
+    int callCommand( fd_stringvector & args );
     void sendCommand(const char * command);
     
-    int search ( fd_stringvector * args );
-    int show ( fd_stringvector * args );
-    int verify ( fd_stringvector * args );
+    int search ( fd_stringvector & args );
+    int show ( fd_stringvector & args );
+    int verify ( fd_stringvector & args );
     
     void readResponse();
     void parseResponse(std::string response);

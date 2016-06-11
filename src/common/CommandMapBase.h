@@ -1,5 +1,5 @@
 /***********************************************************************
- * main.cpp : daemon main()
+ * CommandMapBase.h : Separate Command Map Base class to avoid circular dependency
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,34 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#include <iostream>
-#include "FlacDemonAll.h"
-#include "FlacDemon.h"
+#ifndef flacdemon_CommandMapBase_h
+#define flacdemon_CommandMapBase_h
 
-#define FDOPTIONS_USE_FLACS_DIR 1
+#include "typedefs.h"
 
-#include "globals.hpp"
+class FlacDemon::CommandMapBase {
+public:
+    virtual void callCommandHandler( fd_stringvector & args ) = 0;
+    virtual ~CommandMapBase(){
+        //nothing
+    }
+};
 
-FlacDemon::Demon * demon = nullptr;
-
-int main(int argc, const char * argv[])
-{
-
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    
-    initGlobals();
-    
-    demon = new FlacDemon::Demon();
-    
-    
-    demon->run();
-
-    delete demon;
-    delete signalHandler;
-    
-    curl_global_cleanup();
-    
-    return 0;
-}
-
+#endif

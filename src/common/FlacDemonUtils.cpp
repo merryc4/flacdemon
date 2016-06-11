@@ -29,7 +29,7 @@ void initGlobals(){
     curl_global_init( CURL_GLOBAL_SSL );
     
 #if FDOPTIONS_USE_FLACS_DIR
-    char dir[] = "/mnt/Backup/Storage/FLACS/";
+    char dir[] = "/mnt/StorageDrive/FLACS/";
 #else
     char dir[] = "/Users/merryclarke/Documents/Xcode Projects/FlacDemon/";
 #endif

@@ -68,8 +68,10 @@ void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) 
     fd_strreplace(tcommand, "\r", " ");
     while(fd_strreplace(tcommand, "  ", " ")){};
     
-    if( run )
+    if( run ){
         this->history.push_back(*tcommand);
+        this->currentCommand = *tcommand;
+    }
 
     
 	unsigned long pos = 0, skip = 0;
@@ -120,7 +122,7 @@ void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) 
     this->currentArgs = args;
     this->checkCommand();
     if( run ) {
-        signalHandler->call("callCommand", &args);
+        commandManager->call(args);
     }
     delete tcommand;
     

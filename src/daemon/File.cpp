@@ -21,7 +21,7 @@
 
 #include "TrackFile.h"
 
-FlacDemon::File::File(string* iPath, bool readTags){
+FlacDemon::File::File(std::string* iPath, bool readTags){
     
     this->fileSize = 0;
     
@@ -96,7 +96,7 @@ FlacDemon::File::~File(){
     
     
 }
-string* FlacDemon::File::getPath(){
+std::string* FlacDemon::File::getPath(){
     return this->filepath;
 }
 void FlacDemon::File::setPath(std::string* iPath){
@@ -838,21 +838,28 @@ int FlacDemon::File::openFormatContext(bool reset){
     
     
     int averror;
-    this->formatContext = avformat_alloc_context();
+    this->formatContext = nullptr;
+    
+    //NOTE there is a possibile bug in newer versions of libavformat that cause memory exception on formatContext->metadata, currently ok using version 56.36.100
 
     if ((averror = avformat_open_input(&this->formatContext, this->filepath->c_str(), nullptr,
                                        nullptr)) < 0) {
-        cout << "could not open input file" << endl;
+        cout << "could not open input file: " << this->filepath->c_str() << " ";
+        fd_print_av_error(averror);
+        
         this->formatContext = nullptr;
         return averror;
     }
-    if(this->formatContext->probe_score <= 1){ //revise this number
+
+    if(av_format_get_probe_score(this->formatContext) <= 1){ //revise this number
         std::stringstream ss;
-        ss << "\\." << this->formatContext->iformat->name << "$";
+        ss << ".*\\." << this->formatContext->iformat->name << "$";
+        cout << ss.str() << endl;
         std::regex e(ss.str(), std::regex_constants::icase);
-        if(!regex_match(*this->filepath, e)){
+        if(! std::regex_match(*this->name, e) ){
             return -1;
         }
+    
     }
     return 0;
 }
@@ -1038,6 +1045,15 @@ void FlacDemon::File::standardisePath(){
     
     if(this->isMediaFile() && this->track){
         this->track->filepath = *this->filepath;
+    }
+}
+
+void fd_print_av_error( int errnum ){
+    char buf[1024];
+    if( av_strerror(errnum, buf, sizeof( buf )) ){
+        cout << "averror: " << buf << endl;
+    } else {
+        cout << "no error description for " << errnum << endl;
     }
 }
 

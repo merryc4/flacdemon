@@ -52,7 +52,11 @@ FlacDemonInterface::FlacDemonInterface(){
     this->setTargetMap( this , fd_commandmap < FlacDemonInterface > {
         flacdemon_command( FlacDemonInterface , "search" , search ),
         flacdemon_command( FlacDemonInterface , "show" , show ),
-        flacdemon_command( FlacDemonInterface , "verify" , verify )
+        flacdemon_command( FlacDemonInterface , "verify" , verify ),
+        flacdemon_command( FlacDemonInterface , "play" , callCommand ),
+        flacdemon_command( FlacDemonInterface , "stop" , callCommand ),
+        flacdemon_command( FlacDemonInterface , "add" , callCommand )
+        //remove / delete
     });
 
 }
@@ -197,12 +201,11 @@ void FlacDemonInterface::onConnect(){
     this->readThread = new std::thread(&FlacDemonInterface::readResponse, this);
 
 }
-void FlacDemonInterface::callCommand( const char * signal, void * arg ){
+int FlacDemonInterface::callCommand( fd_stringvector & args ){
     //check some stuff
 
-    fd_stringvector * args = ( fd_stringvector * ) arg;
     
-    cout << "call command " << args->front() << endl;
+    cout << "call command " << args.front() << endl;
     
     if( this->commandParser.commandType == no_command && this->typeSearch ){
         this->typeSearch = false;
@@ -210,9 +213,9 @@ void FlacDemonInterface::callCommand( const char * signal, void * arg ){
     else if(this->commandParser.commandType == interface_command ){
         
     } else if( this->commandParser.commandType == daemon_command ){
-        this->sendCommand(args->front().c_str());
+        this->sendCommand(this->commandParser.currentCommand.c_str());
     }
-    
+    return 0; //TODO handle this return code
 }
 void FlacDemonInterface::sendCommand(const char * icommand){
     if(this->socketFileDescriptor < STDERR_FILENO){
@@ -226,14 +229,14 @@ void FlacDemonInterface::sendCommand(const char * icommand){
         this->socketFileDescriptor = -1;
     }
 }
-int FlacDemonInterface::search ( fd_stringvector * args ) {
+int FlacDemonInterface::search ( fd_stringvector & args ) {
     this->trySearch();
     return 0;
 }
-int FlacDemonInterface::show ( fd_stringvector * args ) {
-    if( args->size() < 3 ) return 1;
+int FlacDemonInterface::show ( fd_stringvector & args ) {
+    if( args.size() < 3 ) return 1;
     
-    std::string & showValue = args->at(2);
+    std::string & showValue = args.at(2);
     if( showValue ==  "albums" ) {
         this->library.listingMode = FlacDemonListingModeAlbums;
     } else if( showValue == "tracks" ) {
@@ -243,7 +246,7 @@ int FlacDemonInterface::show ( fd_stringvector * args ) {
     this->event( fd_interface_printlibrary );
     return 0;
 }
-int FlacDemonInterface::verify ( fd_stringvector * args ){
+int FlacDemonInterface::verify ( fd_stringvector & args ){
     fd_albumvector & albums = this->library.allAlbums();
     FlacDemon::Album * album = albums[0];
     this->currentViewAlbum = album;

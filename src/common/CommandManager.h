@@ -24,15 +24,18 @@
 
 #include "includes.h"
 #include "FlacDemonNameSpace.h"
+#include "FlacDemonUtils.h"
+#include "CommandMapBase.h"
 
 class FlacDemon::CommandManager {
 private:
 protected:
-	std::map < std::string , FlacDemon::CommandMapBase & > commandMaps;
+    std::map < std::string , FlacDemon::CommandMapBase * > commandMaps;
 public:
-	CommandManager();
-	virtual ~CommandManager();
-	void add( FlacDemon::CommandMapBase & map );
+    CommandManager();
+    virtual ~CommandManager();
+    void add( FlacDemon::CommandMapBase * map );
+    void call( fd_stringvector & );
 };
 
 #endif /* COMMANDMANAGER_H_ */
