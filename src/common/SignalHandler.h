@@ -23,6 +23,7 @@
 #define __FlacDemon__SignalHandler__
 
 #include <iostream>
+#include <csignal>
 #include <boost/signals2.hpp>
 
 typedef boost::signals2::signal<void (const char *, void *)> fd_signal;

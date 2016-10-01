@@ -18,7 +18,7 @@ AC_LANG_PUSH([C++])
 
 #AC_CHECK_LIB([mba] , [diff] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lmba"] , [ AC_MSG_ERROR( Library dependency missing: libmba ) ] )
 AC_CHECK_LIB([sqlite3] , [sqlite3_open_v2] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lsqlite3"] , [ AC_MSG_ERROR( Library dependency missing: libsqlite3 ) ] )
-#AC_CHECK_LIB([uuid] , [uuid_generate_random] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -luuid"] , [ AC_MSG_ERROR( Library dependency missing: libuuid ) ] )
+AC_CHECK_LIB([uuid] , [uuid_generate_random] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -luuid"] , [ AC_MSG_ERROR( Library dependency missing: libuuid ) ] )
 AC_CHECK_LIB([curl] , [curl_global_init] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lcurl"] , [ AC_MSG_ERROR( Library dependency missing: libcurl ) ] )
 AC_CHECK_LIB([jansson] , [json_loads] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -ljansson"] , [ AC_MSG_ERROR( Library dependency missing: libjansson ) ] )
 AC_CHECK_LIB([ao] , [ao_initialize] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lao"] , [ AC_MSG_ERROR( Library dependency missing: libao ) ] )
@@ -27,6 +27,7 @@ AC_CHECK_LIB([avcodec] , [avcodec_find_decoder] , [flacdemon_LDFLAGS="$flacdemon
 AC_CHECK_LIB([avformat] , [avformat_alloc_context] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lavformat"] , [ AC_MSG_ERROR( Library dependency missing: libavformat ) ] )
 AC_CHECK_LIB([avutil] , [av_dict_get] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lavutil"] , [ AC_MSG_ERROR( Library dependency missing: libavutil ) ] )
 AC_CHECK_LIB([swresample] , [swr_init] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lswresample"] , [ AC_MSG_ERROR( Library dependency missing: libswresample ) ] )
+#AC_CHECK_LIB([pthread] , [initialize_pthread] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lpthread"] , [ AC_MSG_ERROR( Library dependency missing: libpthread) ] )
 
 
 AC_CHECK_LIB([curses] , [initscr] , [flacdemon_LDFLAGS="$flacdemon_LDFLAGS -lcurses"], [ AC_MSG_ERROR( Library dependency missing: libcurses ) ] )

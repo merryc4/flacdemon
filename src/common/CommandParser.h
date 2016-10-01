@@ -61,7 +61,7 @@ public:
 
     void signalReceiver(const char * signalName, void * arg);
 
-    void getCommand();
+    bool getCommand();
     std::string * getInput();
     void parseCommand( std::string & icommand , bool run = true );
     CommandType checkCommand();

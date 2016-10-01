@@ -59,6 +59,9 @@ void FlacDemon::TCPHandler::initialize(){
     
     // some kind of accept thread loop?
 }
+void FlacDemon::TCPHandler::join(){
+    this->acceptThread->join();
+}
 void FlacDemon::TCPHandler::setSignals(){
     auto f = boost::bind(&FlacDemon::TCPHandler::trackPlayingHandler, this, _1, _2);
     signalHandler->signals("playingTrack")->connect(f);

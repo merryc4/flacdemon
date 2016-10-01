@@ -78,14 +78,21 @@ MatchType fd_comparetags(std::string & itag1, std::string & itag2, float * match
     
     MatchType matchType = MatchTypeNone;
     
-    struct varray * ses = varray_new(sizeof(struct diff_edit), NULL);
-    int numElements;
-    int editDistance = diff(&tag1, 0, (int)tag1.length(), &tag2, 0, (int)tag2.length(), characterAtIndex, compareCharacters, NULL, 0, ses, &numElements, NULL);
+    // struct varray * ses = varray_new(sizeof(struct diff_edit), NULL);
+    int numElements = 0;
+    // int editDistance = diff(&tag1, 0, (int)tag1.length(), &tag2, 0, (int)tag2.length(), characterAtIndex, compareCharacters, NULL, 0, ses, &numElements, NULL);
+
+
     int match_count = 0;
     int nonmatch_count = 0;
     int diff_delete = 0;
     
-    for(int i = 0; i < numElements; i++){
+    dtl::Diff<char , std::string> d( tag1, tag2 );
+
+    d.compose();
+
+    
+/*    for(int i = 0; i < numElements; i++){
         struct diff_edit * e = (struct diff_edit *)varray_get(ses, i);
         switch (e->op) {
             case DIFF_MATCH:
@@ -116,7 +123,7 @@ MatchType fd_comparetags(std::string & itag1, std::string & itag2, float * match
         }
     }
     nonmatch_count+=diff_delete;
-
+*/
     float percent = 1.0 * (match_count - nonmatch_count) / tag1.length();
     
     if( match_count ){

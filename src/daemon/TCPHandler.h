@@ -46,6 +46,7 @@ public:
     TCPHandler();
     ~TCPHandler();
     void initialize();
+    void join();
     void setSignals();
     void runAcceptLoop(int sockfd);
     void messageReceiverLoop(int sockfd);

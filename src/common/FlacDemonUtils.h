@@ -26,6 +26,9 @@
 #include "netincludes.h"
 #include "globals.h"
 
+#include <dtl/dtl.hpp>
+
+
 #define FLACDEMON_MULTIPLE_TAG_MATCH_THRESHOLD 0.7
 
 enum MatchType {

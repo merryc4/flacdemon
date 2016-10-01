@@ -19,8 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef __FlacDemon__Verifier__
-#define __FlacDemon__Verifier__
+#ifndef __FlacDemon__VerifierViewer__
+#define __FlacDemon__VerifierViewer__
 
 #include "FlacDemonNameSpace.h"
 #include "includes.h"
@@ -36,4 +36,4 @@ public:
     void showAlbum( FlacDemon::Album * album );
 };
 
-#endif /* defined(__FlacDemon__Verifier__) */
+#endif /* defined(__FlacDemon__VerifierViewer__) */

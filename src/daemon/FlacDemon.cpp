@@ -65,11 +65,10 @@ void FlacDemon::Demon::run() {
     this->debug_tests();
 #endif
     this->tcpHandler->initialize();
-	while (true) {
-        this->commandParser->getCommand();
-        
-		usleep(100); //revise sleep length
-	}
+    while (this->commandParser->getCommand()) {        
+        usleep(100); //revise sleep length
+    }
+    this->tcpHandler->join();
 }
 
 int FlacDemon::Demon::add( fd_stringvector & args ){

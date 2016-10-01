@@ -44,15 +44,32 @@ void FlacDemon::CommandParser::signalReceiver(const char * signalName, void * ar
         this->parseCommand(command);
     }
 }
-void FlacDemon::CommandParser::getCommand() {
+bool FlacDemon::CommandParser::getCommand() {
     std::string * cmd = this->getInput();
-    this->parseCommand(*cmd);
+    
+    if( cmd )
+        this->parseCommand(*cmd);
+    bool ok = !!cmd;
     delete cmd;
+
+    return ok;
 }
 std::string * FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";
     std::string* input = new std::string();
-    getline(std::cin >> std::ws, *input);
+    std::getline(std::cin >> std::ws, *input);
+    if (std::cin.eof())
+    {
+        // rare for keyboard input - e.g. ^D on UNIX/Linux, ^Z Windows
+        // can happen with pipes/redirects - e.g. echo 10 20 | ./my_app
+        std::cerr << "expected value for input but encountered end of input\n";
+        return nullptr;
+    }
+    else
+    {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
 	return input;
 }
 void FlacDemon::CommandParser::parseCommand( std::string & icommand , bool run ) {
