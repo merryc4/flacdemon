@@ -370,7 +370,7 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
                 continue;
             }
             
-            if((filenameSimilarity = fd_comparetags(&value, this->name)) > FLACDEMON_TAG_SIMILARITY_THRESHOLD){
+            if((filenameSimilarity = fd_comparetags(value, *this->name)) > FLACDEMON_TAG_SIMILARITY_THRESHOLD){
                 //tag shares similarity / is the same as filename
                 int flag = 0;
                 if(keyIsAlbum)
@@ -392,7 +392,7 @@ void FlacDemon::File::checkMetaData(bool albumConsistency, bool artistConsistenc
         
         for(std::map< std::string , int >::iterator valueIterator = valueCounts->begin(); valueIterator != valueCounts->end(); valueIterator++){
             value.assign((*valueIterator).first);
-            if(previous.length() && fd_comparetags(&value, &previous) > FLACDEMON_TAG_SIMILARITY_THRESHOLD){
+            if(previous.length() && fd_comparetags(value, previous) > FLACDEMON_TAG_SIMILARITY_THRESHOLD){
                 cout << "Found high tag similarity for " << previous << " and " << value << endl;
                 if(this->similarMetadata == nullptr)
                     this->similarMetadata = new fd_stringvector;
@@ -485,7 +485,7 @@ void FlacDemon::File::checkDiscs(int method){
         if( ! metaDiscStr.length() )
             metaDiscStr = (*it)->getMetaDataEntry("cd", 0);
         
-        if(fd_stringtoint(&metaDiscStr, &metaDiscNumber) || metaDiscNumber == 0){
+        if(fd_stringtoint(metaDiscStr, &metaDiscNumber) || metaDiscNumber == 0){
             cout << "could not get disc number from metadata for " << *(*it)->filepath << endl;
         } else {
             numbers.push_back(metaDiscNumber);
@@ -494,7 +494,7 @@ void FlacDemon::File::checkDiscs(int method){
         if(regex_search(*(*it)->name, ematch, e) && ematch.size()){
             sub_match = ematch[ematch.size() - 1];
             fileNameDiscStr = sub_match.str();
-            fd_stringtoint(&fileNameDiscStr, &filenameDiscNumber);
+            fd_stringtoint(fileNameDiscStr, &filenameDiscNumber);
         }
         if(!filenameDiscNumber){
             cout << "could not get disc number from filename for " << *(*it)->filepath << endl;
@@ -508,7 +508,7 @@ void FlacDemon::File::checkDiscs(int method){
             if(regex_search(albumTag, ematch, e) && ematch.size()){
                 sub_match = ematch[ematch.size() - 1];
                 albumTagDiscStr = sub_match.str();
-                if(!fd_stringtoint(&albumTagDiscStr, &albumTagDiscNumber)){
+                if(!fd_stringtoint(albumTagDiscStr, &albumTagDiscNumber)){
                     albumTag = regex_replace(albumTag, std::regex("\\s*(?:disc|cd)\\s*\\w+\\s*", std::regex_constants::icase), "");
                     (*it)->setMetaDataEntry("album", &albumTag, FLACDEMON_SET_ALL_CHILD_METADATA);
                     reparseNeeded = true;
@@ -669,7 +669,7 @@ void FlacDemon::File::parseTrackNumber(){
         trackCnt = 0;
     int nonDigitFound = 0;
     
-    if(!trackNumStr.length() || fd_stringtoint(&trackNumStr, &trackNum)){
+    if(!trackNumStr.length() || fd_stringtoint(trackNumStr, &trackNum)){
         cout << "could not parse track number from metadata for " << *this->filepath << endl;
     }
     for(std::string::iterator it = trackNumStr.begin(); it != trackNumStr.end(); it++){
@@ -689,7 +689,7 @@ void FlacDemon::File::parseTrackNumber(){
         std::ssub_match sub_match = ematch[0];
 //            cout << "found track number " << sub_match.str() << endl;
         trackNumStr2 = sub_match.str();
-        if(fd_stringtoint(&trackNumStr2, &trackNum2)){
+        if(fd_stringtoint(trackNumStr2, &trackNum2)){
             cout << "Could not parse track number from file for " << *this->filepath << endl;
         }
             
@@ -890,7 +890,7 @@ void FlacDemon::File::standardiseMetaTags(){
     std::map < std::string , const char * > toAdd;
     while ( ( copyFrom = av_dict_get( this->metadata, "", copyFrom, AV_DICT_IGNORE_SUFFIX ) ) ){
         key = copyFrom->key;
-        newKey = fd_standardiseKey(&key);
+        newKey = fd_standardiseKey(key);
         if(key != newKey)
             toAdd.insert( std::pair < std::string , const char * > { newKey, copyFrom->value } );
     }

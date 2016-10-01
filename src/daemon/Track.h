@@ -39,7 +39,7 @@ public:
     struct MediaStreamInfo * mediaStreamInfo = nullptr;
 
     Track (FlacDemon::File* file = nullptr);
-    Track (fd_keymap * keymap);
+    Track (fd_keymap & keymap);
     ~Track();
     
     void incrementPlaycount ();

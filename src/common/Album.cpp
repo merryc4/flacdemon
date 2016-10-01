@@ -32,64 +32,62 @@ FlacDemon::Album::Album( std::string * iuuid ){
     
     if(iuuid && iuuid->length() ){
         this->uuid = *iuuid;
-        this->setValueForKey( iuuid , "albumuuid" );
+        this->setValueForKey( *iuuid , "albumuuid" );
     }
 }
 FlacDemon::Album::~Album(){
     this->tracks.clear();
 }
-void FlacDemon::Album::addTrackListing ( FlacDemon::TrackListing * track ){
-    this->tracks.push_back(track);
+void FlacDemon::Album::addTrackListing ( FlacDemon::TrackListing & track ){
+    this->tracks.push_back(&track);
     this->trackCount = this->tracks.size();
     this->addMetaDataFromTrackListing( track );
-    if( ! track->getTrackInfoForKey("verified") ){
+    if( ! track.getTrackInfoForKey("verified") ){
         this->verified = false;
     }
 }
-void FlacDemon::Album::addMetaDataFromTrackListing( FlacDemon::TrackListing * track ) {
+void FlacDemon::Album::addMetaDataFromTrackListing( FlacDemon::TrackListing & track ) {
     std::string value, trackValue, key;
     for( fd_stringvector::iterator it = libraryTitlesAlbumCopyFromTrack->begin(); it != libraryTitlesAlbumCopyFromTrack->end(); it++ ) {
         key = (*it);
-        trackValue = track->valueForKey( &key );
+        trackValue = track.valueForKey( key );
         if( ! trackValue.length() ) continue;
-        value = this->valueForKey( &key );
+        value = this->valueForKey( key );
         if( ! value.length() ) {
             if( trackValue != "-1" )
-                this->setValueForKey( &trackValue , &key );
+                this->setValueForKey( trackValue , key );
         } else if( trackValue != value && value != FlacDemonMetaDataMultipleValues ){
-            this->setValueForKey( FlacDemonMetaDataMultipleValues , &key );
+            this->setValueForKey( FlacDemonMetaDataMultipleValues , key );
         }
     }
 }
-std::string FlacDemon::Album::valueForKey( std::string * key ) {
+std::string FlacDemon::Album::valueForKey( const std::string & key ) {
     std::string rvalue = "";
-    if( this->metadata.count( *key ) ) {
-        rvalue = this->metadata.at( *key );
+    if( this->metadata.count( key ) ) {
+        rvalue = this->metadata.at( key );
     } else {
-        if( *key == "tracks" )
+        if( key == "tracks" )
             rvalue = std::to_string( this->trackCount );
-        else if( *key == "playcount" )
+        else if( key == "playcount" )
             rvalue = std::to_string( this->playcount() );
-        else if( *key == "verified" )
+        else if( key == "verified" )
             rvalue = std::to_string( (int) this->verified );
     }
     return rvalue;
 }
-void FlacDemon::Album::setValueForKey( const char * value , std::string * key ) {
+void FlacDemon::Album::setValueForKey( const char * value , std::string & key ) {
     std::string strValue = value;
-    this->setValueForKey( &strValue, key );
+    this->setValueForKey( strValue, key );
 }
-void FlacDemon::Album::setValueForKey( std::string * value , const char * key ) {
+void FlacDemon::Album::setValueForKey( std::string & value , const char * key ) {
     std::string strKey = key;
-    this->setValueForKey(value, &strKey);
+    this->setValueForKey(value, strKey);
 }
-void FlacDemon::Album::setValueForKey( std::string * value , std::string * key ) {
-    if( value && key ){
-        if( this->metadata.count( *key ) ) {
-            this->metadata.at( *key ) = *value;
-        } else {
-            this->metadata.insert( std::make_pair( *key , *value ));
-        }
+void FlacDemon::Album::setValueForKey( std::string & value , std::string & key ) {
+    if( this->metadata.count( key ) ) {
+        this->metadata.at( key ) = value;
+    } else {
+        this->metadata.insert( std::make_pair( key , value ));
     }
 }
 bool FlacDemon::Album::matchesSearch() {
@@ -106,4 +104,13 @@ float FlacDemon::Album::playcount(){
     }
     total /= this->tracks.size();
     return total;
+}
+fd_keymap * FlacDemon::Album::getScraperKeymap(){
+    fd_keymap * rmap = new fd_keymap();
+    for(fd_keymap::iterator it = this->metadata.begin(); it != this->metadata.end(); it++){
+        if( it->second != FlacDemonMetaDataMultipleValues ){
+            rmap->insert(fd_keypair{ it->first, it->second });
+        }
+    }
+    return rmap;
 }

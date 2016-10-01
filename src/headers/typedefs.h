@@ -40,11 +40,13 @@ typedef std::map < std::string, std::string > fd_keymap;
 typedef std::vector < fd_keymap * > fd_keymap_vector;
 typedef std::basic_string <unsigned char> fd_ustring;
 
-
+//TODO change these to references
 typedef std::vector < std::string > fd_stringvector;
 typedef std::vector < FlacDemon::File * > fd_filevector;
 typedef std::vector < FlacDemon::Track * > fd_trackvector;
 typedef std::vector < FlacDemon::TrackListing * > fd_tracklistingvector;
 typedef std::vector < FlacDemon::LibraryListing * > fd_librarylistingvector;
 typedef std::vector < FlacDemon::Album * > fd_albumvector;
+typedef std::map < std::string , FlacDemon::Album & > fd_albummap;
+typedef std::map < std::string , FlacDemon::Track & > fd_trackmap;
 #endif

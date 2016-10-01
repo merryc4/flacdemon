@@ -36,34 +36,36 @@ protected:
     time_t trackTime;
     
     std::string filepath;
-    std::map<std::string, long> * trackinfo = nullptr;
-    fd_keymap * keymap = nullptr;
+    std::map <std::string, long> * trackinfo = nullptr;
+    fd_keymap keymap;
     
     
 public:
     std::string * uuid = nullptr;
 
     TrackListing();
-    TrackListing (fd_keymap * keymap);
+    TrackListing (fd_keymap & keymap);
     ~TrackListing();
     
 //    std::string valueForKey (const char * key);
     using FlacDemon::LibraryListing::valueForKey;
-    std::string valueForKey (std::string * key);
+    std::string valueForKey (const std::string & key);
     
-    virtual std::string keymapFileValue(std::string * key);
+    virtual std::string keymapFileValue( const std::string & key);
     
-    void setValueForKey(std::string * value, std::string* key);
+    void setValueForKey(std::string & value, std::string & key);
     fd_keymap::iterator * iterateMetadata( fd_keymap::iterator * it );
-    std::string standardiseMetaValue(std::string * value, std::string * key);
+    std::string standardiseMetaValue(std::string & value, std::string & key);
     
-    long getTrackInfoForKey(const char * key);
-    long getTrackInfoForKey(std::string * key);
+    long getTrackInfoForKey( const char * key );
+    long getTrackInfoForKey( const std::string & key );
     
     void setTrackInfoForKey(const char * key, long value);
-    void setTrackInfoForKey(std::string * key, long value);
+    void setTrackInfoForKey(std::string & key, long value);
     
-    bool compareSearchStrings(std::vector < std::string > * sstrings, bool setMatch = false);
+    bool compareSearchStrings(std::vector < std::string > & sstrings, bool setMatch = false);
+    
+    fd_keymap * getKeymap();
 };
 
 #endif /* defined(__FlacDemon__TrackListing__) */

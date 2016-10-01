@@ -65,9 +65,8 @@ FlacDemonInterface::~FlacDemonInterface(){
 }
 void FlacDemonInterface::initialize(){
     
-    
     //redirect cout to log file
-    std::ofstream * out = new std::ofstream("fd_interface.log");
+    std::ofstream * out = new std::ofstream("interface.log");
     std::cout.rdbuf(out->rdbuf());
 
     initscr();
@@ -105,7 +104,7 @@ void FlacDemonInterface::initialize(){
     
     refresh();
     
-    mvwprintw(titleWindow, 0, (this->maxColumns - strlen(msg)) / 2, "%s", msg);
+    mvwprintw(titleWindow, 0, (int)(( this->maxColumns - strlen( msg )) / 2 ), "%s", msg);
     
     wrefresh(titleWindow);
     
@@ -118,14 +117,14 @@ void FlacDemonInterface::initialize(){
     size_t browserPanelRow = row;
 
     this->browserHeaderWindow = this->nextwin( 2 , &row );
-    this->browserRows = this->maxRows - row;
+    this->browserRows = this->maxRows - (int) row;
     
     this->browserWindow = this->nextwin( this->browserRows );
     
     this->albumViewWindow = this->nextwin( ( this->maxRows - browserPanelRow ), &row, ( int )browserPanelRow);
     
     int verifyColums = ( this->maxColumns > 20 ) ? 10 : ( this->maxColumns - 10 );
-    this->verifyWindow = newwin( ( this->maxRows - browserPanelRow ) , verifyColums, browserPanelRow, ( this->maxColumns - verifyColums ));
+    this->verifyWindow = newwin( ( this->maxRows - (int)browserPanelRow ) , verifyColums, (int)browserPanelRow, ( this->maxColumns - verifyColums ));
     
     this->verifyPanel = new_panel( this->verifyWindow );
     this->browserPanel = new_panel( this->browserWindow );
@@ -288,21 +287,22 @@ void FlacDemonInterface::readResponse(){
     }while(n>0 && !this->killResponseThread);
     this->connect();
 }
-void FlacDemonInterface::parseResponse(std::string response){
+void FlacDemonInterface::parseResponse( std::string & response ){
 //    cout << response << endl;
-    std::string tcommand = this->parseCommandFromResponse(&response);
+    std::string tcommand = this->parseCommandFromResponse( response );
     std::cout << "Got response for command \"" << tcommand << "\"" << std::endl;
-    if(commandFlags->count(tcommand)){
-        switch (commandFlags->at(tcommand)) {
+    if( commandFlags->count( tcommand ) ){
+        switch ( commandFlags->at( tcommand ) ) {
             case fd_interface_libraryupdate:
-                this->parseLibraryUpdate(&response);
+                this->parseLibraryUpdate( response );
                 break;
-            case fd_interface_playing:
-                this->setNowPlaying(this->removeCommandFromResponse(&response));
+            { case fd_interface_playing:
+                std::string id = this->removeCommandFromResponse( response );
+                this->setNowPlaying( id );
                 break;
-            case fd_interface_playbackprogress:
-                this->progress = atof(this->removeCommandFromResponse(&response).c_str());
-                this->event(fd_interface_printprogress);
+            } case fd_interface_playbackprogress:
+                this->progress = atof(this->removeCommandFromResponse( response ).c_str());
+                this->event( fd_interface_printprogress );
                 break;
             default:
                 break;
@@ -310,10 +310,10 @@ void FlacDemonInterface::parseResponse(std::string response){
         this->setCommandCursor();
     }
 }
-std::string FlacDemonInterface::parseCommandFromResponse(std::string *response){
+std::string FlacDemonInterface::parseCommandFromResponse( std::string & response ){
     std::istringstream inStream;
     std::string line;
-    inStream.str(*response);
+    inStream.str( response );
     std::getline(inStream, line);
     std::regex reg("\"command\":\"([^\"]+)\"");
     std::smatch regmatch;
@@ -323,11 +323,12 @@ std::string FlacDemonInterface::parseCommandFromResponse(std::string *response){
     }
     return (std::string(""));
 }
-std::string FlacDemonInterface::removeCommandFromResponse(std::string * response){
-    int pos = response->find("\n");
+std::string FlacDemonInterface::removeCommandFromResponse( std::string & response
+                                                          ){
+    size_t pos = response.find("\n");
     std::string responseWithoutCommand;
-    if(pos != std::string::npos && (pos+1) < response->length()){
-        responseWithoutCommand = response->substr( pos + 1 );
+    if(pos != std::string::npos && (pos+1) < response.length()){
+        responseWithoutCommand = response.substr( pos + 1 );
     }
     return responseWithoutCommand;
 }
@@ -343,7 +344,7 @@ void FlacDemonInterface::printFlags(){
     this->eventCV.wait( lock );
     if(ihas_flag(this->flags, fd_interface_printlibrary)){
         cout << "printing library" << endl;
-        this->printLibrary(this->browserOffset);
+        this->printLibrary( (int) this->browserOffset );
     }
     if(ihas_flag(this->flags, fd_interface_printcommand)){
         cout << "printing command" << endl;
@@ -412,7 +413,7 @@ void FlacDemonInterface::userInputLoop(){
                 this->escapeHandler();
                 break;
             case 10: //Enter
-                this->commandParser.parseCommand( &this->userCommand , true );
+                this->commandParser.parseCommand( this->userCommand , true );
                 this->userCommand.clear();
                 break;
             case 127: //backspace
@@ -427,7 +428,7 @@ void FlacDemonInterface::userInputLoop(){
         }
         this->commandCursorPosition = this->commandCursorDefault + this->userCommand.length();
         this->event(fd_interface_printcommand);
-        this->commandParser.parseCommand( &this->userCommand , false );
+        this->commandParser.parseCommand( this->userCommand , false );
         this->trySearch();
 
     }
@@ -482,10 +483,10 @@ void FlacDemonInterface::printLibrary(int offset = 0){
         std::vector < std::string > values;
         for(std::vector< std::string >::iterator it2 = titles.begin(); it2 != titles.end(); it2++){
             key = (*it2);
-            key = fd_standardiseKey(&key);
-            values.push_back( ( *it )->valueForKey( &key ) );
+            key = fd_standardiseKey( key );
+            values.push_back( ( *it )->valueForKey( key ) );
         }
-        this->printLibraryLine( this->browserWindow , &values );
+        this->printLibraryLine( this->browserWindow , values );
         if( this->currentBrowserRow > this->browserRows )
             break;
     }
@@ -495,20 +496,20 @@ void FlacDemonInterface::printLibrary(int offset = 0){
 void FlacDemonInterface::printLibraryHeaders(){
     this->colorsOn = false;
     char title[] = "Library";
-    mvwprintw(this->browserHeaderWindow, 0, (this->maxColumns - strlen(title)) / 2, title);
+    mvwprintw(this->browserHeaderWindow, 0, (int)((this->maxColumns - strlen(title)) / 2), title);
     this->currentBrowserRow = 1;
-    this->printLibraryLine( this->browserHeaderWindow , &this->libraryTitles());
+    this->printLibraryLine( this->browserHeaderWindow , this->libraryTitles());
     this->colorsOn = true;
 }
-void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::string> *values ){
-    int width = (this->maxColumns / values->size());
+void FlacDemonInterface::printLibraryLine( WINDOW * window , std::vector<std::string> & values ){
+    int width = (this->maxColumns / values.size());
     int position = 0;
 //    cout << "printing line " << this->browserRows << endl;
     
     int pair = COLOR_PAIR_BLUE_WHITE + ( this->currentBrowserRow % 2 );
     this->setColor( this->browserWindow , COLOR_PAIR( pair ), true );
     
-    for(std::vector< std::string >::iterator it = values->begin(); it != values->end(); it++){
+    for(std::vector< std::string >::iterator it = values.begin(); it != values.end(); it++){
         const char * val = this->formatValue(*it, width);
         mvwprintw(window, this->currentBrowserRow, position, val);
         position+=width;
@@ -526,9 +527,9 @@ const char * FlacDemonInterface::formatValue(std::string value, int max){
     }
     return value.c_str();
 }
-void FlacDemonInterface::parseLibraryUpdate(std::string *response){
-    fd_keymap_vector * results = fd_jsontokeymap_vector(response);
-    this->library.libraryUpdate(results);
+void FlacDemonInterface::parseLibraryUpdate(std::string & response){
+    fd_keymap_vector * results = fd_jsontokeymap_vector( response );
+    this->library.libraryUpdate( *results );
     this->library.sort("artist");
     this->setColumnWidths();
     this->event(fd_interface_printlibrary);
@@ -555,7 +556,7 @@ void FlacDemonInterface::changeOffset(int diff, bool absolute){
         this->event(fd_interface_printlibrary);
     }
 }
-void FlacDemonInterface::setNowPlaying(std::string ID){
+void FlacDemonInterface::setNowPlaying(std::string & ID){
 //    int iid;
 //    fd_stringtoint(&ID, &iid);
     cout << "setting now playing to " << ID << endl;
@@ -568,10 +569,10 @@ void FlacDemonInterface::printNowPlaying(){
     if(this->nowPlaying){
         std::string title = this->nowPlaying->valueForKey("title");
         cout << "setting title to " << title << endl;
-        mvwprintw(this->playbackWindow, 0, (this->maxColumns - title.length()) / 2, title.c_str());
+        mvwprintw(this->playbackWindow, 0, (int)((this->maxColumns - title.length()) / 2), title.c_str());
     } else {
         char msg2[] = "Nothing Playing";
-        mvwprintw(this->playbackWindow, 0, (this->maxColumns - strlen(msg2)) / 2, msg2);
+        mvwprintw(this->playbackWindow, 0, (int)((this->maxColumns - strlen(msg2)) / 2), msg2);
         wclrtobot(this->playbackWindow);
     }
     wrefresh(this->playbackWindow);
@@ -584,7 +585,7 @@ void FlacDemonInterface::printCommand(){
         this->searchPrompt = "";
     mvwprintw(this->commandWindow, 0, 0, "%s%s", this->commandPrompt.c_str(), this->userCommand.c_str());
     wclrtoeol(this->commandWindow);
-    mvwprintw(this->commandWindow, 0, this->maxColumns - this->searchPrompt.length(), "%s", this->searchPrompt.c_str());
+    mvwprintw(this->commandWindow, 0, (int)(this->maxColumns - this->searchPrompt.length()), "%s", this->searchPrompt.c_str());
     wrefresh(this->commandWindow);
 
 //    this->setCommandCursor();
@@ -599,7 +600,7 @@ void FlacDemonInterface::printProgress(){
     std::string tracktime = this->nowPlaying->valueForKey("tracktime");
     cout << "printing progress " << this->progress << " tracktime " << tracktime << endl;
     int itime;
-    fd_stringtoint( &tracktime , &itime );
+    fd_stringtoint( tracktime , &itime );
     itime = itime / 1000;
     int progressTime = (int)(itime * this->progress);
     std::string formatTime = fd_secondstoformattime(itime);
@@ -607,7 +608,7 @@ void FlacDemonInterface::printProgress(){
     std::string totalTime = formatProgressTime;
     totalTime.append("/");
     totalTime.append(formatTime);
-    mvwprintw(this->playbackWindow, 1, (this->maxColumns - totalTime.length()) / 2, totalTime.c_str());
+    mvwprintw(this->playbackWindow, 1, (int)((this->maxColumns - totalTime.length()) / 2), totalTime.c_str());
     wrefresh(this->playbackWindow);
 }
 void FlacDemonInterface::waitForSearch(){
@@ -629,13 +630,13 @@ void FlacDemonInterface::printAlbum( WINDOW * window , FlacDemon::Album * album 
     getmaxyx( window , maxY , maxX );
     std::string value = album->valueForKey( "album" );
 
-    mvwprintw( window , 0 , ( maxX - value.length() ) / 2, value.c_str() );
+    mvwprintw( window , 0 , (int)(( maxX - value.length() ) / 2 ), value.c_str() );
 
     std::string key;
     int row = 1;
     for( fd_keymap::iterator keyIterator = album->metadata.begin(); keyIterator != album->metadata.end(); keyIterator++ ){
         key = keyIterator->first;
-        value = album->valueForKey( & key );
+        value = album->valueForKey(  key );
         this->setColor( window , COLOR_PAIR( COLOR_PAIR_GREY_WHITE ), true );
         mvwprintw( window , row , 0 , key.c_str() );
         this->setColor( window , COLOR_PAIR( COLOR_PAIR_GREY_WHITE ), false );

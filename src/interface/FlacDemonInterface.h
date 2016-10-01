@@ -135,7 +135,7 @@ public:
     fd_stringvector& libraryTitles();
     void printLibrary(int offset);
     void printLibraryHeaders();
-    void printLibraryLine( WINDOW * window , std::vector< std:: string > * values);
+    void printLibraryLine( WINDOW * window , std::vector< std:: string > & values);
     int callCommand( fd_stringvector & args );
     void sendCommand(const char * command);
     
@@ -144,14 +144,14 @@ public:
     int verify ( fd_stringvector & args );
     
     void readResponse();
-    void parseResponse(std::string response);
-    std::string parseCommandFromResponse(std::string * response);
-    std::string removeCommandFromResponse(std::string * response);
-    const char * formatValue(std::string value, int max);
-    void parseLibraryUpdate(std::string * response);
+    void parseResponse( std::string & response );
+    std::string parseCommandFromResponse( std::string & response );
+    std::string removeCommandFromResponse( std::string & response );
+    const char * formatValue( std::string value, int max );
+    void parseLibraryUpdate( std::string & response );
     void changeOffset(int diff, bool absolute = false);
     void setColumnWidths();
-    void setNowPlaying(std::string ID);
+    void setNowPlaying( std::string & ID );
     void printNowPlaying();
     void printCommand();
     void setCommandCursor();

@@ -28,39 +28,38 @@ FlacDemon::Library::Library(){
 FlacDemon::Library::~Library(){
     
 }
-void FlacDemon::Library::libraryUpdate(fd_keymap_vector * values){
-    for(fd_keymap_vector::iterator it = values->begin(); it != values->end(); it++){
-        this->addTrackListing(*it);
+void FlacDemon::Library::libraryUpdate(fd_keymap_vector & values){
+    for(fd_keymap_vector::iterator it = values.begin(); it != values.end(); it++){
+        this->addTrackListing(**it);
     }
 }
-void FlacDemon::Library::addTrackListing( FlacDemon::TrackListing *trackListing ){
-    this->tracks.insert( std::pair<std::string, FlacDemon::TrackListing * >( trackListing->valueForKey( "id" ) , trackListing ));
-    FlacDemon::Album * album = this->getOrCreateAlbum( trackListing->uuid );
+void FlacDemon::Library::addTrackListing( FlacDemon::TrackListing & trackListing ){
+    this->tracks.insert( std::pair<std::string, FlacDemon::TrackListing * >( trackListing.valueForKey( "id" ) , &trackListing ));
+    FlacDemon::Album * album = this->getOrCreateAlbum( *trackListing.uuid );
     if( album ) {
         album->addTrackListing ( trackListing );
     }
 }
-void FlacDemon::Library::addTrackListing( fd_keymap *keymap ){
+void FlacDemon::Library::addTrackListing( fd_keymap & keymap ){
     std::string idKey("id");
-    if(!keymap->count(idKey)){
+    if(!keymap.count(idKey)){
         std::cout << "Error: Malformed keymap, has no ID" << std::endl;
         return;
     }
-    std::string id = keymap->at(idKey);
+    std::string id = keymap.at(idKey);
     if(this->tracks.count(id)){
         //update
     } else {
         FlacDemon::TrackListing * trackListing = new FlacDemon::TrackListing(keymap);
-        this->addTrackListing( trackListing );
+        this->addTrackListing( *trackListing );
     }
 }
-FlacDemon::Album * FlacDemon::Library::getOrCreateAlbum ( std::string * albumuuid ) {
-    if( albumuuid == nullptr ) return nullptr;
+FlacDemon::Album * FlacDemon::Library::getOrCreateAlbum ( std::string & albumuuid ) {
     FlacDemon::Album * album = nullptr;
-    if( this->albums.count( *albumuuid ) ) {
-        album = this->albums.at( *albumuuid );
+    if( this->albums.count( albumuuid ) ) {
+        album = this->albums.at( albumuuid );
     } else {
-        FlacDemon::Album * album = new FlacDemon::Album( albumuuid );
+        FlacDemon::Album * album = new FlacDemon::Album( & albumuuid );
         this->albums.insert( std::make_pair( album->uuid , album ) );
     }
     return album;
@@ -119,7 +118,7 @@ void FlacDemon::Library::startSearchThread(){
 void FlacDemon::Library::runSearchThread(){
     this->searchMutex.lock();
     for(std::map < std::string , FlacDemon::TrackListing * >::iterator it = this->tracks.begin(); it != this->tracks.end(); it++){
-        it->second->compareSearchStrings(&this->searchTerms, true);
+        it->second->compareSearchStrings( this->searchTerms, true);
     }
     this->searching = false;
     this->searchTerms.clear();
@@ -137,11 +136,11 @@ bool FlacDemon::Library::setSearchTerms( fd_stringvector terms ){
     this->searchMutex.unlock();
     return diff;
 }
-FlacDemon::TrackListing * FlacDemon::Library::trackListingForID(std::string ID){
-    if(this->tracks.count(ID) == 0){
+FlacDemon::TrackListing * FlacDemon::Library::trackListingForID( std::string & Id ){
+    if(this->tracks.count(Id) == 0){
         return nullptr;
     }
-    return this->tracks.at(ID);
+    return this->tracks.at(Id);
 }
 fd_tracklistingvector & FlacDemon::Library::allTracks(){
     return this->sortedTracks;

@@ -33,9 +33,9 @@ FlacDemon::Demon::Demon() {
     this->database = new FlacDemon::Database();
     this->player = new FlacDemon::Player();
     this->tcpHandler = new FlacDemon::TCPHandler();
-    this->scraper = new FlacDemon::Scraper();
     
     this->player->setDatabase(this->database);
+    this->verifier = new FlacDemon::Verifier();
     
     this->setTargetMap( this , fd_commandmap < FlacDemon::Demon > {
         flacdemon_command( FlacDemon::Demon , "play" , play ),
@@ -49,10 +49,20 @@ FlacDemon::Demon::Demon() {
 FlacDemon::Demon::~Demon() {
 	cout << "Deleting FlacDemon\n";
 }
+#ifdef DEBUG
+void FlacDemon::Demon::debug_tests(){
+    fd_albumvector * albums = this->database->unverifiedAlbums();
+    if( albums->size() ){
+        FlacDemon::Album * album = albums->back();
+        this->verifier->verifyAlbum( * album );
+    }
+    
+}
+#endif
 
 void FlacDemon::Demon::run() {
 #ifdef DEBUG
-    run_tests();
+    this->debug_tests();
 #endif
     this->tcpHandler->initialize();
 	while (true) {
@@ -94,14 +104,14 @@ int FlacDemon::Demon::set(fd_stringvector & args){
     }
 
     int id;
-    if(fd_stringtoint(&(args)[2], &id)){
+    if(fd_stringtoint((args)[2], &id)){
         cout << "command error : unknown id: " << args[0] << endl;
         return 1;
     }
     std::string metaTagName = args[3];
     std::string metaTagValue = args[4];
     
-    this->database->setValue(id, &metaTagName, &metaTagValue);
+    this->database->setValue(id, metaTagName, metaTagValue);
     
     return 0;
 }
@@ -118,12 +128,12 @@ int FlacDemon::Demon::get(fd_stringvector & args){
         }
         
         int id;
-        if(fd_stringtoint(&(args)[1], &id)){
+        if(fd_stringtoint((args)[1], &id)){
             cout << "command error : unknown id: " << args[0] << endl;
             return 1;
         }
         std::string metaTagName = args[2];
-        results = this->database->getValue(id, &metaTagName);
+        results = this->database->getValue(id, metaTagName);
     }
 
     sessionManager->getSession()->setString(&(args[0]), &results);

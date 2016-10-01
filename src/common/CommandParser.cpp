@@ -41,12 +41,13 @@ void FlacDemon::CommandParser::signalReceiver(const char * signalName, void * ar
         this->availableInterfaces |= interface;
     } else if (strcmp(signalName, "runCommand") == 0){
         std::string command = (char*)arg;
-        this->parseCommand(&command);
+        this->parseCommand(command);
     }
 }
 void FlacDemon::CommandParser::getCommand() {
     std::string * cmd = this->getInput();
-    this->parseCommand(cmd);
+    this->parseCommand(*cmd);
+    delete cmd;
 }
 std::string * FlacDemon::CommandParser::getInput() {
 	cout << "Enter a command: ";
@@ -54,14 +55,14 @@ std::string * FlacDemon::CommandParser::getInput() {
     getline(std::cin >> std::ws, *input);
 	return input;
 }
-void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) {
-    if (!icommand->length()){
+void FlacDemon::CommandParser::parseCommand( std::string & icommand , bool run ) {
+    if (!icommand.length()){
         this->clear();
 		return;
     }
-    std::string * tcommand = new std::string( *icommand );
-    while(tcommand->back() == '\n'){
-        tcommand->pop_back();
+    std::string tcommand = icommand;
+    while(tcommand.back() == '\n'){
+        tcommand.pop_back();
     }
     fd_strreplace(tcommand, "\t", " ");
     fd_strreplace(tcommand, "\n", " ");
@@ -69,8 +70,8 @@ void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) 
     while(fd_strreplace(tcommand, "  ", " ")){};
     
     if( run ){
-        this->history.push_back(*tcommand);
-        this->currentCommand = *tcommand;
+        this->history.push_back(tcommand);
+        this->currentCommand = tcommand;
     }
 
     
@@ -84,27 +85,27 @@ void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) 
 //    std::match_results<std::string::iterator> regmatch;
     
     
-    args.push_back(*tcommand);
+    args.push_back(tcommand);
     
     do {
         skip = 0;
-        while(tcommand->front() == ' '){
-            tcommand->erase(0, 1);
+        while(tcommand.front() == ' '){
+            tcommand.erase(0, 1);
         }
         //        cout << "parse command regex search. first: " << *first << " last: " << *last << endl;
-        if(regex_search(*tcommand, regmatch, reg, std::regex_constants::match_continuous )){
+        if(regex_search(tcommand, regmatch, reg, std::regex_constants::match_continuous )){
             cout << "regex matched" << endl;
             pos = regmatch.length();
             skip = 1;
-        } else if ( ( pos = tcommand->find(" ")) == std::string::npos ){
-            pos = tcommand->length();
+        } else if ( ( pos = tcommand.find(" ")) == std::string::npos ){
+            pos = tcommand.length();
         }
         
-        if(pos > tcommand->length())
+        if(pos > tcommand.length())
             break;
         
-        word = tcommand->substr( skip, pos - 2 * skip );
-        tcommand->erase(0, pos);
+        word = tcommand.substr( skip, pos - 2 * skip );
+        tcommand.erase(0, pos);
         
         if( word.compare(" ") == 0 ){
             continue;
@@ -112,20 +113,18 @@ void FlacDemon::CommandParser::parseCommand( std::string* icommand , bool run ) 
         
         if( args.size() == 1 ){
             this->commandWord = word;
-            this->commandArgs = *tcommand;
+            this->commandArgs = tcommand;
         }
         
         args.push_back(word);
         
         
-    } while ( tcommand->length() );
+    } while ( tcommand.length() );
     this->currentArgs = args;
     this->checkCommand();
     if( run ) {
         commandManager->call(args);
     }
-    delete tcommand;
-    
 }
 CommandType FlacDemon::CommandParser::checkCommand(){
     if(this->commandWord == "s" || this->commandWord == "search"){
@@ -143,8 +142,8 @@ CommandType FlacDemon::CommandParser::checkCommand(){
     }
     return ( this-> commandType = no_command );
 }
-void FlacDemon::CommandParser::historyPush ( std::string * icommand ) {
-    this->history.push_back( *icommand );
+void FlacDemon::CommandParser::historyPush ( std::string & icommand ) {
+    this->history.push_back( icommand );
 }
 void FlacDemon :: CommandParser :: clear() {
     this->commandType = no_command;

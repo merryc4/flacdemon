@@ -1,5 +1,5 @@
 /***********************************************************************
- * Verifier.cpp : Verify and correct release metadata
+ * KeyValue.cpp : Virtual class for any class that implements valueForKey
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,21 +19,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef __FlacDemon__Verifier__
-#define __FlacDemon__Verifier__
 
-#include "FlacDemonNameSpace.h"
+#ifndef __FlacDemon__KeyValue__
+#define __FlacDemon__KeyValue__
+
 #include "includes.h"
-#include "typedefs.h"
 
-class FlacDemon::Verifier {
+class KeyValue {
 private:
 protected:
 public:
-    Verifier();
-    ~Verifier();
     
-    void showAlbum( FlacDemon::Album * album );
+    std::string valueForKey (const char * key){
+        const std::string tkey = key;
+        return this->valueForKey( tkey );
+    }
+    virtual std::string valueForKey (const std::string & key) = 0;
 };
 
-#endif /* defined(__FlacDemon__Verifier__) */
+#endif /* defined(__FlacDemon__KeyValue__) */

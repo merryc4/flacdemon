@@ -39,7 +39,7 @@ bool TrackSorter < T >::operator()( T a, T b ){
     for( fd_stringvector::iterator it = std::find(sortKeys->begin(), sortKeys->end(), this->currentSortKey); it != sortKeys->end() && !isDiff && nextKey; it++){
         sortKey = (*it);
         std::string value1, value2;
-        if( ! (isDiff = ( ( diff = fd_strnumbercompare( &( value1 = a->valueForKey( &sortKey ) ) , &( value2 = b->valueForKey( &sortKey ) ) ) ) < 0 )) ){
+        if( ! (isDiff = ( ( diff = fd_strnumbercompare( ( value1 = a->valueForKey( sortKey ) ) , ( value2 = b->valueForKey( sortKey ) ) ) ) < 0 )) ){
             nextKey = (diff == 0);
         }
     }

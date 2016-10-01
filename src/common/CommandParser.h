@@ -63,9 +63,9 @@ public:
 
     void getCommand();
     std::string * getInput();
-    void parseCommand( std::string* icommand , bool run = true );
+    void parseCommand( std::string & icommand , bool run = true );
     CommandType checkCommand();
-    void historyPush ( std::string * icommand );
+    void historyPush ( std::string & icommand );
     void clear();
 };
 

@@ -1,5 +1,5 @@
 /***********************************************************************
- * Verifier.cpp : Verify and correct release metadata
+ * VerifierViewer.cpp : Let user verify and correct release metadata
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,14 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#include "Verifier.h"
+#include "VerifierViewer.h"
 
-FlacDemon::Verifier::Verifier(){
+FlacDemon::VerifierViewer::VerifierViewer(){
     
 }
-FlacDemon::Verifier::~Verifier(){
+FlacDemon::VerifierViewer::~VerifierViewer(){
     
 }
-void FlacDemon::Verifier::showAlbum( FlacDemon::Album * album ) {
+void FlacDemon::VerifierViewer::showAlbum( FlacDemon::Album * album ) {
     
 }

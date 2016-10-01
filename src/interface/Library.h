@@ -71,15 +71,15 @@ public:
     bool searching;
     FlacDemonListingMode listingMode;
 
-    void libraryUpdate( fd_keymap_vector * values );
-    void addTrackListing( FlacDemon::TrackListing * trackListing );
-    void addTrackListing( fd_keymap * keymap );
-    FlacDemon::Album * getOrCreateAlbum( std::string * albumuuid );
+    void libraryUpdate( fd_keymap_vector & values );
+    void addTrackListing( FlacDemon::TrackListing & trackListing );
+    void addTrackListing( fd_keymap & keymap );
+    FlacDemon::Album * getOrCreateAlbum( std::string & albumuuid );
 //    FlacDemon::Album * createAlbum( std::string * albumuuid );
     void sort( std::string sortKey = ""  , FlacDemonListingMode iListingMode = FlacDemonListingModeDefault );
     void search( fd_stringvector terms );
     
-    FlacDemon::TrackListing * trackListingForID(std::string ID);
+    FlacDemon::TrackListing * trackListingForID(std::string & Id);
     fd_tracklistingvector & allTracks();
     fd_albumvector & allAlbums();
     fd_librarylistingvector & allListings( FlacDemonListingMode iListingMode = FlacDemonListingModeDefault );

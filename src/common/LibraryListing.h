@@ -26,8 +26,9 @@
 #include "includes.h"
 #include "typedefs.h"
 #include "FlacDemonNameSpace.h"
+#include "KeyValue.h"
 
-class FlacDemon::LibraryListing {
+class FlacDemon::LibraryListing : public KeyValue {
 private:
 protected:
     bool isSearchMatch;
@@ -35,9 +36,7 @@ public:
     bool matchesSearch() {
         return this->isSearchMatch;
     };
-    std::string valueForKey (const char * key);
-    virtual std::string valueForKey (std::string * key) = 0;
-    virtual void setValueForKey(std::string * value, std::string* key) = 0;
+    virtual void setValueForKey(std::string & value, std::string & key) = 0;
 };
 
 #endif /* defined(__FlacDemon__LibraryListing__) */

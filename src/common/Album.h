@@ -30,7 +30,7 @@
 class FlacDemon::Album : public FlacDemon::LibraryListing {
     
 private:
-    void addMetaDataFromTrackListing( FlacDemon::TrackListing * track );
+    void addMetaDataFromTrackListing( FlacDemon::TrackListing & track );
     
 public:
     std::string path;
@@ -47,16 +47,17 @@ public:
     Album( std::string * iuuid = nullptr );
     ~Album();
     
-    void addTrackListing( FlacDemon::TrackListing * );
-    std::string valueForKey( std::string * key );
+    void addTrackListing( FlacDemon::TrackListing & );
+    std::string valueForKey( const std::string & key );
     using FlacDemon::LibraryListing::valueForKey;
 
-    void setValueForKey( const char * value , std::string * key );
-    void setValueForKey( std::string * value , const char * key );
-    void setValueForKey( std::string * value , std::string * key );
+    void setValueForKey( const char * value , std::string & key );
+    void setValueForKey( std::string & value , const char * key );
+    void setValueForKey( std::string & value , std::string & key );
     
     bool matchesSearch();
     float playcount();
+    fd_keymap * getScraperKeymap();
     //playcount, date added, various flags, artist info (from scraper)
 };
 

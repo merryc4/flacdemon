@@ -1,5 +1,5 @@
 /***********************************************************************
- * LibraryListing.cpp : Virtual class for any class to be displayed by the library
+ * VerifierViewer.h : Let user verify and correct release metadata
  * part of FlacDemon
  ************************************************************************
  *  Copyright (c) 2016 Meriadoc Clarke.
@@ -19,9 +19,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#include "LibraryListing.h"
+#ifndef __FlacDemon__Verifier__
+#define __FlacDemon__Verifier__
 
-std::string FlacDemon::LibraryListing::valueForKey (const char * key) {
-    std::string tkey = key;
-    return this->valueForKey(&tkey);
+#include "FlacDemonNameSpace.h"
+#include "includes.h"
+#include "typedefs.h"
+
+class FlacDemon::VerifierViewer {
+private:
+protected:
+public:
+    VerifierViewer();
+    ~VerifierViewer();
+    
+    void showAlbum( FlacDemon::Album * album );
 };
+
+#endif /* defined(__FlacDemon__Verifier__) */

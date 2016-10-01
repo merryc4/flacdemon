@@ -26,7 +26,7 @@ FlacDemon::Track::Track(FlacDemon::File* file){
     if(file)
         this->setFile(file);
 }
-FlacDemon::Track::Track(fd_keymap * keymap) : FlacDemon::TrackListing(keymap){
+FlacDemon::Track::Track(fd_keymap & keymap) : FlacDemon::TrackListing(keymap){
 
 }
 FlacDemon::Track::~Track(){
@@ -63,8 +63,8 @@ std::string FlacDemon::Track::keymapFileValue( std::string * key ){
     if(this->trackinfo && this->trackinfo->count(*key)){
         value = std::to_string( this->trackinfo->at( *key ) ) ;
     }
-    else if(this->keymap && this->keymap->count(*key))
-        value = this->keymap->at(*key);
+    else if(this->keymap.count(*key))
+        value = this->keymap.at(*key);
     else if(this->file){
         if(key->compare("albumuuid") == 0)
             value = *this->file->albumuuid;

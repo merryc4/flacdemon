@@ -30,6 +30,7 @@
 #include "TCPHandler.h"
 #include "Session.h"
 #include "Scraper.h"
+#include "Verifier.h"
 #include "includes.h"
 #include "tests.h"
 
@@ -58,11 +59,15 @@ public:
     int flags;
     int interfaceMode;
     
-    FlacDemon::Database* database;
-    FlacDemon::Scraper * scraper;
+    FlacDemon::Database * database;
+    FlacDemon::Verifier * verifier;
 
     Demon();
     ~Demon();
+    
+#ifdef DEBUG
+    void debug_tests();
+#endif
     
     void run();
     int add( fd_stringvector & args);

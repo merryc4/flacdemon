@@ -29,19 +29,19 @@ void run_tests(){
 //    test_comparetags();
 //    test_insertsql();
 //    demon->database->fillDatabase(50000);
-//    cout << *demon->database->getJSONForID(1) << endl;
+    cout << demon->database->getJSONForID(1) << endl;
 //    cout << *demon->database->getAll() << endl;
 //    cout << *demon->database->getValue(1, new std::string("title"));
     
 //    std::string all = *demon->database->getAll();
 //    fd_keymap_vector * test = fd_jsontokeymap_vector(&all);
-
+//    *demon->scraper->s
     
 }
 void test_comparetags(){
     std::string tag1 = "compare test string";
     std::string tag2 = "compare test a string";
-    fd_comparetags(&tag1, &tag2);
+    fd_comparetags(tag1, tag2);
 }
 void test_insertsql(){
    

@@ -31,7 +31,7 @@ namespace FlacDemon {
     class FileImporter;
     class Scraper;
     class File;
-    
+        
     class TrackListing;
     class Track;
     class Group;
@@ -47,6 +47,7 @@ namespace FlacDemon {
     template < class Target > class CommandMap;
     
     class Verifier;
+    class VerifierViewer;
 }
 
 #endif

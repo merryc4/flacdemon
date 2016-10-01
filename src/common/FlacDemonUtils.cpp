@@ -21,10 +21,12 @@
 
 #include "FlacDemonUtils.h"
 
-std::vector< std::string > * fd_numbers;
+fd_stringvector * fd_numbers;
+fd_stringvector * fd_multiple_tag;
 
 void initGlobals(){
-    fd_numbers = new std::vector< std::string >{"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"};
+    fd_numbers = new fd_stringvector {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"};
+    fd_multiple_tag = new fd_stringvector {"various", "multiple"};
     
     curl_global_init( CURL_GLOBAL_SSL );
     
@@ -42,22 +44,20 @@ void initGlobals(){
     strcpy(workingDirectory, dir);
 }
 
-int fd_stringtoint(std::string * str, int * value){
-    if(!str)
-        return 0;
+int fd_stringtoint(const std::string & str, int * value){
     
-    const char * cstr = str->c_str();
+    const char * cstr = str.c_str();
     int val = std::atoi(cstr);
     if(val || cstr[0] == '0'){
         *value = val;
         return 0;
     }
-    std::string * numberStr = new std::string(*str);
-    transform(numberStr->begin(), numberStr->end(), numberStr->begin(), ::tolower);
+    std::string numberStr = str;
+    transform(numberStr.begin(), numberStr.end(), numberStr.begin(), ::tolower);
     
     int i = 0;
     for(std::vector<std::string>::iterator it = fd_numbers->begin(); it != fd_numbers->end(); it++){
-        if(numberStr->compare((*it)) == 0){
+        if(numberStr.compare((*it)) == 0){
             *value = i;
             return 0;
         }
@@ -66,17 +66,25 @@ int fd_stringtoint(std::string * str, int * value){
     
     return 1;
 }
-float fd_comparetags(std::string * tag1, std::string * tag2){
-    if(!tag1->length() || !tag2->length())
-        return 0;
-    tag1 = new std::string(*tag1); fd_tolowercase(tag1);
-    tag2 = new std::string(*tag2); fd_tolowercase(tag2);
+MatchType fd_comparetags(const char * tag1, const char * tag2){
+    std::string sTag1 = tag1, sTag2 = tag2;
+    return fd_comparetags(sTag1, sTag2);
+}
+MatchType fd_comparetags(std::string & itag1, std::string & itag2, float * matchProportion){
+    if(!itag1.length() || !itag2.length())
+        return MatchTypeNone;
+    std::string tag1 = itag1; fd_tolowercase(tag1);
+    std::string tag2 = itag2; fd_tolowercase(tag2);
+    
+    MatchType matchType = MatchTypeNone;
+    
     struct varray * ses = varray_new(sizeof(struct diff_edit), NULL);
     int numElements;
-    int editDistance = diff(tag1, 0, (int)tag1->length(), tag2, 0, (int)tag2->length(), characterAtIndex, compareCharacters, NULL, 0, ses, &numElements, NULL);
+    int editDistance = diff(&tag1, 0, (int)tag1.length(), &tag2, 0, (int)tag2.length(), characterAtIndex, compareCharacters, NULL, 0, ses, &numElements, NULL);
     int match_count = 0;
     int nonmatch_count = 0;
     int diff_delete = 0;
+    
     for(int i = 0; i < numElements; i++){
         struct diff_edit * e = (struct diff_edit *)varray_get(ses, i);
         switch (e->op) {
@@ -85,6 +93,13 @@ float fd_comparetags(std::string * tag1, std::string * tag2){
                     nonmatch_count+=diff_delete;
                     diff_delete = 0;
                 }
+                if( ! match_count ){
+                    if( e->len == itag1.length() )
+                        matchType = MatchTypeBContainsA;
+                    else if( e->len == itag2.length())
+                        matchType = MatchTypeAContainsB;
+                }
+                
                 match_count+=e->len;
                 break;
             case DIFF_DELETE:
@@ -100,11 +115,43 @@ float fd_comparetags(std::string * tag1, std::string * tag2){
                 break;
         }
     }
+    nonmatch_count+=diff_delete;
+
+    float percent = 1.0 * (match_count - nonmatch_count) / tag1.length();
     
-    float percent = 1.0 * (match_count - nonmatch_count) / tag1->length();
-    delete tag1;
-    delete tag2;
-    return percent;
+    if( match_count ){
+        if( nonmatch_count ){
+            if( ! matchType )
+                matchType = MatchTypePartial;
+        } else {
+            matchType = MatchTypeFull;
+            percent = 1;
+        }
+    } else {
+        matchType = MatchTypeNone;
+    }
+    
+    
+
+    if( matchProportion )
+        *matchProportion = percent;
+    return matchType;
+}
+uint fd_ismultipletag( std::string & tag , bool isArtist ){
+    if ( tag == FlacDemonMetaDataMultipleValues )
+        return 1;
+    
+    if(isArtist){
+        fd_strreplace( tag, "artists", "");
+        //should check return value?
+    }
+    
+    for( fd_stringvector::iterator it = fd_multiple_tag->begin(); it != fd_multiple_tag->end(); it++){
+        float match = fd_comparetags( tag, *it);
+        if( match > FLACDEMON_MULTIPLE_TAG_MATCH_THRESHOLD )
+            return 1;
+    }
+    return 0;
 }
 
 const void * characterAtIndex(const void * str, int index, void * context){
@@ -113,33 +160,33 @@ const void * characterAtIndex(const void * str, int index, void * context){
 int compareCharacters(const void * c1, const void * c2, void * context){
     return (*((char*)c1)) != (*((char*)c2));
 }
-void fd_tolowercase(std::string * str){
-    transform(str->begin(), str->end(), str->begin(), ::tolower);
+void fd_tolowercase(std::string & str){
+    transform(str.begin(), str.end(), str.begin(), ::tolower);
 }
-int fd_strreplace(std::string * str, std::string * search, std::string * replace, bool global ){
-    return fd_strreplace(str, search->c_str(), replace->c_str() , global );
+int fd_strreplace(std::string & str, std::string & search, std::string & replace, bool global ){
+    return fd_strreplace(str, search.c_str(), replace.c_str() , global );
 }
-int fd_strreplace(std::string * str, const char * search, const char * replace, bool global ){
+int fd_strreplace(std::string & str, const char * search, const char * replace, bool global ){
     size_t pos = 0;
     int matches = 0;
     do {
-        pos = str->find(search);
+        pos = str.find(search);
         if(pos == std::string::npos)
             break;
-        str->erase(pos, strlen(search));
-        str->insert(pos, replace);
+        str.erase(pos, strlen(search));
+        str.insert(pos, replace);
         matches++;
     } while ( global );
     return matches;
 }
-int fd_strnumbercompare(std::string * str1, std::string * str2){
+int fd_strnumbercompare(std::string & str1, std::string & str2){
     int value1, value2, rvalue = 0;
     if(fd_stringtoint(str1, &value1) == 0 && fd_stringtoint(str2, &value2) == 0){
         if( !( rvalue = -1 * (int)( value1 < value2 )) ){
             ( rvalue = 1 * (int)( value1 > value2 ));
         }
     } else {
-        rvalue = str1->compare(*str2);
+        rvalue = str1.compare(str2);
     }
     return rvalue;
 }
@@ -165,12 +212,12 @@ std::string fd_keymaptojson(fd_keymap * ikeymap){
     fd_keymap_vector kmv{ikeymap};
     return fd_keymap_vectortojson(&kmv);
 }
-fd_keymap_vector * fd_jsontokeymap_vector(std::string * json){
+fd_keymap_vector * fd_jsontokeymap_vector(std::string & json){
 
     fd_keymap_vector * rkeymap_vector = new fd_keymap_vector;
     fd_keymap * tkeymap = nullptr;
     
-    std::vector < std::string > objects{*json};
+    std::vector < std::string > objects{json};
     std::istringstream inStream;
     std::string line, key, value;
     size_t pos, pos2, offset;
@@ -218,11 +265,11 @@ json_t * fd_decodeJSON( std::string & jsonString) {
     return json;
 
 }
-std::vector< std::string > fd_splitjsondescriptor(std::string * json){
+std::vector< std::string > fd_splitjsondescriptor(std::string & json){
     std::regex reg("[{}]");
     std::match_results<std::string::iterator> regmatch;
-    std::string::iterator last = json->end();
-    std::string::iterator first = json->begin();
+    std::string::iterator last = json.end();
+    std::string::iterator first = json.begin();
     int openBracketCount = 0, closeBracketCount = 0, depth = 0;
     std::vector< std::string > objects;
     while(std::regex_search(first, last, regmatch, reg) && first != last){
@@ -234,7 +281,7 @@ std::vector< std::string > fd_splitjsondescriptor(std::string * json){
         }
         depth = openBracketCount - closeBracketCount;
         if(depth == 0){
-            objects.push_back(std::string(json->begin(), first));
+            objects.push_back(std::string(json.begin(), first));
         }
     }
     
@@ -253,9 +300,9 @@ void waitfor0(bool * value){
 int isMainThread(){
     return std::this_thread::get_id() == mainThreadID;
 }
-std::string fd_standardiseKey(std::string * key){
-    std::string standardisedKey = *key;
-    fd_tolowercase( &standardisedKey );
+std::string fd_standardiseKey(std::string & key){
+    std::string standardisedKey = key;
+    fd_tolowercase( standardisedKey );
     std::regex e( "album[^a-zA-Z]artist" , std::regex_constants::icase );
     if (regex_match( standardisedKey, e ) ) {
         standardisedKey = "albumartist";

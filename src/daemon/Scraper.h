@@ -23,7 +23,7 @@
 #define __FlacDemon__Scraper__
 
 #include "FlacDemonAll.h"
-
+#include "DiscogsTypes.h"
 
 class FlacDemon::Scraper {
 private:
@@ -31,24 +31,38 @@ protected:
     size_t connectionLimit;
     size_t connectionLimitTime;
     size_t connectionCount;
+    size_t resultsArrayIndex;
     
     CURL * curlHandle;
     char * curlErrorBuffer;
+    const char * curlUrl;
     
     std::string curlResponse;
     std::string searchBaseUrl;
     
+//    std::string masterBaseUrl;
+    
+    std::map< std::string , json_int_t > currentPageInfo;
+    
+    json_t * jsonResultsArray;
+    
     void curlSetup();
-    void curlReset();
+    void curlReset( std::string & url );
+    void curlReset( const char * url = nullptr );
     int curlPerform();
+    json_t * curlGetJson( std::string & url );
     void search( std::string & searchString );
     void getDiscogsAccessToken();
     void authorize();
     
-    
 public:
     Scraper();
     ~Scraper();
+    
+    void search( fd_keymap & values );
+    DiscogsMaster * getMaster( std::string & releaseUrl );
+    DiscogsResult * nextResult();
+    void clear();
 };
 
 
